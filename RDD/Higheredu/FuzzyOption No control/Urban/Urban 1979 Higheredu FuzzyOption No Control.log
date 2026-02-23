@@ -1,0 +1,3644 @@
+---------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No con
+> trol/Urban 1979 Higheredu FuzzyOption No Control.log
+  log type:  text
+ opened on:   6 Aug 2024, 17:16:24
+
+. use "`datapath'", clear
+
+. 
+. *Step One: Variables and Data Processing
+. 
+. *1) Monthly earning & it's ln value
+. 
+. gen annualearning = C05_1 if C05_1!=-99 & C05_1!=-88
+(17,426 missing values generated)
+
+. gen workmonths=C01_1 if C01_1!=-99
+(79 missing values generated)
+
+. gen monthlyearning = annualearning/workmonths
+(17,471 missing values generated)
+
+. gen log_monthlyearning = ln(monthlyearning)
+(17,516 missing values generated)
+
+. 
+. *2) Sex (Male)
+. 
+. gen male=1 if A03==1
+(18,084 missing values generated)
+
+. replace male=0 if A03==2
+(18,084 real changes made)
+
+. 
+. *3) Age & Exp
+. 
+. gen birthyear = A04_1 if A04_1!=-88 & A04_1!=-99
+
+. gen age = 2018-birthyear
+
+. gen agesqr = age*age
+
+. 
+. gen exp = age-A13_3-6 if A13_3>=0
+(3,412 missing values generated)
+
+. replace exp=0 if exp<0
+(3,271 real changes made)
+
+. gen expsqr = exp*exp
+(3,412 missing values generated)
+
+. 
+. gen yearstart = C02 if C02!=-88 & C02!=-99
+(17,464 missing values generated)
+
+. gen tenure = 2018 - yearstart
+(17,464 missing values generated)
+
+. gen tenuresqr = tenure * tenure
+(17,464 missing values generated)
+
+. 
+. *4) Secondary education (Sec Voc; Sec Gen; Sec Jun)
+. 
+. *Sec Voc
+. *filter by secondary school types.
+. gen secvocedu=1 if A14==5
+(33,350 missing values generated)
+
+. replace secvocedu =0 if A14!=5
+(33,350 real changes made)
+
+. *include who reported vocational secondary degrees
+. replace secvocedu=1 if inrange(A13_1, 5, 6) & A13_2==1
+(902 real changes made)
+
+. *remove who had not finished secondary vocational education.
+. replace secvocedu=0 if (inrange(A13_1,4,6) & A13_2>1) | A13_1<4
+(188 real changes made)
+
+. tab secvocedu
+
+  secvocedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     32,636       90.01       90.01
+          1 |      3,623        9.99      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec voc
+. gen voc_log_monthlyearning = log_monthlyearning if secvocedu==1
+(33,450 missing values generated)
+
+. 
+. *Sec Gen
+. *filter by secondary school types.
+. gen secgenedu = 1 if A14!=-99 & A14!=-88 & A14!=5
+(22,075 missing values generated)
+
+. replace secgenedu =0 if A14==-99 | A14==-88 | A14==5
+(22,075 real changes made)
+
+. *remove who had/have not finished secondary general schools.
+. replace secgenedu =0 if (A13_1==4 & A13_2>1) | inrange(A13_1, 5, 6) | A13_1<4
+(2,765 real changes made)
+
+. tab secgenedu
+
+  secgenedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     24,840       68.51       68.51
+          1 |     11,419       31.49      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec gen
+. gen gen_log_monthlyearning = log_monthlyearning if secgenedu==1
+(28,201 missing values generated)
+
+. 
+. *Only Sec Junior
+. *filter by A13_1
+. gen secjun = 1 if (A13_1 ==3 & A13_2 ==1) | (inrange(A13_1, 4, 6) & A13_2>1) 
+(26,513 missing values generated)
+
+. replace secjun = 0 if secjun!=1
+(26,513 real changes made)
+
+. tab secjun
+
+     secjun |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     26,513       73.12       73.12
+          1 |      9,746       26.88      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. gen jun_log_monthlyearning = log_monthlyearning if secjun==1
+(30,659 missing values generated)
+
+. 
+. *Categotical variable of education
+. gen educat=1 if secvocedu==1
+(32,636 missing values generated)
+
+. replace educat=2 if secgenedu==1
+(11,419 real changes made)
+
+. replace educat=3 if secjun==1
+(9,746 real changes made)
+
+. tab educat
+
+     educat |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |      3,623       14.62       14.62
+          2 |     11,419       46.07       60.68
+          3 |      9,746       39.32      100.00
+------------+-----------------------------------
+      Total |     24,788      100.00
+
+. 
+. *5) Higher education (High Voc; High Gen; Adult Edu; Higher Edu)
+. 
+. *Higher vocational education (full-time)
+. gen highvocedu =1 if A13_1==7 & A13_2==1
+(32,394 missing values generated)
+
+. replace highvocedu=0 if highvocedu!=1
+(32,394 real changes made)
+
+. replace highvocedu=0 if A15_7==6
+(959 real changes made)
+
+. 
+. *Higher general education (full-time)
+. gen highgenedu =1 if (A13_1==8 & A13_2==1) | A13_1==9
+(32,336 missing values generated)
+
+. replace highgenedu =0 if highgenedu!=1
+(32,336 real changes made)
+
+. replace highgenedu=0 if A15_7==6
+(567 real changes made)
+
+. 
+. *Adult continuing education
+. gen adultedu = 1 if A15_7 == 6
+(34,552 missing values generated)
+
+. replace adultedu = 0 if A15_7!=6
+(34,552 real changes made)
+
+. replace adultedu = 0 if ((A13_1==7 | A13_1==8) & A13_2!=1) | A13_1<=6
+(181 real changes made)
+
+. tab adultedu
+
+   adultedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     34,733       95.79       95.79
+          1 |      1,526        4.21      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *higheredu (dummy variable of higher education)
+. gen higheredu=1 if highvocedu==1 | highgenedu==1 | adultedu==1
+(28,471 missing values generated)
+
+. replace higheredu=0 if higheredu!=1
+(28,471 real changes made)
+
+. 
+. *Track based Higheredu
+. gen secvochighedu = secvocedu * higheredu
+
+. gen secgenhighedu = secgenedu * higheredu
+
+. gen secjunhighedu = secjun * higheredu
+
+. 
+. *6) Educational Instrucments; Omit here because we are using this RDD to estimate it locall
+> y!!!
+. 
+. *7) Province fixed effect (Method: By the first two digits of household code)
+. 
+. destring hhcode, generate(province_code) force float
+hhcode: contains nonnumeric characters; province_code generated as float
+(2 missing values generated)
+
+. replace province_code = floor(province_code/1000000000000) if province_code<100000000000000
+(35,938 real changes made)
+
+. replace province_code = floor(province_code/10000000000000) if province_code>=1000000000000
+> 00 & province_code<1000000000000000
+(319 real changes made)
+
+. replace province_code = floor(province_code/1000000000000000) if province_code>=10000000000
+> 000000
+(0 real changes made)
+
+. tab province_code, gen(provincedum)
+
+     hhcode |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         11 |      2,836        7.82        7.82
+         14 |      2,555        7.05       14.87
+         15 |      1,760        4.85       19.72
+         21 |      2,218        6.12       25.84
+         32 |      2,943        8.12       33.96
+         34 |      2,254        6.22       40.17
+         37 |      2,396        6.61       46.78
+         41 |      2,959        8.16       54.94
+         42 |      2,447        6.75       61.69
+         43 |      2,289        6.31       68.01
+         44 |      4,331       11.95       79.95
+         50 |      2,115        5.83       85.78
+         51 |      2,796        7.71       93.50
+         53 |      1,226        3.38       96.88
+         62 |      1,132        3.12      100.00
+------------+-----------------------------------
+      Total |     36,257      100.00
+
+. 
+. *8) Birth Month cohort & GaoKao_Treatment
+. 
+. gen birthmonth = A04_2 if A04_2!=-88 & A04_2!=-99
+(13 missing values generated)
+
+. gen t = birthmonth - 9 + 12 * (birthyear - 1979)
+(13 missing values generated)
+
+. gen d = 1 if t >= 1 & t != .
+(18,431 missing values generated)
+
+. replace d = 0 if t < 1
+(18,418 real changes made)
+
+. gen td = t * d
+(13 missing values generated)
+
+. 
+. gen GaoKao_Treatment = 0 if A15_2<=1998 & A15_2!=-99 & A15_2!=-88
+(33,372 missing values generated)
+
+. replace GaoKao_Treatment = 1 if A15_2>=1999
+(5,190 real changes made)
+
+. 
+. *Step Two: Regressions
+. 
+. *2_1) RDD Earning t
+. 
+. *2_1_1) rdrobust on earning, sheet 1, no province no omitting local variables
+. 
+. **2_1_1_1 Pooled 
+. *One year each
+. rdrobust log_monthlyearning t if inrange(t, -12, 11) & inrange(monthlyearning, 250, 25000) 
+> & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        931
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       491         440            Kernel        =    Uniform
+Eff. Number of obs |       491         440            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .03427     .06003   0.5709   0.568   -.083385      .151928
+    Bias-corrected | -.01411     .06003   -0.2350  0.814   -.131763      .103549
+            Robust | -.01411     .09224   -0.1529  0.878   -.194889      .166675
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  4.9195     8.3856   0.5867   0.557    -11.516      21.3551
+    Bias-corrected |  10.582     8.3856   1.2620   0.207   -5.85313       27.018
+            Robust |  10.582     13.034   0.8119   0.417   -14.9642      36.1291
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", replace ctitle(no province no loc
+> al adjustment, pooled, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if inrange(t, -36, 35) & inrange(monthlyearning, 250, 25000) 
+> & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2723
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      1286        1437            Kernel        =    Uniform
+Eff. Number of obs |      1286        1437            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0648     .03684   1.7589   0.079    -.00741      .137018
+    Bias-corrected |   .0513     .03684   1.3924   0.164    -.02091      .123517
+            Robust |   .0513      .0534   0.9608   0.337   -.053353       .15596
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.5248     1.0284   1.4827   0.138   -.490839      3.54051
+    Bias-corrected |  2.5299     1.0284   2.4599   0.014    .514184      4.54553
+            Robust |  2.5299     1.5017   1.6847   0.092   -.413425      5.47314
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, pooled, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if inrange(monthlyearning, 250, 25000) & educat != ., covs() 
+> fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      16190
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      8396        7794            Kernel        = Epanechnikov
+Eff. Number of obs |      3135        3323            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    80.550      80.550
+       BW bias (b) |   125.500     125.500
+         rho (h/b) |     0.642       0.642
+        Unique obs |       370         261
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .04179     .02631   1.5884   0.112   -.009777      .093353
+    Bias-corrected |   .0369     .02631   1.4027   0.161   -.014661      .088468
+            Robust |   .0369     .03148   1.1725   0.241   -.024787      .098594
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.1783     1.0132   1.1629   0.245    -.80752      3.16407
+    Bias-corrected |  1.2385     1.0132   1.2224   0.222   -.747275      3.22432
+            Robust |  1.2385     1.2144   1.0199   0.308    -1.1416      3.61864
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, pooled, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. **2_1_1_2 Pooled without SecJun
+. *One year each
+. rdrobust log_monthlyearning t if inrange(t, -12, 11) & inrange(monthlyearning, 250, 25000) 
+> & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        625
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       319         306            Kernel        =    Uniform
+Eff. Number of obs |       319         306            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .01174     .07328   0.1601   0.873   -.131885      .155355
+    Bias-corrected |  .09301     .07328   1.2693   0.204    -.05061       .23663
+            Robust |  .09301     .10776   0.8631   0.388   -.118194      .304213
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  7.4786     45.673   0.1637   0.870   -82.0398       96.997
+    Bias-corrected | -43.193     45.673   -0.9457  0.344   -132.711      46.3254
+            Robust | -43.193     67.822   -0.6369  0.524   -176.121      89.7351
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, pooled without secjun, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if inrange(t, -36, 35) & inrange(monthlyearning, 250, 25000) 
+> & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1840
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       832        1008            Kernel        =    Uniform
+Eff. Number of obs |       832        1008            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .08093     .04485   1.8045   0.071   -.006974      .168837
+    Bias-corrected |  .00865     .04485   0.1930   0.847   -.079251      .096561
+            Robust |  .00865     .06515   0.1328   0.894   -.119038      .136347
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.6864     1.0922   1.5440   0.123   -.454321      3.82708
+    Bias-corrected |  2.4862     1.0922   2.2763   0.023     .34546      4.62686
+            Robust |  2.4862     1.6181   1.5365   0.124    -.68519      5.65751
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, pooled without secjun, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if inrange(monthlyearning, 250, 25000) & (educat==1 | educat=
+> =2), covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10681
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      4668        6013            Kernel        = Epanechnikov
+Eff. Number of obs |      1384        1725            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    58.628      58.628
+       BW bias (b) |    90.469      90.469
+         rho (h/b) |     0.648       0.648
+        Unique obs |       320         248
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .04459     .03778   1.1802   0.238   -.029459      .118634
+    Bias-corrected |  .04237     .03778   1.1215   0.262   -.031678      .116416
+            Robust |  .04237     .04501   0.9413   0.347   -.045851      .130589
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.8365     1.7536   1.0473   0.295   -1.60039      5.27345
+    Bias-corrected |  2.1545     1.7536   1.2286   0.219   -1.28246      5.59138
+            Robust |  2.1545     2.0931   1.0293   0.303   -1.94798      6.25691
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, pooled without secjun, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. **2_1_1_3 SecVoc
+. *One year each
+. rdrobust log_monthlyearning t if inrange(t, -12, 11) & inrange(monthlyearning, 250, 25000) 
+> & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       106         100            Kernel        =    Uniform
+Eff. Number of obs |       106         100            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .00061     .10524   0.0058   0.995    -.20565      .206864
+    Bias-corrected |  .17922     .10524   1.7030   0.089   -.027041      .385473
+            Robust |  .17922     .12847   1.3950   0.163   -.072588       .43102
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   -90.7      15794   -0.0057  0.995   -31046.4        30865
+    Bias-corrected |   26535      15794   1.6801   0.093   -4420.39      57490.9
+            Robust |   26535      19259   1.3778   0.168   -11211.2      64281.8
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, secvoc, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if inrange(t, -36, 35) & inrange(monthlyearning, 250, 25000) 
+> & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        633
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       304         329            Kernel        =    Uniform
+Eff. Number of obs |       304         329            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .11267     .07165   1.5726   0.116   -.027752        .2531
+    Bias-corrected |  .04785     .07165   0.6678   0.504   -.092578      .188274
+            Robust |  .04785     .09832   0.4866   0.627   -.144862      .240558
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.2822     1.0951   1.1708   0.242   -.864182       3.4285
+    Bias-corrected |  1.4855     1.0951   1.3565   0.175   -.660804      3.63187
+            Robust |  1.4855     1.6678   0.8907   0.373   -1.78335      4.75442
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, secvoc, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if inrange(monthlyearning, 250, 25000) & educat ==1, covs() f
+> uzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2768
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      1164        1604            Kernel        = Epanechnikov
+Eff. Number of obs |       538         579            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    65.510      65.510
+       BW bias (b) |   112.782     112.782
+         rho (h/b) |     0.581       0.581
+        Unique obs |       236         243
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .08097     .05735   1.4117   0.158   -.031442      .193377
+    Bias-corrected |  .09099     .05735   1.5866   0.113   -.021416      .203403
+            Robust |  .09099     .06651   1.3681   0.171   -.039368      .221355
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.5259     1.2825   1.1898   0.234   -.987781       4.0396
+    Bias-corrected |  1.5579     1.2825   1.2147   0.224   -.955829      4.07155
+            Robust |  1.5579     1.5051   1.0350   0.301   -1.39214      4.50786
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, secvoc, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. **2_1_1_4 SecGen
+. *One year each
+. rdrobust log_monthlyearning t if inrange(t, -12, 11) & inrange(monthlyearning, 250, 25000) 
+> & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        419
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       213         206            Kernel        =    Uniform
+Eff. Number of obs |       213         206            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |    .007     .07854   0.0891   0.929   -.146942      .160943
+    Bias-corrected |  .03218     .07854   0.4097   0.682   -.121765       .18612
+            Robust |  .03218     .11124   0.2893   0.772    -.18584      .250196
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  21.068     234.42   0.0899   0.928   -438.395      480.531
+    Bias-corrected | -49.368     234.42   -0.2106  0.833   -508.832      410.095
+            Robust | -49.368     332.96   -0.1483  0.882    -701.95      603.213
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, secgen, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if inrange(t, -36, 35) & inrange(monthlyearning, 250, 25000) 
+> & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1207
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       528         679            Kernel        =    Uniform
+Eff. Number of obs |       528         679            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .05803     .04861   1.1936   0.233   -.037253      .153307
+    Bias-corrected |  .00678     .04861   0.1396   0.889   -.088495      .102065
+            Robust |  .00678      .0702   0.0967   0.923   -.130801      .144371
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  2.2175     2.1421   1.0352   0.301   -1.98091      6.41595
+    Bias-corrected |  3.4216     2.1421   1.5973   0.110    -.77687      7.61998
+            Robust |  3.4216     3.1392   1.0899   0.276   -2.73122      9.57434
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, secgen, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if inrange(monthlyearning, 250, 25000) & educat ==2, covs() f
+> uzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7913
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      3504        4409            Kernel        = Epanechnikov
+Eff. Number of obs |      1153        1546            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    72.031      72.031
+       BW bias (b) |   114.520     114.520
+         rho (h/b) |     0.629       0.629
+        Unique obs |       315         237
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .02607     .03703   0.7040   0.481   -.046505      .098635
+    Bias-corrected |  .01724     .03703   0.4657   0.641   -.055327      .089813
+            Robust |  .01724     .04381   0.3936   0.694   -.068619      .103105
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.5449     2.9912   0.5165   0.606   -4.31782      7.40756
+    Bias-corrected |  1.4916     2.9912   0.4987   0.618    -4.3711      7.35427
+            Robust |  1.4916     3.5288   0.4227   0.673   -5.42467      8.40784
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 1 results.xls", append ctitle(no province no loca
+> l adjustment, secgen, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 1 results.xls
+dir : seeout
+
+. 
+. *2_1_2) rdrobust on earning, sheet 2, province-clustered no omitting local variables
+. 
+. **2_1_2_1 Pooled 
+. *One year each
+. rdrobust log_monthlyearning t if inrange(t, -12, 11) & inrange(monthlyearning, 250, 25000) 
+> & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nncluster province_co
+> de)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        931
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       491         440            Kernel        =    Uniform
+Eff. Number of obs |       491         440            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .03427     .07341   0.4669   0.641   -.109602      .178145
+    Bias-corrected | -.01411     .07341   -0.1922  0.848   -.157981      .129767
+            Robust | -.01411     .09684   -0.1457  0.884   -.203919      .175705
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  4.9195     10.519   0.4677   0.640   -15.6978      25.5368
+    Bias-corrected |  10.582     10.519   1.0060   0.314   -10.0349      31.1997
+            Robust |  10.582     14.795   0.7153   0.474   -18.4152      39.5801
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", replace ctitle(province-clustered
+>  no local adjustment, pooled, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if inrange(t, -36, 35) & inrange(monthlyearning, 250, 25000) 
+> & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nncluster province_co
+> de)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2723
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      1286        1437            Kernel        =    Uniform
+Eff. Number of obs |      1286        1437            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0648      .0567   1.1429   0.253   -.046333      .175941
+    Bias-corrected |   .0513      .0567   0.9048   0.366   -.059833       .16244
+            Robust |   .0513     .06717   0.7638   0.445   -.080341      .182947
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.5248     1.5788   0.9658   0.334   -1.56963       4.6193
+    Bias-corrected |  2.5299     1.5788   1.6024   0.109   -.564603      5.62432
+            Robust |  2.5299     2.0861   1.2127   0.225   -1.55888       6.6186
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, pooled, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if inrange(monthlyearning, 250, 25000) & educat != ., covs() 
+> fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster province_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      16190
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      8396        7794            Kernel        = Epanechnikov
+Eff. Number of obs |      3610        3863            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    91.327      91.327
+       BW bias (b) |   121.802     121.802
+         rho (h/b) |     0.750       0.750
+        Unique obs |       370         261
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0439     .04465   0.9834   0.325   -.043601      .131406
+    Bias-corrected |  .03562     .04465   0.7978   0.425   -.051886      .123121
+            Robust |  .03562      .0464   0.7676   0.443   -.055333      .126568
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.1374     1.7671   0.6437   0.520   -2.32599      4.60072
+    Bias-corrected |  1.2818     1.7671   0.7254   0.468   -2.18158      4.74514
+            Robust |  1.2818     1.8939   0.6768   0.499   -2.43027      4.99383
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, pooled, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. **2_1_2_2 Pooled without SecJun
+. *One year each
+. rdrobust log_monthlyearning t if inrange(t, -12, 11) & inrange(monthlyearning, 250, 25000) 
+> & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nncluster
+>  province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        625
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       319         306            Kernel        =    Uniform
+Eff. Number of obs |       319         306            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .01174     .08425   0.1393   0.889   -.153398      .176868
+    Bias-corrected |  .09301     .08425   1.1039   0.270   -.072123      .258143
+            Robust |  .09301     .10825   0.8592   0.390    -.11916       .30518
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  7.4786     53.982   0.1385   0.890   -98.3235      113.281
+    Bias-corrected | -43.193     53.982   -0.8001  0.424   -148.995      62.6092
+            Robust | -43.193     73.125   -0.5907  0.555   -186.516       100.13
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, pooled without secjun, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if inrange(t, -36, 35) & inrange(monthlyearning, 250, 25000) 
+> & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nncluster
+>  province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1840
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       832        1008            Kernel        =    Uniform
+Eff. Number of obs |       832        1008            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .08093     .05916   1.3680   0.171   -.035024      .196887
+    Bias-corrected |  .00865     .05916   0.1463   0.884     -.1073       .12461
+            Robust |  .00865     .07583   0.1141   0.909   -.139962      .157272
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.6864     1.6471   1.0239   0.306    -1.5418      4.91455
+    Bias-corrected |  2.4862     1.6471   1.5095   0.131   -.742017      5.71434
+            Robust |  2.4862     2.2021   1.1290   0.259    -1.8298      6.80212
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, pooled without secjun, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if inrange(monthlyearning, 250, 25000) & (educat==1 | educat=
+> =2), covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster province_co
+> de)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10681
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      4668        6013            Kernel        = Epanechnikov
+Eff. Number of obs |      1499        1882            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    62.929      62.929
+       BW bias (b) |    88.548      88.548
+         rho (h/b) |     0.711       0.711
+        Unique obs |       320         248
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .04619     .05078   0.9096   0.363   -.053338      .145725
+    Bias-corrected |  .04405     .05078   0.8673   0.386   -.055486      .143578
+            Robust |  .04405     .06134   0.7181   0.473   -.076171      .164263
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   1.606     2.7084   0.5930   0.553   -3.70235      6.91434
+    Bias-corrected |  1.9842     2.7084   0.7326   0.464   -3.32413      7.29256
+            Robust |  1.9842     3.0946   0.6412   0.521   -4.08109      8.04952
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, pooled without secjun, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. **2_1_2_3 SecVoc
+. *One year each
+. rdrobust log_monthlyearning t if inrange(t, -12, 11) & inrange(monthlyearning, 250, 25000) 
+> & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nncluster province_cod
+> e)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       106         100            Kernel        =    Uniform
+Eff. Number of obs |       106         100            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .00061     .09325   0.0065   0.995   -.182154      .183367
+    Bias-corrected |  .17922     .09325   1.9220   0.055   -.003544      .361976
+            Robust |  .17922     .10605   1.6899   0.091    -.02864      .387072
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   -90.7      14021   -0.0065  0.995   -27572.3      27390.9
+    Bias-corrected |   26535      14021   1.8925   0.058   -946.323      54016.9
+            Robust |   26535      15880   1.6710   0.095   -4588.03      57658.6
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, secvoc, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if inrange(t, -36, 35) & inrange(monthlyearning, 250, 25000) 
+> & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nncluster province_cod
+> e)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        633
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       304         329            Kernel        =    Uniform
+Eff. Number of obs |       304         329            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .11267     .07831   1.4388   0.150   -.040809      .266157
+    Bias-corrected |  .04785     .07831   0.6110   0.541   -.105635      .201331
+            Robust |  .04785     .08257   0.5795   0.562   -.113988      .209684
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.2822     1.2964   0.9891   0.323   -1.25865      3.82296
+    Bias-corrected |  1.4855     1.2964   1.1459   0.252   -1.05527      4.02634
+            Robust |  1.4855     1.8007   0.8250   0.409   -2.04384      5.01491
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, secvoc, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if inrange(monthlyearning, 250, 25000) & educat ==1, covs() f
+> uzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster province_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2768
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      1164        1604            Kernel        = Epanechnikov
+Eff. Number of obs |       595         619            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    72.885      72.885
+       BW bias (b) |   115.048     115.048
+         rho (h/b) |     0.634       0.634
+        Unique obs |       236         243
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .07672     .06877   1.1156   0.265   -.058067      .211512
+    Bias-corrected |  .08911     .06877   1.2958   0.195   -.045677      .223902
+            Robust |  .08911     .08181   1.0893   0.276   -.071232      .249456
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.3595     1.7293   0.7861   0.432   -2.02995      4.74893
+    Bias-corrected |  1.4182     1.7293   0.8201   0.412   -1.97122      4.80765
+            Robust |  1.4182     1.9363   0.7324   0.464   -2.37688      5.21332
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, secvoc, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. **2_1_2_4 SecGen
+. *One year each
+. rdrobust log_monthlyearning t if inrange(t, -12, 11) & inrange(monthlyearning, 250, 25000) 
+> & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nncluster province_cod
+> e)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        419
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       213         206            Kernel        =    Uniform
+Eff. Number of obs |       213         206            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |    .007     .09787   0.0715   0.943   -.184825      .198826
+    Bias-corrected |  .03218     .09787   0.3288   0.742   -.159648      .224003
+            Robust |  .03218     .12375   0.2600   0.795   -.210374      .274729
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  21.068     291.59   0.0723   0.942   -550.441      592.577
+    Bias-corrected | -49.368     291.59   -0.1693  0.866   -620.877       522.14
+            Robust | -49.368     373.46   -0.1322  0.895   -781.333      682.596
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, secgen, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if inrange(t, -36, 35) & inrange(monthlyearning, 250, 25000) 
+> & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nncluster province_cod
+> e)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1207
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       528         679            Kernel        =    Uniform
+Eff. Number of obs |       528         679            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .05803      .0702   0.8265   0.408   -.079571      .195625
+    Bias-corrected |  .00678      .0702   0.0966   0.923   -.130813      .144383
+            Robust |  .00678       .097   0.0699   0.944   -.183332      .196902
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  2.2175     2.9395   0.7544   0.451   -3.54383      7.97887
+    Bias-corrected |  3.4216     2.9395   1.1640   0.244   -2.33979       9.1829
+            Robust |  3.4216      3.954   0.8653   0.387   -4.32814      11.1713
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, secgen, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if inrange(monthlyearning, 250, 25000) & educat ==2, covs() f
+> uzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster province_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7913
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      3504        4409            Kernel        = Epanechnikov
+Eff. Number of obs |      1286        1752            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    80.899      80.899
+       BW bias (b) |   114.843     114.843
+         rho (h/b) |     0.704       0.704
+        Unique obs |       315         237
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0331     .04925   0.6720   0.502   -.063437      .129636
+    Bias-corrected |  .02183     .04925   0.4432   0.658   -.074705      .118368
+            Robust |  .02183     .05849   0.3732   0.709   -.092808      .136471
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   1.327     3.2829   0.4042   0.686    -5.1073      7.76128
+    Bias-corrected |  1.2054     3.2829   0.3672   0.713   -5.22888      7.63969
+            Robust |  1.2054      3.563   0.3383   0.735   -5.77785      8.18866
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 2 results.xls", append ctitle(province-clustered 
+> no local adjustment, secgen, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 2 results.xls
+dir : seeout
+
+. 
+. *2_1_3) rdrobust on earning, sheet 3, no province no Aug-Sep
+. 
+. **2_1_3_1 Pooled 
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        828
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       447         381            Kernel        =    Uniform
+Eff. Number of obs |       447         381            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .08499     .07304   1.1636   0.245    -.05817      .228156
+    Bias-corrected |  .08706     .07304   1.1920   0.233   -.056098      .230228
+            Robust |  .08706     .13661   0.6373   0.524   -.180687      .354817
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.3174     1.4266   0.9235   0.356   -1.47865      4.11341
+    Bias-corrected | -.97831     1.4266   -0.6858  0.493   -3.77433      1.81772
+            Robust | -.97831      2.675   -0.3657  0.715   -6.22118      4.26457
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", replace ctitle(no province no Aug
+> -Sep, pooled, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2620
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      1242        1378            Kernel        =    Uniform
+Eff. Number of obs |      1242        1378            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0844     .03966   2.1281   0.033    .006668      .162139
+    Bias-corrected |  .09799     .03966   2.4707   0.013    .020256      .175727
+            Robust |  .09799     .06201   1.5802   0.114   -.023547       .21953
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .81585     .68202   1.1962   0.232   -.520887      2.15259
+    Bias-corrected |   .9633     .68202   1.4124   0.158   -.373433      2.30004
+            Robust |   .9633     1.0491   0.9182   0.358   -1.09283      3.01944
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, pooled, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(monthlyearning, 250, 25000) & edu
+> cat != ., covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      16087
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      8352        7735            Kernel        = Epanechnikov
+Eff. Number of obs |      1911        2101            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    52.347      52.347
+       BW bias (b) |    84.630      84.630
+         rho (h/b) |     0.619       0.619
+        Unique obs |       369         260
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .05284     .03439   1.5366   0.124   -.014557      .120231
+    Bias-corrected |  .05698     .03439   1.6572   0.097    -.01041      .124377
+            Robust |  .05698     .04125   1.3816   0.167   -.023855      .137822
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .5898     .91077   0.6476   0.517   -1.19527      2.37487
+    Bias-corrected |  .60163     .91077   0.6606   0.509   -1.18343       2.3867
+            Robust |  .60163     1.0902   0.5519   0.581   -1.53506      2.73833
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, pooled, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. **2_1_3_2 Pooled without SecJun
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(12) 
+> all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        544
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       283         261            Kernel        =    Uniform
+Eff. Number of obs |       283         261            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .05414      .0919   0.5891   0.556   -.125972      .234252
+    Bias-corrected |  .28858      .0919   3.1403   0.002    .108464      .468688
+            Robust |  .28858     .16709   1.7271   0.084   -.038909      .616061
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.35046      2.643   -0.1326  0.895   -5.53071      4.82979
+    Bias-corrected | -1.7498      2.643   -0.6620  0.508   -6.93005      3.43045
+            Robust | -1.7498     4.7082   -0.3717  0.710   -10.9777      7.47805
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, pooled without secjun, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(36) 
+> all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1759
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       796         963            Kernel        =    Uniform
+Eff. Number of obs |       796         963            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .10684     .04865   2.1960   0.028    .011484      .202198
+    Bias-corrected |  .04011     .04865   0.8244   0.410   -.055246      .135468
+            Robust |  .04011     .07738   0.5184   0.604    -.11155      .191773
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   1.062     .72321   1.4684   0.142   -.355493      2.47945
+    Bias-corrected |  .65152     .72321   0.9009   0.368    -.76595      2.06899
+            Robust |  .65152     1.1468   0.5681   0.570   -1.59621      2.89925
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, pooled without secjun, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(monthlyearning, 250, 25000) & (ed
+> ucat==1 | educat==2), covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10600
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      4632        5968            Kernel        = Epanechnikov
+Eff. Number of obs |      2106        2702            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    88.891      88.891
+       BW bias (b) |   144.873     144.873
+         rho (h/b) |     0.614       0.614
+        Unique obs |       319         247
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .05959     .03177   1.8757   0.061   -.002677      .121847
+    Bias-corrected |  .06105     .03177   1.9218   0.055   -.001212      .123313
+            Robust |  .06105      .0383   1.5941   0.111   -.014012      .136114
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .71344     .78941   0.9038   0.366   -.833779      2.26067
+    Bias-corrected |  .32163     .78941   0.4074   0.684   -1.22559      1.86885
+            Robust |  .32163     .95137   0.3381   0.735   -1.54301      2.18627
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, pooled without secjun, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. **2_1_3_3 SecVoc
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        178
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |        94          84            Kernel        =    Uniform
+Eff. Number of obs |        94          84            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.03417     .16748   -0.2040  0.838   -.362427      .294081
+    Bias-corrected |  .15633     .16748   0.9334   0.351   -.171927      .484581
+            Robust |  .15633     .32002   0.4885   0.625   -.470892      .783545
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.6825     8.7997   0.1912   0.848   -15.5647      18.9296
+    Bias-corrected |  14.903     8.7997   1.6935   0.090   -2.34439        32.15
+            Robust |  14.903      17.27   0.8629   0.388   -18.9464      48.7519
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, secvoc, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        605
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       292         313            Kernel        =    Uniform
+Eff. Number of obs |       292         313            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .11991     .08386   1.4300   0.153   -.044444      .284262
+    Bias-corrected |  .03532     .08386   0.4212   0.674   -.129035      .199672
+            Robust |  .03532      .1379   0.2561   0.798   -.234968      .305606
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.5096     1.1784   1.2811   0.200   -.799993       3.8192
+    Bias-corrected |  2.2258     1.1784   1.8889   0.059   -.083796      4.53539
+            Robust |  2.2258     1.9538   1.1392   0.255    -1.6035       6.0551
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, secvoc, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(monthlyearning, 250, 25000) & edu
+> cat ==1, covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2740
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      1152        1588            Kernel        = Epanechnikov
+Eff. Number of obs |       622         640            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    77.690      77.690
+       BW bias (b) |   141.980     141.980
+         rho (h/b) |     0.547       0.547
+        Unique obs |       235         242
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .07585     .05845   1.2977   0.194   -.038708      .190412
+    Bias-corrected |  .09251     .05845   1.5826   0.114   -.022054      .207066
+            Robust |  .09251     .06812   1.3581   0.174   -.040997      .226009
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.4885     1.2764   1.1662   0.244   -1.01309      3.99013
+    Bias-corrected |  1.2619     1.2764   0.9887   0.323   -1.23969      3.76353
+            Robust |  1.2619     1.4956   0.8437   0.399   -1.66947      4.19332
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, secvoc, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. **2_1_3_4 SecGen
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        366
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       189         177            Kernel        =    Uniform
+Eff. Number of obs |       189         177            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0784     .10128   0.7741   0.439   -.120103      .276903
+    Bias-corrected |  .27278     .10128   2.6934   0.007    .074279      .471285
+            Robust |  .27278      .1827   1.4931   0.135   -.085301      .630865
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.20788     2.1385   -0.0972  0.923   -4.39933      3.98357
+    Bias-corrected | -2.1073     2.1385   -0.9854  0.324   -6.29871      2.08418
+            Robust | -2.1073     3.7978   -0.5549  0.579   -9.55091      5.33638
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, secgen, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1154
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       504         650            Kernel        =    Uniform
+Eff. Number of obs |       504         650            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .08969     .05327   1.6836   0.092   -.014723      .194099
+    Bias-corrected |  .06273     .05327   1.1775   0.239   -.041684      .167138
+            Robust |  .06273     .08543   0.7342   0.463   -.104716      .230169
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .82409     1.0322   0.7984   0.425   -1.19898      2.84716
+    Bias-corrected | -.42428     1.0322   -0.4110  0.681   -2.44736      1.59879
+            Robust | -.42428     1.6207   -0.2618  0.793   -3.60086      2.75229
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, secgen, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(monthlyearning, 250, 25000) & edu
+> cat ==2, covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7860
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      3480        4380            Kernel        = Epanechnikov
+Eff. Number of obs |       832        1098            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    55.045      55.045
+       BW bias (b) |    87.734      87.734
+         rho (h/b) |     0.627       0.627
+        Unique obs |       314         236
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .03451     .04511   0.7649   0.444    -.05391      .122922
+    Bias-corrected |  .03111     .04511   0.6897   0.490   -.057303      .119529
+            Robust |  .03111     .05439   0.5721   0.567   -.075485       .13771
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.16958     2.2828   -0.0743  0.941   -4.64373      4.30457
+    Bias-corrected | -.51019     2.2828   -0.2235  0.823   -4.98434      3.96395
+            Robust | -.51019     2.7236   -0.1873  0.851   -5.84842      4.82803
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 3 results.xls", append ctitle(no province no Aug-
+> Sep, secgen, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 3 results.xls
+dir : seeout
+
+. 
+. 
+. *2_1_4) rdrobust on earning, sheet 4, province-clustered no Aug-Sep
+. 
+. **2_1_4_1 Pooled 
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nncl
+> uster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        828
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       447         381            Kernel        =    Uniform
+Eff. Number of obs |       447         381            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .08499     .08384   1.0138   0.311   -.079324       .24931
+    Bias-corrected |  .08706     .08384   1.0385   0.299   -.077252      .251382
+            Robust |  .08706     .14778   0.5891   0.556    -.20258       .37671
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.3174     1.5808   0.8333   0.405   -1.78102      4.41578
+    Bias-corrected | -.97831     1.5808   -0.6188  0.536   -4.07671      2.12009
+            Robust | -.97831     3.4857   -0.2807  0.779   -7.81015      5.85353
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", replace ctitle(province-clustered
+>  no Aug-Sep, pooled, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nncl
+> uster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2620
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      1242        1378            Kernel        =    Uniform
+Eff. Number of obs |      1242        1378            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0844     .05625   1.5004   0.134   -.025849      .194656
+    Bias-corrected |  .09799     .05625   1.7420   0.082   -.012262      .208244
+            Robust |  .09799     .07233   1.3548   0.175   -.043771      .239753
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .81585     .95476   0.8545   0.393   -1.05544      2.68714
+    Bias-corrected |   .9633     .95476   1.0089   0.313    -.90799       2.8346
+            Robust |   .9633     1.3392   0.7193   0.472   -1.66146      3.58806
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, pooled, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(monthlyearning, 250, 25000) & edu
+> cat != ., covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster provin
+> ce_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      16087
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      8352        7735            Kernel        = Epanechnikov
+Eff. Number of obs |      2386        2587            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    63.010      63.010
+       BW bias (b) |    85.829      85.829
+         rho (h/b) |     0.734       0.734
+        Unique obs |       369         260
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .05061     .04717   1.0730   0.283    -.04184      .143068
+    Bias-corrected |  .05542     .04717   1.1749   0.240   -.037032      .147876
+            Robust |  .05542     .05365   1.0330   0.302   -.049737      .160581
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .51431     1.4063   0.3657   0.715   -2.24197       3.2706
+    Bias-corrected |  .51499     1.4063   0.3662   0.714    -2.2413      3.27127
+            Robust |  .51499     1.5848   0.3249   0.745   -2.59122      3.62119
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, pooled, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. **2_1_4_2 Pooled without SecJun
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(12) 
+> all vce(nncluster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        544
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       283         261            Kernel        =    Uniform
+Eff. Number of obs |       283         261            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .05414     .09389   0.5766   0.564   -.129882      .238162
+    Bias-corrected |  .28858     .09389   3.0735   0.002    .104554      .472599
+            Robust |  .28858     .18493   1.5604   0.119   -.073887       .65104
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.35046     2.4876   -0.1409  0.888   -5.22602       4.5251
+    Bias-corrected | -1.7498     2.4876   -0.7034  0.482   -6.62536      3.12575
+            Robust | -1.7498     4.6694   -0.3747  0.708   -10.9016        7.402
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, pooled without secjun, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(36) 
+> all vce(nncluster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1759
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       796         963            Kernel        =    Uniform
+Eff. Number of obs |       796         963            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .10684      .0566   1.8876   0.059   -.004099       .21778
+    Bias-corrected |  .04011      .0566   0.7086   0.479   -.070828      .151051
+            Robust |  .04011      .0769   0.5216   0.602   -.110606      .190828
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   1.062     1.0197   1.0415   0.298   -.936522      3.06047
+    Bias-corrected |  .65152     1.0197   0.6390   0.523   -1.34698      2.65002
+            Robust |  .65152     1.4232   0.4578   0.647   -2.13787      3.44091
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, pooled without secjun, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(monthlyearning, 250, 25000) & (ed
+> ucat==1 | educat==2), covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncl
+> uster province_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10600
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      4632        5968            Kernel        = Epanechnikov
+Eff. Number of obs |      2268        2957            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    95.535      95.535
+       BW bias (b) |   142.284     142.284
+         rho (h/b) |     0.671       0.671
+        Unique obs |       319         247
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .06205     .03844   1.6142   0.106   -.013291      .137389
+    Bias-corrected |  .06422     .03844   1.6707   0.095   -.011121      .139559
+            Robust |  .06422     .04434   1.4482   0.148   -.022694      .151133
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .74243     1.4098   0.5266   0.598   -2.02078      3.50563
+    Bias-corrected |  .30716     1.4098   0.2179   0.828   -2.45604      3.07036
+            Robust |  .30716     1.4814   0.2073   0.836   -2.59634      3.21066
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, pooled without secjun, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. **2_1_4_3 SecVoc
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nnclu
+> ster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        178
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |        94          84            Kernel        =    Uniform
+Eff. Number of obs |        94          84            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.03417     .16004   -0.2135  0.831   -.347851      .279506
+    Bias-corrected |  .15633     .16004   0.9768   0.329   -.157352      .470005
+            Robust |  .15633     .27755   0.5632   0.573   -.387653      .700306
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.6825     9.1639   0.1836   0.854   -16.2784      19.6433
+    Bias-corrected |  14.903     9.1639   1.6263   0.104   -3.05806      32.8636
+            Robust |  14.903     17.101   0.8715   0.383   -18.6139      48.4195
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, secvoc, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nnclu
+> ster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        605
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       292         313            Kernel        =    Uniform
+Eff. Number of obs |       292         313            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .11991     .08853   1.3544   0.176   -.053614      .293432
+    Bias-corrected |  .03532     .08853   0.3989   0.690   -.138205      .208842
+            Robust |  .03532     .11032   0.3201   0.749   -.180911      .251549
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.5096     1.2066   1.2511   0.211   -.855247      3.87445
+    Bias-corrected |  2.2258     1.2066   1.8447   0.065    -.13905      4.59065
+            Robust |  2.2258     1.6488   1.3499   0.177   -1.00582      5.45742
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, secvoc, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(monthlyearning, 250, 25000) & edu
+> cat ==1, covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster provinc
+> e_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2740
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      1152        1588            Kernel        = Epanechnikov
+Eff. Number of obs |       669         682            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    84.384      84.384
+       BW bias (b) |   147.705     147.705
+         rho (h/b) |     0.571       0.571
+        Unique obs |       235         242
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .07552     .06795   1.1115   0.266    -.05765       .20869
+    Bias-corrected |  .09648     .06795   1.4199   0.156   -.036692      .229648
+            Robust |  .09648     .07899   1.2214   0.222   -.058342      .251299
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.3655     1.6297   0.8379   0.402   -1.82858      4.55968
+    Bias-corrected |  1.0939     1.6297   0.6712   0.502   -2.10023      4.28803
+            Robust |  1.0939      1.817   0.6020   0.547   -2.46732      4.65513
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, secvoc, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. **2_1_4_4 SecGen
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nnclu
+> ster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        366
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       189         177            Kernel        =    Uniform
+Eff. Number of obs |       189         177            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0784     .10967   0.7149   0.475    -.13654       .29334
+    Bias-corrected |  .27278     .10967   2.4874   0.013    .057842      .487722
+            Robust |  .27278     .22076   1.2357   0.217    -.15989      .705454
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.20788     1.9226   -0.1081  0.914    -3.9761      3.56034
+    Bias-corrected | -2.1073     1.9226   -1.0961  0.273   -5.87548      1.66095
+            Robust | -2.1073       3.79   -0.5560  0.578   -9.53549      5.32096
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, secgen, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nnclu
+> ster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1154
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       504         650            Kernel        =    Uniform
+Eff. Number of obs |       504         650            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .08969     .06773   1.3242   0.185   -.043064       .22244
+    Bias-corrected |  .06273     .06773   0.9261   0.354   -.070026      .195479
+            Robust |  .06273      .1061   0.5912   0.554   -.145221      .270675
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .82409     1.3237   0.6226   0.534   -1.77032       3.4185
+    Bias-corrected | -.42428     1.3237   -0.3205  0.749   -3.01869      2.17012
+            Robust | -.42428     1.8259   -0.2324  0.816   -4.00295      3.15438
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, secgen, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-2 | t>=1) & inrange(monthlyearning, 250, 25000) & edu
+> cat ==2, covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster provinc
+> e_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7860
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      3480        4380            Kernel        = Epanechnikov
+Eff. Number of obs |       900        1189            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    59.307      59.307
+       BW bias (b) |    86.585      86.585
+         rho (h/b) |     0.685       0.685
+        Unique obs |       314         236
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .03517     .05716   0.6153   0.538   -.076867      .147215
+    Bias-corrected |  .03103     .05716   0.5429   0.587   -.081008      .143073
+            Robust |  .03103     .06961   0.4458   0.656   -.105396      .167461
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.12551     2.9789   -0.0421  0.966   -5.96402        5.713
+    Bias-corrected | -.45745     2.9789   -0.1536  0.878   -6.29595      5.38106
+            Robust | -.45745     3.1779   -0.1439  0.886   -6.68594      5.77105
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 4 results.xls", append ctitle(province-clustered 
+> no Aug-Sep, secgen, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 4 results.xls
+dir : seeout
+
+. 
+. *2_1_5) rdrobust on earning, sheet 5, no province no July-Oct
+. 
+. **2_1_5_1 Pooled 
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        723
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       399         324            Kernel        =    Uniform
+Eff. Number of obs |       399         324            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |    .109     .09247   1.1788   0.238   -.072228      .290236
+    Bias-corrected |  .17603     .09247   1.9037   0.057   -.005206      .357259
+            Robust |  .17603     .21327   0.8254   0.409   -.241966      .594019
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.3319     1.4283   0.9325   0.351   -1.46752       4.1314
+    Bias-corrected | -2.7522     1.4283   -1.9269  0.054   -5.55169      .047227
+            Robust | -2.7522     3.3219   -0.8285  0.407   -9.26298      3.75852
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", replace ctitle(no province no Jul
+> y-Oct, pooled, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2515
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      1194        1321            Kernel        =    Uniform
+Eff. Number of obs |      1194        1321            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .09037     .04294   2.1045   0.035    .006207       .17453
+    Bias-corrected |  .12554     .04294   2.9237   0.003    .041383      .209706
+            Robust |  .12554     .07324   1.7142   0.086   -.017999      .269088
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .76344     .69064   1.1054   0.269   -.590186      2.11707
+    Bias-corrected |  .84564     .69064   1.2244   0.221   -.507987      2.19927
+            Robust |  .84564     1.1697   0.7230   0.470   -1.44687      3.13816
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, pooled, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(monthlyearning, 250, 25000) & edu
+> cat != ., covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      15982
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      8304        7678            Kernel        = Epanechnikov
+Eff. Number of obs |      1642        1823            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    47.506      47.506
+       BW bias (b) |    80.276      80.276
+         rho (h/b) |     0.592       0.592
+        Unique obs |       368         259
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0628     .03868   1.6237   0.104   -.013005      .138611
+    Bias-corrected |  .06855     .03868   1.7723   0.076   -.007259      .144357
+            Robust |  .06855     .04675   1.4664   0.143   -.023072       .16017
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .5257      .8709   0.6036   0.546   -1.18123      2.23263
+    Bias-corrected |  .52848      .8709   0.6068   0.544   -1.17845      2.23541
+            Robust |  .52848     1.0512   0.5028   0.615   -1.53178      2.58874
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, pooled, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. **2_1_5_2 Pooled without SecJun
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(12) 
+> all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        473
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       247         226            Kernel        =    Uniform
+Eff. Number of obs |       247         226            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.05704     .12249   -0.4657  0.641   -.297116      .183026
+    Bias-corrected |  .22083     .12249   1.8029   0.071    -.01924      .460902
+            Robust |  .22083     .29677   0.7441   0.457   -.360829      .802491
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .7714      3.117   0.2475   0.805   -5.33785      6.88065
+    Bias-corrected |   13.06      3.117   4.1899   0.000    6.95073      19.1692
+            Robust |   13.06     7.5623   1.7270   0.084   -1.76185      27.8818
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, pooled without secjun, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(36) 
+> all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1688
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       760         928            Kernel        =    Uniform
+Eff. Number of obs |       760         928            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .09126     .05317   1.7164   0.086   -.012948      .195474
+    Bias-corrected | -.02884     .05317   -0.5424  0.588   -.133051      .075372
+            Robust | -.02884     .09424   -0.3060  0.760    -.21354      .155861
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.4014     1.0178   1.3768   0.169   -.593509      3.39623
+    Bias-corrected |  1.7315     1.0178   1.7012   0.089   -.263393      3.72635
+            Robust |  1.7315     1.7916   0.9664   0.334   -1.77997      5.24293
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, pooled without secjun, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(monthlyearning, 250, 25000) & (ed
+> ucat==1 | educat==2), covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10529
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      4596        5933            Kernel        = Epanechnikov
+Eff. Number of obs |      1196        1492            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    53.390      53.390
+       BW bias (b) |    88.552      88.552
+         rho (h/b) |     0.603       0.603
+        Unique obs |       318         246
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .04123     .04481   0.9203   0.357   -.046586      .129055
+    Bias-corrected |  .03859     .04481   0.8612   0.389   -.049231       .12641
+            Robust |  .03859     .05464   0.7062   0.480   -.068512      .145691
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.5437     1.9892   0.7760   0.438   -2.35513      5.44253
+    Bias-corrected |  1.7937     1.9892   0.9017   0.367    -2.1051      5.69256
+            Robust |  1.7937     2.4231   0.7403   0.459   -2.95553      6.54298
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, pooled without secjun, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. **2_1_5_3 SecVoc
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        160
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |        83          77            Kernel        =    Uniform
+Eff. Number of obs |        83          77            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.07223     .20006   -0.3610  0.718   -.464331      .319875
+    Bias-corrected |  .26161     .20006   1.3077   0.191   -.130491      .653715
+            Robust |  .26161     .49347   0.5302   0.596   -.705563      1.22879
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  2.1901      5.686   0.3852   0.700   -8.95438      13.3345
+    Bias-corrected |  21.651      5.686   3.8077   0.000    10.5061       32.795
+            Robust |  21.651     12.803   1.6910   0.091   -3.44348      46.7446
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, secvoc, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        587
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       281         306            Kernel        =    Uniform
+Eff. Number of obs |       281         306            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .13337     .08838   1.5090   0.131   -.039857      .306592
+    Bias-corrected |  .03713     .08838   0.4201   0.674   -.136094      .210355
+            Robust |  .03713     .15647   0.2373   0.812    -.26955      .343811
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.3936     1.0512   1.3258   0.185   -.666653      3.45382
+    Bias-corrected |  2.1173     1.0512   2.0143   0.044    .057084      4.17756
+            Robust |  2.1173      1.813   1.1678   0.243   -1.43614      5.67079
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, secvoc, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(monthlyearning, 250, 25000) & edu
+> cat ==1, covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2722
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      1141        1581            Kernel        = Epanechnikov
+Eff. Number of obs |       515         556            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    65.707      65.707
+       BW bias (b) |   118.433     118.433
+         rho (h/b) |     0.555       0.555
+        Unique obs |       234         241
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .08796     .06565   1.3399   0.180   -.040707      .216619
+    Bias-corrected |  .10123     .06565   1.5420   0.123   -.027434      .229892
+            Robust |  .10123     .07784   1.3004   0.193   -.051342        .2538
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.6488     1.2924   1.2758   0.202   -.884209      4.18175
+    Bias-corrected |  1.6698     1.2924   1.2921   0.196   -.863148      4.20282
+            Robust |  1.6698     1.5422   1.0828   0.279   -1.35278      4.69245
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, secvoc, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. **2_1_5_4 SecGen
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        313
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       164         149            Kernel        =    Uniform
+Eff. Number of obs |       164         149            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.03359     .13657   -0.2460  0.806   -.301272      .234089
+    Bias-corrected |  .13791     .13657   1.0098   0.313   -.129773      .405588
+            Robust |  .13791     .32643   0.4225   0.673   -.501892      .777706
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.46237     7.5731   -0.0611  0.951   -15.3053      14.3806
+    Bias-corrected |  10.676     7.5731   1.4098   0.159   -4.16659      25.5193
+            Robust |  10.676      17.89   0.5968   0.551   -24.3874      45.7401
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, secgen, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1101
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       479         622            Kernel        =    Uniform
+Eff. Number of obs |       479         622            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .06849     .05832   1.1743   0.240   -.045825      .182797
+    Bias-corrected | -.00864     .05832   -0.1481  0.882   -.122947      .105675
+            Robust | -.00864     .10454   -0.0826  0.934   -.213539      .196267
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.4126     1.7057   0.8282   0.408   -1.93041      4.75568
+    Bias-corrected |  .62976     1.7057   0.3692   0.712   -2.71328       3.9728
+            Robust |  .62976     3.0581   0.2059   0.837   -5.36405      6.62357
+--------------------------------------------------------------------------------
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, secgen, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(monthlyearning, 250, 25000) & edu
+> cat ==2, covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7807
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      3455        4352            Kernel        = Epanechnikov
+Eff. Number of obs |       905        1186            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    60.424      60.424
+       BW bias (b) |   102.575     102.575
+         rho (h/b) |     0.589       0.589
+        Unique obs |       313         235
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .01327     .04548   0.2918   0.770   -.075867      .102405
+    Bias-corrected |  .00292     .04548   0.0643   0.949   -.086213      .092059
+            Robust |  .00292     .05476   0.0534   0.957    -.10441      .110255
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .00101     6.0203   0.0002   1.000   -11.7986      11.8006
+    Bias-corrected | -1.7447     6.0203   -0.2898  0.772   -13.5443      10.0549
+            Robust | -1.7447      7.205   -0.2422  0.809   -15.8663      12.3768
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 5 results.xls", append ctitle(no province no July
+> -Oct, secgen, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 5 results.xls
+dir : seeout
+
+. 
+. 
+. *2_1_6) rdrobust on earning, sheet 6, province-clustered no July-Oct
+. 
+. **2_1_6_1 Pooled 
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nncl
+> uster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        723
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       399         324            Kernel        =    Uniform
+Eff. Number of obs |       399         324            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |    .109     .08728   1.2489   0.212   -.062055      .280063
+    Bias-corrected |  .17603     .08728   2.0169   0.044    .004967      .347086
+            Robust |  .17603     .21462   0.8202   0.412   -.244613      .596666
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.3319     1.3114   1.0157   0.310   -1.23834      3.90222
+    Bias-corrected | -2.7522     1.3114   -2.0987  0.036   -5.32251     -.181951
+            Robust | -2.7522     3.5516   -0.7749  0.438   -9.71325      4.20879
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", replace ctitle(province-clustered
+>  no July-Oct, pooled, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat != ., covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nncl
+> uster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2515
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      1194        1321            Kernel        =    Uniform
+Eff. Number of obs |      1194        1321            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .09037     .05579   1.6198   0.105   -.018977      .199714
+    Bias-corrected |  .12554     .05579   2.2503   0.024    .016199       .23489
+            Robust |  .12554     .07189   1.7463   0.081   -.015361       .26645
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .76344     .83103   0.9187   0.358   -.865347      2.39223
+    Bias-corrected |  .84564     .83103   1.0176   0.309   -.783147      2.47443
+            Robust |  .84564     1.1237   0.7525   0.452   -1.35681      3.04809
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, pooled, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(monthlyearning, 250, 25000) & edu
+> cat != ., covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster provin
+> ce_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      15982
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      8304        7678            Kernel        = Epanechnikov
+Eff. Number of obs |      1996        2164            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    55.740      55.740
+       BW bias (b) |    79.375      79.375
+         rho (h/b) |     0.702       0.702
+        Unique obs |       368         259
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .05101      .0457   1.1161   0.264   -.038569      .140584
+    Bias-corrected |  .05935      .0457   1.2985   0.194    -.03023      .148923
+            Robust |  .05935     .05238   1.1331   0.257   -.043308      .162001
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .47659      1.458   0.3269   0.744   -2.38103      3.33421
+    Bias-corrected |  .51168      1.458   0.3510   0.726   -2.34594      3.36931
+            Robust |  .51168     1.6756   0.3054   0.760   -2.77244      3.79581
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, pooled, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. **2_1_6_2 Pooled without SecJun
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(12) 
+> all vce(nncluster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        473
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       247         226            Kernel        =    Uniform
+Eff. Number of obs |       247         226            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.05704     .09728   -0.5864  0.558   -.247702      .133612
+    Bias-corrected |  .22083     .09728   2.2701   0.023    .030173      .411488
+            Robust |  .22083     .28141   0.7847   0.433    -.33072      .772382
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .7714     3.0232   0.2552   0.799   -5.15398      6.69677
+    Bias-corrected |   13.06     3.0232   4.3199   0.000    7.13461      18.9854
+            Robust |   13.06     7.0963   1.8404   0.066   -.848588      26.9686
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, pooled without secjun, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & (educat==1 | educat==2), covs() fuzzy(higheredu) kernel(uni) p(1) h(36) 
+> all vce(nncluster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1688
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       760         928            Kernel        =    Uniform
+Eff. Number of obs |       760         928            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .09126     .05846   1.5612   0.118   -.023308      .205834
+    Bias-corrected | -.02884     .05846   -0.4934  0.622    -.14341      .085731
+            Robust | -.02884     .08391   -0.3437  0.731   -.193303      .135624
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.4014        1.2   1.1678   0.243   -.950608      3.75333
+    Bias-corrected |  1.7315        1.2   1.4429   0.149   -.620493      4.08345
+            Robust |  1.7315     1.7013   1.0177   0.309   -1.60302      5.06597
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, pooled without secjun, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(monthlyearning, 250, 25000) & (ed
+> ucat==1 | educat==2), covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncl
+> uster province_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10529
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      4596        5933            Kernel        = Epanechnikov
+Eff. Number of obs |      1196        1492            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    53.412      53.412
+       BW bias (b) |    81.947      81.947
+         rho (h/b) |     0.652       0.652
+        Unique obs |       318         246
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .04122     .04936   0.8352   0.404   -.055514      .137958
+    Bias-corrected |   .0396     .04936   0.8023   0.422   -.057136      .136336
+            Robust |   .0396     .06054   0.6541   0.513   -.079059       .15826
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.5441     2.9019   0.5321   0.595   -4.14347      7.23168
+    Bias-corrected |  1.9617     2.9019   0.6760   0.499   -3.72591      7.64924
+            Robust |  1.9617     3.3276   0.5895   0.556   -4.56023      8.48355
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, pooled without secjun, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. **2_1_6_3 SecVoc
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nnclu
+> ster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        160
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |        83          77            Kernel        =    Uniform
+Eff. Number of obs |        83          77            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        14          14
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.07223     .22162   -0.3259  0.744     -.5066      .362144
+    Bias-corrected |  .26161     .22162   1.1804   0.238    -.17276      .695984
+            Robust |  .26161     .46968   0.5570   0.578   -.658936      1.18216
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  2.1901     6.3754   0.3435   0.731   -10.3056      14.6857
+    Bias-corrected |  21.651     6.3754   3.3959   0.001    9.15493      34.1462
+            Robust |  21.651     14.003   1.5461   0.122   -5.79546      49.0966
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, secvoc, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==1, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nnclu
+> ster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        587
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       281         306            Kernel        =    Uniform
+Eff. Number of obs |       281         306            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .13337      .0961   1.3878   0.165   -.054987      .321722
+    Bias-corrected |  .03713      .0961   0.3864   0.699   -.151224      .225485
+            Robust |  .03713     .13392   0.2773   0.782   -.225341      .299602
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.3936     1.0188   1.3679   0.171   -.603226       3.3904
+    Bias-corrected |  2.1173     1.0188   2.0783   0.038    .120511      4.11413
+            Robust |  2.1173     1.3948   1.5180   0.129    -.61639      4.85103
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, secvoc, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(monthlyearning, 250, 25000) & edu
+> cat ==1, covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster provinc
+> e_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       2722
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      1141        1581            Kernel        = Epanechnikov
+Eff. Number of obs |       566         589            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    71.404      71.404
+       BW bias (b) |   122.220     122.220
+         rho (h/b) |     0.584       0.584
+        Unique obs |       234         241
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .08371     .07294   1.1476   0.251   -.059252      .226676
+    Bias-corrected |  .09884     .07294   1.3550   0.175   -.044128        .2418
+            Robust |  .09884     .08836   1.1186   0.263   -.074344      .272015
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.4997     1.5135   0.9908   0.322   -1.46676      4.46608
+    Bias-corrected |  1.4999     1.5135   0.9910   0.322   -1.46655      4.46629
+            Robust |  1.4999     1.6857   0.8898   0.374   -1.80397      4.80371
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, secvoc, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. **2_1_6_4 SecGen
+. *One year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -12, 11) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(12) all vce(nnclu
+> ster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =        313
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       164         149            Kernel        =    Uniform
+Eff. Number of obs |       164         149            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    12.000      12.000
+       BW bias (b) |    12.000      12.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.03359     .14455   -0.2324  0.816     -.3169      .249717
+    Bias-corrected |  .13791     .14455   0.9541   0.340   -.145401      .421215
+            Robust |  .13791      .2555   0.5398   0.589   -.362857      .638671
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.46237     5.8689   -0.0788  0.937   -11.9651      11.0404
+    Bias-corrected |  10.676     5.8689   1.8192   0.069    -.82639      22.1791
+            Robust |  10.676     15.647   0.6823   0.495   -19.9905      41.3433
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, secgen, uniform weight, 12-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. *Three year each
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(t, -36, 35) & inrange(monthlyearn
+> ing, 250, 25000) & educat ==2, covs() fuzzy(higheredu) kernel(uni) p(1) h(36) all vce(nnclu
+> ster province_code)
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       1101
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |       479         622            Kernel        =    Uniform
+Eff. Number of obs |       479         622            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    36.000      36.000
+       BW bias (b) |    36.000      36.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .06849     .07283   0.9404   0.347   -.074254      .211226
+    Bias-corrected | -.00864     .07283   -0.1186  0.906   -.151376      .134104
+            Robust | -.00864     .12859   -0.0672  0.946   -.260666      .243395
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  1.4126     1.9351   0.7300   0.465   -2.38017      5.20545
+    Bias-corrected |  .62976     1.9351   0.3254   0.745   -3.16305      4.42257
+            Robust |  .62976     3.0152   0.2089   0.835   -5.27995      6.53947
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, secgen, uniform weight, 36-month bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. *Automatic
+. rdrobust log_monthlyearning t if (t<=-3 | t>=2) & inrange(monthlyearning, 250, 25000) & edu
+> cat ==2, covs() fuzzy(higheredu) kernel(epa) p(1) bwselect(mserd) all vce(nncluster provinc
+> e_code)
+Mass points detected in the running variable.
+
+Fuzzy RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7807
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      3455        4352            Kernel        = Epanechnikov
+Eff. Number of obs |       840        1116            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |    57.030      57.030
+       BW bias (b) |    94.059      94.059
+         rho (h/b) |     0.606       0.606
+        Unique obs |       313         235
+Number of clusters |        15          15
+
+First-stage estimates. Outcome: higheredu. Running variable: t.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |   .0102     .06026   0.1693   0.866   -.107899      .128301
+    Bias-corrected |  -.0013     .06026   -0.0215  0.983   -.119396      .116804
+            Robust |  -.0013     .07346   -0.0176  0.986   -.145269      .142677
+--------------------------------------------------------------------------------
+
+Treatment effect estimates. Outcome: log_monthlyearning. Running variable: t. Treatment Statu
+> s: higheredu.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.12929     10.945   -0.0118  0.991   -21.5819      21.3233
+    Bias-corrected | -2.1386     10.945   -0.1954  0.845   -23.5911       19.314
+            Robust | -2.1386     12.003   -0.1782  0.859    -25.664      21.3868
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in province_code
+Estimates adjusted for mass points in the running variable.
+
+. local bandwidth = e(h_l)
+
+. mata : st_numscalar("e(N)", `e(N_h_l)'+`e(N_h_r)')
+
+. outreg2 using "`folderpath'/Earning Sheet 6 results.xls", append ctitle(province-clustered 
+> no July-Oct, secgen, epa weight, automatic bandwidth) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No control/Earning 
+> Sheet 6 results.xls
+dir : seeout
+
+. 
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Wyatt/RDD/Higheredu/FuzzyOption No con
+> trol/Urban 1979 Higheredu FuzzyOption No Control.log
+  log type:  text
+ closed on:   6 Aug 2024, 17:16:53
+---------------------------------------------------------------------------------------------

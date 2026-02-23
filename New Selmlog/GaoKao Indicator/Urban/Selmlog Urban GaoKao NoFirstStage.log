@@ -1,0 +1,1775 @@
+---------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Sel
+> mlog Urban GaoKao NoFirstStage.log
+  log type:  text
+ opened on:   6 Aug 2024, 18:06:36
+
+. use "`datapath'", clear
+
+. 
+. *Step Zero: A New Dataset for Merging
+. 
+. gen headsecedu = .
+(36,259 missing values generated)
+
+. gen headhighedu = .
+(36,259 missing values generated)
+
+. gen spousesecedu = .
+(36,259 missing values generated)
+
+. gen spousehighedu = .
+(36,259 missing values generated)
+
+. gen headparty = .
+(36,259 missing values generated)
+
+. gen spouseparty = .
+(36,259 missing values generated)
+
+. gen spouseparentsecedu = .
+(36,259 missing values generated)
+
+. gen spouseparenthighedu = .
+(36,259 missing values generated)
+
+. gen spouseparentparty = .
+(36,259 missing values generated)
+
+. gen headparentsecedu = .
+(36,259 missing values generated)
+
+. gen headparenthighedu = .
+(36,259 missing values generated)
+
+. gen headparentparty = .
+(36,259 missing values generated)
+
+. replace headsecedu = 1 if A02 == 1 & inrange(A13_1, 4, 9)
+(6,181 real changes made)
+
+. replace headsecedu = 0 if A02 == 1 & inrange(A13_1, 1, 3)
+(5,310 real changes made)
+
+. replace headhighedu = 1 if A02 == 1 & inrange(A13_1, 7, 9)
+(3,235 real changes made)
+
+. replace headhighedu = 0 if A02 == 1 & inrange(A13_1, 1, 6)
+(8,256 real changes made)
+
+. replace spousesecedu = 1 if A02 == 2 & inrange(A13_1, 4, 9)
+(4,780 real changes made)
+
+. replace spousesecedu = 0 if A02 == 2 & inrange(A13_1, 1, 3)
+(5,112 real changes made)
+
+. replace spousehighedu = 1 if A02 == 2 & inrange(A13_1, 7, 9)
+(2,420 real changes made)
+
+. replace spousehighedu = 0 if A02 == 2 & inrange(A13_1, 1, 6)
+(7,472 real changes made)
+
+. replace headparty = 1 if A02 == 1 & A07_1 == 1
+(2,477 real changes made)
+
+. replace headparty = 0 if A02 == 1 & inrange(A07_1, 2, 4)
+(9,027 real changes made)
+
+. replace spouseparty = 1 if A02 == 2 & A07_1 == 1
+(1,231 real changes made)
+
+. replace spouseparty = 0 if A02 == 2 & inrange(A07_1, 2, 4)
+(8,672 real changes made)
+
+. replace spouseparentsecedu = 0 if A02 == 5 & inrange(A13_1, 1, 3)
+(239 real changes made)
+
+. replace spouseparentsecedu = 1 if A02 == 5 & inrange(A13_1, 4, 9)
+(63 real changes made)
+
+. replace spouseparenthighedu = 0 if A02 == 5 & inrange(A13_1, 1, 6)
+(289 real changes made)
+
+. replace spouseparenthighedu = 1 if A02 == 5 & inrange(A13_1, 7, 9)
+(13 real changes made)
+
+. replace spouseparentparty = 0 if A02 == 5 & inrange(A07_1, 2, 4)
+(273 real changes made)
+
+. replace spouseparentparty = 1 if A02 == 5 & A07_1 == 1
+(33 real changes made)
+
+. replace headparentsecedu = 0 if A02 == 4 & inrange(A13_1, 1, 3)
+(1,208 real changes made)
+
+. replace headparentsecedu = 1 if A02 == 4 & inrange(A13_1, 4, 9)
+(308 real changes made)
+
+. replace headparenthighedu = 0 if A02 == 4 & inrange(A13_1, 1, 6)
+(1,450 real changes made)
+
+. replace headparenthighedu = 1 if A02 == 4 & inrange(A13_1, 7, 9)
+(66 real changes made)
+
+. replace headparentparty = 0 if A02 == 4 & inrange(A07_1, 2, 4)
+(1,366 real changes made)
+
+. replace headparentparty = 1 if A02 == 4 & A07_1 == 1
+(160 real changes made)
+
+. collapse (max) headsecedu headhighedu spousesecedu spousehighedu headparty spouseparty spou
+> separentsecedu spouseparenthighedu spouseparentparty headparentsecedu headparenthighedu hea
+> dparentparty, by(hhcode)
+
+. 
+. save "`folderpath'/`logname'.dta", replace
+(file /Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog
+    Urban GaoKao NoFirstStage.dta not found)
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog
+    Urban GaoKao NoFirstStage.dta saved
+
+. 
+. use "`datapath'", clear
+
+. 
+. *Step One: Variables and Data Processing
+. 
+. *1) Monthly earning & it's ln value
+. 
+. gen annualearning = C05_1 if C05_1!=-99 & C05_1!=-88
+(17,426 missing values generated)
+
+. gen workmonths=C01_1 if C01_1!=-99
+(79 missing values generated)
+
+. gen monthlyearning = annualearning/workmonths
+(17,471 missing values generated)
+
+. gen log_monthlyearning = ln(monthlyearning)
+(17,516 missing values generated)
+
+. 
+. *2) Sex (Male)
+. 
+. gen male=1 if A03==1
+(18,084 missing values generated)
+
+. replace male=0 if A03==2
+(18,084 real changes made)
+
+. 
+. *3) Age & Exp
+. 
+. gen birthyear = A04_1 if A04_1!=-88 & A04_1!=-99
+
+. gen age = 2018-birthyear
+
+. gen agesqr = age*age
+
+. 
+. gen exp = age-A13_3-6 if A13_3>=0
+(3,412 missing values generated)
+
+. replace exp=0 if exp<0
+(3,271 real changes made)
+
+. gen expsqr = exp*exp
+(3,412 missing values generated)
+
+. 
+. *4) Secondary education (Sec Voc; Sec Gen; Sec Jun)
+. 
+. *Sec Voc
+. *filter by secondary school types.
+. 
+. gen secvocedu=1 if A14==5
+(33,350 missing values generated)
+
+. replace secvocedu =0 if A14!=5
+(33,350 real changes made)
+
+. *include who reported vocational secondary degrees
+. replace secvocedu=1 if inrange(A13_1, 5, 6) & A13_2==1
+(902 real changes made)
+
+. *remove who had not finished secondary vocational education.
+. replace secvocedu=0 if (inrange(A13_1,4,6) & A13_2>1) | A13_1<4
+(188 real changes made)
+
+. tab secvocedu
+
+  secvocedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     32,636       90.01       90.01
+          1 |      3,623        9.99      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec voc
+. gen voc_log_monthlyearning = log_monthlyearning if secvocedu==1
+(33,450 missing values generated)
+
+. 
+. *Sec Gen
+. *filter by secondary school types.
+. gen secgenedu = 1 if A14!=-99 & A14!=-88 & A14!=5
+(22,075 missing values generated)
+
+. replace secgenedu =0 if A14==-99 | A14==-88 | A14==5
+(22,075 real changes made)
+
+. *remove who had/have not finished secondary general schools.
+. replace secgenedu =0 if (A13_1==4 & A13_2>1) | inrange(A13_1, 5, 6) | A13_1<4
+(2,765 real changes made)
+
+. tab secgenedu
+
+  secgenedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     24,840       68.51       68.51
+          1 |     11,419       31.49      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec gen
+. gen gen_log_monthlyearning = log_monthlyearning if secgenedu==1
+(28,201 missing values generated)
+
+. 
+. *Only Sec Junior
+. *filter by A13_1
+. gen secjun = 1 if (A13_1 ==3 & A13_2 ==1) | (inrange(A13_1, 4, 6) & A13_2>1) 
+(26,513 missing values generated)
+
+. replace secjun = 0 if secjun!=1
+(26,513 real changes made)
+
+. tab secjun
+
+     secjun |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     26,513       73.12       73.12
+          1 |      9,746       26.88      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for secjun
+. gen jun_log_monthlyearning = log_monthlyearning if secjun == 1
+(30,659 missing values generated)
+
+. 
+. *Categotical variable of education
+. gen educat=1 if secvocedu==1
+(32,636 missing values generated)
+
+. replace educat=2 if secgenedu==1
+(11,419 real changes made)
+
+. replace educat=3 if secjun==1
+(9,746 real changes made)
+
+. tab educat
+
+     educat |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |      3,623       14.62       14.62
+          2 |     11,419       46.07       60.68
+          3 |      9,746       39.32      100.00
+------------+-----------------------------------
+      Total |     24,788      100.00
+
+. 
+. *5) Higher education (High Voc; High Gen; Adult Edu; Higher Edu)
+. 
+. *Higher vocational education (full-time)
+. gen highvocedu =1 if A13_1==7 & A13_2==1
+(32,394 missing values generated)
+
+. replace highvocedu=0 if highvocedu!=1
+(32,394 real changes made)
+
+. replace highvocedu=0 if A15_7==6
+(959 real changes made)
+
+. 
+. *Higher general education (full-time)
+. gen highgenedu =1 if (A13_1==8 & A13_2==1) | A13_1==9
+(32,336 missing values generated)
+
+. replace highgenedu =0 if highgenedu!=1
+(32,336 real changes made)
+
+. replace highgenedu=0 if A15_7==6
+(567 real changes made)
+
+. 
+. *Adult continuing education
+. gen adultedu = 1 if A15_7 == 6
+(34,552 missing values generated)
+
+. replace adultedu = 0 if A15_7!=6
+(34,552 real changes made)
+
+. replace adultedu = 0 if ((A13_1==7 | A13_1==8) & A13_2!=1) | A13_1<=6
+(181 real changes made)
+
+. tab adultedu
+
+   adultedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     34,733       95.79       95.79
+          1 |      1,526        4.21      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *higheredu (dummy variable of higher education)
+. gen higheredu=1 if highvocedu==1 | highgenedu==1 | adultedu==1
+(28,471 missing values generated)
+
+. replace higheredu=0 if higheredu!=1
+(28,471 real changes made)
+
+. 
+. *6) Instrument
+. 
+. gen yearat15 = birthyear+15
+
+. local obsnum = _N
+
+. 
+. forval i =  1/`obsnum' {
+  2.         
+.         *extract the observation's year at age 15
+.         qui sum yearat15  in `i'
+  3.         local yearvalue = round(mod(r(mean),100))
+  4.         
+.         *get the variables' names for this observation
+.         *graduates of mid and sec schools
+.         if inrange(`yearvalue', 0, 9) {
+  5.                 local czgrad_year = "czgrad0`yearvalue'"
+  6.                 local gzgrad_year = "gzgrad0`yearvalue'"
+  7.         }
+  8.         else {
+  9.                 local czgrad_year = "czgrad`yearvalue'"
+ 10.                 local gzgrad_year = "gzgrad`yearvalue'"
+ 11.         }
+ 12.         *entrants of sec and universities
+.         if inrange(`yearvalue'+1, 0, 9) {
+ 13.                 local gzentrant_year = "gzentrant0`=`yearvalue'+1'"
+ 14.                 local gxentrant_year = "gxentrant0`=`yearvalue'+1'"
+ 15.                 local vsentrant_year = "vsentrant0`=`yearvalue'+1'"
+ 16.                 local tsentrant_year = "tsentrant0`=`yearvalue'+1'"
+ 17.         }
+ 18.         else{
+ 19.                 if `yearvalue' == 99 {
+ 20.                 local gzentrant_year = "gzentrant00"
+ 21.                 local gxentrant_year = "gxentrant00"
+ 22.                 local vsentrant_year = "vsentrant00"
+ 23.                 local tsentrant_year = "tsentrant00"
+ 24.                 }
+ 25.         else {
+ 26.                 local gzentrant_year = "gzentrant`=`yearvalue'+1'"
+ 27.                 local gxentrant_year = "gxentrant`=`yearvalue'+1'"
+ 28.                 local vsentrant_year = "vsentrant`=`yearvalue'+1'"
+ 29.                 local tsentrant_year = "tsentrant`=`yearvalue'+1'"
+ 30.         }
+ 31.         }
+ 32.         
+.         
+.         *For Ins 1 & 2: check whether the variable names exist (whether we have those years
+> ' or not)
+.         capture ds `czgrad_year' `gzgrad_year' `gzentrant_year' `gxentrant_year'
+ 33.         if _rc == 0 {
+ 34.                 *generate/replace the instrument
+.                 capture ds ins1_secgen_entrant_relative ins2_highedu_entrant_relative
+ 35.                 if _rc!=0 {
+ 36.                         qui gen ins1_secgen_entrant_relative = `gzentrant_year'/`czgrad_
+> year' if _n == `i'
+ 37.                         qui gen ins2_highedu_entrant_relative = `gxentrant_year'/`gzgrad
+> _year' if _n == `i'
+ 38.                 
+.                 }
+ 39.                 else {
+ 40.                         qui replace ins1_secgen_entrant_relative = `gzentrant_year'/`czg
+> rad_year' if _n == `i'
+ 41.                         qui replace ins2_highedu_entrant_relative = `gxentrant_year'/`gz
+> grad_year' if _n == `i'
+ 42.                 }
+ 43.         }
+ 44.         
+.         *For Ins 3
+.         capture ds `czgrad_year' `vsentrant_year'
+ 45.         if _rc == 0 {
+ 46.                 *generate/replace the instrument
+.                 capture ds ins3_vs_entrant_relative
+ 47.                 if _rc!=0 {
+ 48.                         qui gen ins3_vs_entrant_relative = `vsentrant_year'/`czgrad_year
+> ' if _n == `i'
+ 49.                 }
+ 50.                 else {
+ 51.                         qui replace ins3_vs_entrant_relative = `vsentrant_year'/`czgrad_
+> year' if _n == `i'
+ 52.                 }
+ 53.         }
+ 54. }
+
+. 
+. 
+. sum ins1_secgen_entrant_relative, d
+
+                ins1_secgen_entrant_relative
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     .1551793       .0699308
+ 5%     .1673149       .0699308
+10%      .186534       .0699308       Obs              14,600
+25%      .212766       .0699308       Sum of wgt.      14,600
+
+50%     .2705238                      Mean           .3109947
+                        Largest       Std. dev.      .1165706
+75%     .4141782       .6448125
+90%     .4786784       .6448125       Variance       .0135887
+95%     .5186297       .6448125       Skewness       .6285488
+99%     .5868049       .6448125       Kurtosis       2.318413
+
+. sum ins2_highedu_entrant_relative, d
+
+                ins2_highedu_entrant_relative
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%      .152784       .0821429
+ 5%     .1734805       .0886667
+10%     .2178154       .0925698       Obs              14,600
+25%     .2949015       .1380375       Sum of wgt.      14,600
+
+50%      .563901                      Mean           .6110964
+                        Largest       Std. dev.      .4193773
+75%     .8148931       2.985416
+90%     1.023507       2.985416       Variance       .1758773
+95%     1.167059       2.985416       Skewness       2.172976
+99%     2.425508       2.985416       Kurtosis       10.34083
+
+. sum ins3_vs_entrant_relative, d
+
+                  ins3_vs_entrant_relative
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     .1185751       .0849628
+ 5%     .1372715       .0849628
+10%     .1456793       .0852398       Obs              14,942
+25%      .184019       .0852398       Sum of wgt.      14,942
+
+50%     .2320418                      Mean            .249079
+                        Largest       Std. dev.      .0890765
+75%     .3028006       .6566039
+90%     .3705537       .6566039       Variance       .0079346
+95%     .4302979       .6566039       Skewness       .9809564
+99%     .5072184       .6566039       Kurtosis       4.050356
+
+. 
+. *7) Province fixed effect (Method: By the first two digits of household code)
+. 
+. destring hhcode, generate(province_code) force float
+hhcode: contains nonnumeric characters; province_code generated as float
+(2 missing values generated)
+
+. replace province_code = floor(province_code/1000000000000) if province_code<100000000000000
+(35,938 real changes made)
+
+. replace province_code = floor(province_code/10000000000000) if province_code>=1000000000000
+> 00 & province_code<1000000000000000
+(319 real changes made)
+
+. replace province_code = floor(province_code/1000000000000000) if province_code>=10000000000
+> 000000
+(0 real changes made)
+
+. *The specific two; Do that for rural after special care.
+. replace province_code = 51 if province_code==.
+(2 real changes made)
+
+. tab province_code, gen(provincedum)
+
+     hhcode |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         11 |      2,836        7.82        7.82
+         14 |      2,555        7.05       14.87
+         15 |      1,760        4.85       19.72
+         21 |      2,218        6.12       25.84
+         32 |      2,943        8.12       33.96
+         34 |      2,254        6.22       40.17
+         37 |      2,396        6.61       46.78
+         41 |      2,959        8.16       54.94
+         42 |      2,447        6.75       61.69
+         43 |      2,289        6.31       68.00
+         44 |      4,331       11.94       79.95
+         50 |      2,115        5.83       85.78
+         51 |      2,798        7.72       93.50
+         53 |      1,226        3.38       96.88
+         62 |      1,132        3.12      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *8) Parent Indicators
+. merge m:1 hhcode using "`folderpath'/`logname'.dta"
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                            36,259  (_merge==3)
+    -----------------------------------------
+
+. *parent_secedu
+. gen parent_secedu = 0 if (A02==1 & (inrange(H03_R1, 1, 3) | inrange(H03_R2, 1, 3))) | (A02=
+> =2 & (inrange(H03_R3, 1, 3) | inrange(H03_R4, 1, 3)))
+(25,313 missing values generated)
+
+. replace parent_secedu = 0 if A02 ==3 & (headsecedu == 0 | spousesecedu == 0)
+(6,013 real changes made)
+
+. replace parent_secedu = 0 if (A02 == 2 & spouseparentsecedu == 0) | (A02 == 1 & headparents
+> ecedu == 0)
+(241 real changes made)
+
+. replace parent_secedu=1 if (A02==1 & (inrange(H03_R1, 4, 9) | inrange(H03_R2, 4, 9)))|(A02=
+> =2 & (inrange(H03_R3, 4, 9) | inrange(H03_R4, 4, 9)))
+(2,797 real changes made)
+
+. replace parent_secedu = 1 if A02 ==3 & (headsecedu == 1 | spousesecedu == 1)
+(5,871 real changes made)
+
+. replace parent_secedu = 1 if (A02 == 2 & spouseparentsecedu == 1) | (A02 == 1 & headparents
+> ecedu == 1)
+(60 real changes made)
+
+. tab parent_secedu
+
+parent_sece |
+         du |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     13,468       60.68       60.68
+          1 |      8,728       39.32      100.00
+------------+-----------------------------------
+      Total |     22,196      100.00
+
+.  *parent_highedu
+. gen parent_highedu = 0 if (A02==1 & (inrange(H03_R1, 1, 6) | inrange(H03_R2, 1, 6))) | (A02
+> ==2 & (inrange(H03_R3, 1, 6) | inrange(H03_R4, 1, 6)))
+(24,480 missing values generated)
+
+. replace parent_highedu = 0 if A02 == 3 & (headhighedu == 0 | spousehighedu == 0)
+(8,028 real changes made)
+
+. replace parent_highedu = 0 if (A02 == 2 & spouseparenthighedu == 0) | (A02 == 1 & headparen
+> thighedu == 0)
+(256 real changes made)
+
+. replace parent_highedu=1 if (A02==1 & (inrange(H03_R1, 7, 9) | inrange(H03_R2, 7, 9)))|(A02
+> ==2 & (inrange(H03_R3, 7, 9) | inrange(H03_R4, 7, 9)))
+(546 real changes made)
+
+. replace parent_highedu = 1 if A02 == 3 & (headhighedu == 1 | spousehighedu == 1)
+(3,206 real changes made)
+
+. replace parent_highedu = 1 if (A02 == 2 & spouseparenthighedu == 1) | (A02 == 1 & headparen
+> thighedu == 1)
+(18 real changes made)
+
+. tab parent_highedu
+
+parent_high |
+        edu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     18,426       83.01       83.01
+          1 |      3,770       16.99      100.00
+------------+-----------------------------------
+      Total |     22,196      100.00
+
+. *parent_partymember
+. gen parent_partymember = 0 if ((A02==1 & (inrange(H07_R1, 2, 4) | inrange(H07_R2, 2, 4))) |
+>  (A02==2 & (inrange(H07_R3, 2, 4) | inrange(H07_R4, 2, 4))))
+(24,599 missing values generated)
+
+. replace parent_partymember = 0 if A02 == 3 & (headparty == 0 | spouseparty == 0)
+(9,506 real changes made)
+
+. replace parent_partymember = 0 if (A02 == 2 & spouseparentparty == 0) | (A02 == 1 & headpar
+> entparty == 0)
+(246 real changes made)
+
+. replace parent_partymember=1 if (A02==1 & (H07_R1 == 1 | H07_R2 == 1)) | (A02==2 & (H07_R3 
+> == 1 | H07_R4 == 1))
+(2,132 real changes made)
+
+. replace parent_partymember = 1 if A02 == 3 & (headparty == 1 | spouseparty == 1)
+(2,343 real changes made)
+
+. replace parent_partymember = 1 if (A02 == 2 & spouseparentparty == 1) | (A02 == 1 & headpar
+> entparty == 1)
+(42 real changes made)
+
+. tab parent_partymember
+
+parent_part |
+    ymember |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     17,694       79.66       79.66
+          1 |      4,517       20.34      100.00
+------------+-----------------------------------
+      Total |     22,211      100.00
+
+. 
+. *9) Key School Indicator
+. 
+. gen Keyschool = 0 if A14 != .
+
+. replace Keyschool = 1 if inrange(A14, 1, 3)
+(5,933 real changes made)
+
+. 
+. *10) GaoKao Indicator
+. gen TakeGaoKao = 1 if A15_1 == 1
+(27,995 missing values generated)
+
+. replace TakeGaoKao = 0 if A15_1 == 2
+(22,524 real changes made)
+
+. tab TakeGaoKao
+
+ TakeGaoKao |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     22,524       73.16       73.16
+          1 |      8,264       26.84      100.00
+------------+-----------------------------------
+      Total |     30,788      100.00
+
+. tab TakeGaoKao educat
+
+           |              educat
+TakeGaoKao |         1          2          3 |     Total
+-----------+---------------------------------+----------
+         0 |     2,910      3,884      8,219 |    15,013 
+         1 |       631      7,499         80 |     8,210 
+-----------+---------------------------------+----------
+     Total |     3,541     11,383      8,299 |    23,223 
+
+. tab TakeGaoKao educat if male==1
+
+           |              educat
+TakeGaoKao |         1          2          3 |     Total
+-----------+---------------------------------+----------
+         0 |     1,459      2,029      4,141 |     7,629 
+         1 |       324      3,958         41 |     4,323 
+-----------+---------------------------------+----------
+     Total |     1,783      5,987      4,182 |    11,952 
+
+. tab TakeGaoKao educat if male==0
+
+           |              educat
+TakeGaoKao |         1          2          3 |     Total
+-----------+---------------------------------+----------
+         0 |     1,451      1,855      4,078 |     7,384 
+         1 |       307      3,541         39 |     3,887 
+-----------+---------------------------------+----------
+     Total |     1,758      5,396      4,117 |    11,271 
+
+. 
+. *Step Two: Regressions
+. 
+. *1) All parent indicators & Specified higher education, Sec Voc + inrange(birthyear, 1971, 
+> 1992)
+. selmlog voc_log_monthlyearning  male exp expsqr highvocedu highgenedu adultedu TakeGaoKao i
+> f inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp
+>  expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative
+> ) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,012
+-------------+----------------------------------   F(10, 2001)     =     21.84
+       Model |  82.5072884        10  8.25072884   Prob > F        =    0.0000
+    Residual |  755.830467     2,001   .37772637   R-squared       =    0.0984
+-------------+----------------------------------   Adj R-squared   =    0.0939
+       Total |  838.337755     2,011  .416876059   Root MSE        =    .61459
+
+------------------------------------------------------------------------------
+voc_log_mo~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .2043804   .0352287     5.80   0.000     .1352915    .2734692
+         exp |   .0404633   .0279969     1.45   0.149    -.0144427    .0953694
+      expsqr |  -.0015094   .0008389    -1.80   0.072    -.0031545    .0001358
+  highvocedu |   .2054337   .0449619     4.57   0.000     .1172567    .2936107
+  highgenedu |   .5656862   .0822865     6.87   0.000       .40431    .7270624
+    adultedu |   .3715271   .0384283     9.67   0.000     .2961635    .4468907
+  TakeGaoKao |    .040156   .0378761     1.06   0.289    -.0341247    .1144367
+         _m1 |   .3900172    .218233     1.79   0.074    -.0379704    .8180048
+         _m2 |  -1.371236   .6240777    -2.20   0.028    -2.595146   -.1473255
+         _m3 |  -1.566067   .5558862    -2.82   0.005    -2.656243   -.4758903
+       _cons |   6.228088   .8220399     7.58   0.000     4.615944    7.840231
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   1.249024          .        .       .            .           .
+        rho1 |   .3489783          .        .       .            .           .
+        rho2 |   -1.22695          .        .       .            .           .
+        rho3 |   -1.40128          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu TakeGaoKa
+> o  m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. sum voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu TakeGaoKao m1 m2 
+> m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      2,012    8.316332    .6456594   5.521461   10.12663
+        male |      2,012    .5079523     .500061          0          1
+         exp |      2,012    17.89861     6.45257          1         32
+      expsqr |      2,012    361.9751    235.7509          1       1024
+  highvocedu |      2,012    .1187873    .3236185          0          1
+-------------+---------------------------------------------------------
+  highgenedu |      2,012    .0293241    .1687552          0          1
+    adultedu |      2,012    .1635189    .3699304          0          1
+  TakeGaoKao |      2,012    .1719682    .3774466          0          1
+          m1 |      2,012    1.126098    .1784558   .8143778    1.98121
+          m2 |      2,012   -.5319673    .1432733   -.726001  -.0397592
+-------------+---------------------------------------------------------
+          m3 |      2,012   -.3379441    .1880053  -.7252195  -.0051956
+
+. tab TakeGaoKao educat if e(sample)
+
+           |   educat
+TakeGaoKao |         1 |     Total
+-----------+-----------+----------
+         0 |     1,666 |     1,666 
+         1 |       346 |       346 
+-----------+-----------+----------
+     Total |     2,012 |     2,012 
+
+. outreg2 using "`xlspath'", replace ctitle(Sec Voc, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog Urban Ga
+> oKao NoFirstStage.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *2) All parent indicators & Specified higher education, Sec Voc + inrange(birthyear, 1971, 
+> 1992) + Provincedums
+. selmlog voc_log_monthlyearning  male exp expsqr highvocedu highgenedu adultedu TakeGaoKao p
+> rovincedum2-provincedum15 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 
+> 25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relati
+> ve ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,012
+-------------+----------------------------------   F(24, 1987)     =     14.32
+       Model |  123.588566        24  5.14952358   Prob > F        =    0.0000
+    Residual |  714.749189     1,987  .359712727   R-squared       =    0.1474
+-------------+----------------------------------   Adj R-squared   =    0.1371
+       Total |  838.337755     2,011  .416876059   Root MSE        =    .59976
+
+-------------------------------------------------------------------------------
+voc_log_mon~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   .2074554   .0358985     5.78   0.000     .1370528     .277858
+          exp |   .0520168   .0298121     1.74   0.081    -.0064494    .1104831
+       expsqr |  -.0015127   .0008817    -1.72   0.086    -.0032419    .0002165
+   highvocedu |   .2154272    .044354     4.86   0.000      .128442    .3024124
+   highgenedu |   .5644264   .0810285     6.97   0.000     .4055166    .7233362
+     adultedu |   .3792578   .0384514     9.86   0.000     .3038485    .4546672
+   TakeGaoKao |    .042326   .0375156     1.13   0.259    -.0312481    .1159001
+ provincedum2 |  -.3792227   .0785647    -4.83   0.000    -.5333005    -.225145
+ provincedum3 |  -.3268405   .0835608    -3.91   0.000    -.4907165   -.1629644
+ provincedum4 |   -.342148   .0760787    -4.50   0.000    -.4913505   -.1929455
+ provincedum5 |   .0544897    .071064     0.77   0.443     -.084878    .1938574
+ provincedum6 |  -.1079161   .0885651    -1.22   0.223    -.2816062    .0657741
+ provincedum7 |  -.1315761   .0756242    -1.74   0.082    -.2798871     .016735
+ provincedum8 |  -.2835283   .0786306    -3.61   0.000    -.4377354   -.1293212
+ provincedum9 |  -.0683088   .0744215    -0.92   0.359    -.2142612    .0776435
+provincedum10 |  -.1544838   .0740835    -2.09   0.037    -.2997733   -.0091943
+provincedum11 |   .0643941   .0704682     0.91   0.361    -.0738053    .2025934
+provincedum12 |  -.2121013   .0793098    -2.67   0.008    -.3676404   -.0565622
+provincedum13 |  -.0153892   .0778031    -0.20   0.843    -.1679735    .1371951
+provincedum14 |  -.2887489   .0873239    -3.31   0.001    -.4600049   -.1174929
+provincedum15 |  -.1463886   .0951072    -1.54   0.124     -.332909    .0401317
+          _m1 |   .4097364   .2340038     1.75   0.080    -.0491821    .8686549
+          _m2 |  -1.378338   .6834128    -2.02   0.044    -2.718619   -.0380573
+          _m3 |  -1.195138   .5787741    -2.06   0.039    -2.330206   -.0600706
+        _cons |   6.252341   .8825058     7.08   0.000     4.521607    7.983075
+-------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   1.031698          .        .       .            .           .
+        rho1 |    .403393          .        .       .            .           .
+        rho2 |  -1.356999          .        .       .            .           .
+        rho3 |  -1.176636          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu TakeGaoKa
+> o provincedum2-provincedum15  m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlye
+> arning, 250, 25000)
+
+. sum voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu TakeGaoKao provin
+> cedum2-provincedum15 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      2,012    8.316332    .6456594   5.521461   10.12663
+        male |      2,012    .5079523     .500061          0          1
+         exp |      2,012    17.89861     6.45257          1         32
+      expsqr |      2,012    361.9751    235.7509          1       1024
+  highvocedu |      2,012    .1187873    .3236185          0          1
+-------------+---------------------------------------------------------
+  highgenedu |      2,012    .0293241    .1687552          0          1
+    adultedu |      2,012    .1635189    .3699304          0          1
+  TakeGaoKao |      2,012    .1719682    .3774466          0          1
+provincedum2 |      2,012    .0641153    .2450191          0          1
+provincedum3 |      2,012    .0407555    .1977723          0          1
+-------------+---------------------------------------------------------
+provincedum4 |      2,012    .0710736    .2570116          0          1
+provincedum5 |      2,012    .0790258    .2698462          0          1
+provincedum6 |      2,012    .0452286    .2078569          0          1
+provincedum7 |      2,012    .0904573     .286907          0          1
+provincedum8 |      2,012     .082008     .274445          0          1
+-------------+---------------------------------------------------------
+provincedum9 |      2,012    .0661034    .2485245          0          1
+provinced~10 |      2,012    .0680915    .2519654          0          1
+provinced~11 |      2,012    .1148111    .3188731          0          1
+provinced~12 |      2,012    .0581511    .2340871          0          1
+provinced~13 |      2,012    .0670974    .2502528          0          1
+-------------+---------------------------------------------------------
+provinced~14 |      2,012    .0412525    .1989231          0          1
+provinced~15 |      2,012     .028827    .1673618          0          1
+          m1 |      2,012    1.126098    .1784558   .8143778    1.98121
+          m2 |      2,012   -.5319673    .1432733   -.726001  -.0397592
+          m3 |      2,012   -.3379441    .1880053  -.7252195  -.0051956
+
+. tab TakeGaoKao educat if e(sample)
+
+           |   educat
+TakeGaoKao |         1 |     Total
+-----------+-----------+----------
+         0 |     1,666 |     1,666 
+         1 |       346 |       346 
+-----------+-----------+----------
+     Total |     2,012 |     2,012 
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog Urban Ga
+> oKao NoFirstStage.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *3) All parent indicators & Combined higher education, Sec Voc + inrange(birthyear, 1971, 1
+> 992)
+. selmlog voc_log_monthlyearning  male exp expsqr higheredu TakeGaoKao if inrange(birthyear, 
+> 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_e
+> ntrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit g
+> en(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,012
+-------------+----------------------------------   F(8, 2003)      =     24.68
+       Model |  75.2165983         8  9.40207479   Prob > F        =    0.0000
+    Residual |  763.121157     2,003  .380989095   R-squared       =    0.0897
+-------------+----------------------------------   Adj R-squared   =    0.0861
+       Total |  838.337755     2,011  .416876059   Root MSE        =    .61724
+
+------------------------------------------------------------------------------
+voc_log_mo~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .2039341   .0353744     5.77   0.000     .1345596    .2733086
+         exp |   .0445236   .0280165     1.59   0.112    -.0104209    .0994681
+      expsqr |  -.0015728   .0008405    -1.87   0.061    -.0032212    .0000755
+   higheredu |   .3282942   .0305107    10.76   0.000     .2684581    .3881302
+  TakeGaoKao |    .023783   .0374574     0.63   0.526    -.0496765    .0972425
+         _m1 |   .3771151   .2191135     1.72   0.085    -.0525992    .8068294
+         _m2 |  -1.269306   .6262978    -2.03   0.043    -2.497569   -.0410424
+         _m3 |  -1.462149   .5577555    -2.62   0.009    -2.555991   -.3683072
+       _cons |   6.284736   .8250116     7.62   0.000     4.666766    7.902707
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   1.142043          .        .       .            .           .
+        rho1 |   .3528845          .        .       .            .           .
+        rho2 |   -1.18775          .        .       .            .           .
+        rho3 |  -1.368202          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning male exp expsqr higheredu TakeGaoKao  m1 m2 m3 if inrang
+> e(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. sum voc_log_monthlyearning male exp expsqr higheredu TakeGaoKao m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      2,012    8.316332    .6456594   5.521461   10.12663
+        male |      2,012    .5079523     .500061          0          1
+         exp |      2,012    17.89861     6.45257          1         32
+      expsqr |      2,012    361.9751    235.7509          1       1024
+   higheredu |      2,012    .3116302    .4632748          0          1
+-------------+---------------------------------------------------------
+  TakeGaoKao |      2,012    .1719682    .3774466          0          1
+          m1 |      2,012    1.126098    .1784558   .8143778    1.98121
+          m2 |      2,012   -.5319673    .1432733   -.726001  -.0397592
+          m3 |      2,012   -.3379441    .1880053  -.7252195  -.0051956
+
+. tab TakeGaoKao educat if e(sample)
+
+           |   educat
+TakeGaoKao |         1 |     Total
+-----------+-----------+----------
+         0 |     1,666 |     1,666 
+         1 |       346 |       346 
+-----------+-----------+----------
+     Total |     2,012 |     2,012 
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog Urban Ga
+> oKao NoFirstStage.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *4) All parent indicators & Combined higher education, Sec Voc + inrange(birthyear, 1971, 1
+> 992) + Provincedums
+. selmlog voc_log_monthlyearning  male exp expsqr higheredu TakeGaoKao provincedum2-provinced
+> um15 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=ma
+> le exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_re
+> lative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,012
+-------------+----------------------------------   F(22, 1989)     =     14.63
+       Model |  116.759397        22  5.30724533   Prob > F        =    0.0000
+    Residual |  721.578358     1,989  .362784494   R-squared       =    0.1393
+-------------+----------------------------------   Adj R-squared   =    0.1298
+       Total |  838.337755     2,011  .416876059   Root MSE        =    .60232
+
+-------------------------------------------------------------------------------
+voc_log_mon~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   .2064619   .0360382     5.73   0.000     .1357852    .2771385
+          exp |   .0559765   .0298422     1.88   0.061    -.0025487    .1145018
+       expsqr |  -.0015628   .0008837    -1.77   0.077    -.0032958    .0001702
+    higheredu |   .3349364   .0305392    10.97   0.000     .2750443    .3948285
+   TakeGaoKao |   .0247288   .0370316     0.67   0.504    -.0478961    .0973536
+ provincedum2 |  -.4025666   .0787018    -5.12   0.000    -.5569133     -.24822
+ provincedum3 |  -.3404445   .0838242    -4.06   0.000    -.5048369   -.1760521
+ provincedum4 |  -.3665964   .0761178    -4.82   0.000    -.5158755   -.2173173
+ provincedum5 |   .0266702   .0710309     0.38   0.707    -.1126325     .165973
+ provincedum6 |  -.1249465   .0888518    -1.41   0.160    -.2991988    .0493058
+ provincedum7 |  -.1447925    .075636    -1.91   0.056    -.2931265    .0035415
+ provincedum8 |  -.3032418   .0787872    -3.85   0.000    -.4577559   -.1487277
+ provincedum9 |  -.0834087   .0746481    -1.12   0.264    -.2298055     .062988
+provincedum10 |  -.1760986   .0742271    -2.37   0.018    -.3216696   -.0305275
+provincedum11 |   .0438524   .0705556     0.62   0.534    -.0945181     .182223
+provincedum12 |  -.2301134    .079531    -2.89   0.004    -.3860862   -.0741407
+provincedum13 |  -.0338069   .0779881    -0.43   0.665    -.1867538    .1191401
+provincedum14 |  -.3036402   .0876062    -3.47   0.001    -.4754497   -.1318306
+provincedum15 |  -.1484594   .0955111    -1.55   0.120    -.3357717     .038853
+          _m1 |   .3994946   .2349203     1.70   0.089    -.0612211    .8602103
+          _m2 |   -1.33488   .6858353    -1.95   0.052    -2.679911    .0101505
+          _m3 |  -1.113617   .5807596    -1.92   0.055    -2.252578     .025344
+        _cons |   6.282479     .88531     7.10   0.000     4.546246    8.018711
+-------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |    .974033          .        .       .            .           .
+        rho1 |   .4047847          .        .       .            .           .
+        rho2 |  -1.352557          .        .       .            .           .
+        rho3 |  -1.128363          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning male exp expsqr higheredu TakeGaoKao provincedum2-provin
+> cedum15  m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. sum voc_log_monthlyearning male exp expsqr higheredu TakeGaoKao provincedum2-provincedum15 
+> m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      2,012    8.316332    .6456594   5.521461   10.12663
+        male |      2,012    .5079523     .500061          0          1
+         exp |      2,012    17.89861     6.45257          1         32
+      expsqr |      2,012    361.9751    235.7509          1       1024
+   higheredu |      2,012    .3116302    .4632748          0          1
+-------------+---------------------------------------------------------
+  TakeGaoKao |      2,012    .1719682    .3774466          0          1
+provincedum2 |      2,012    .0641153    .2450191          0          1
+provincedum3 |      2,012    .0407555    .1977723          0          1
+provincedum4 |      2,012    .0710736    .2570116          0          1
+provincedum5 |      2,012    .0790258    .2698462          0          1
+-------------+---------------------------------------------------------
+provincedum6 |      2,012    .0452286    .2078569          0          1
+provincedum7 |      2,012    .0904573     .286907          0          1
+provincedum8 |      2,012     .082008     .274445          0          1
+provincedum9 |      2,012    .0661034    .2485245          0          1
+provinced~10 |      2,012    .0680915    .2519654          0          1
+-------------+---------------------------------------------------------
+provinced~11 |      2,012    .1148111    .3188731          0          1
+provinced~12 |      2,012    .0581511    .2340871          0          1
+provinced~13 |      2,012    .0670974    .2502528          0          1
+provinced~14 |      2,012    .0412525    .1989231          0          1
+provinced~15 |      2,012     .028827    .1673618          0          1
+-------------+---------------------------------------------------------
+          m1 |      2,012    1.126098    .1784558   .8143778    1.98121
+          m2 |      2,012   -.5319673    .1432733   -.726001  -.0397592
+          m3 |      2,012   -.3379441    .1880053  -.7252195  -.0051956
+
+. tab TakeGaoKao educat if e(sample)
+
+           |   educat
+TakeGaoKao |         1 |     Total
+-----------+-----------+----------
+         0 |     1,666 |     1,666 
+         1 |       346 |       346 
+-----------+-----------+----------
+     Total |     2,012 |     2,012 
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog Urban Ga
+> oKao NoFirstStage.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *5) All parent indicators & Specified higher education, Sec Gen + inrange(birthyear, 1971, 
+> 1992)
+. selmlog gen_log_monthlyearning  male exp expsqr highvocedu highgenedu adultedu TakeGaoKao i
+> f inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp
+>  expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative
+> ) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     5,282
+-------------+----------------------------------   F(10, 5271)     =     66.59
+       Model |  301.838318        10  30.1838318   Prob > F        =    0.0000
+    Residual |  2389.20063     5,271  .453272744   R-squared       =    0.1122
+-------------+----------------------------------   Adj R-squared   =    0.1105
+       Total |  2691.03895     5,281  .509569958   Root MSE        =    .67326
+
+------------------------------------------------------------------------------
+gen_log_mo~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .2310555   .0212298    10.88   0.000     .1894363    .2726747
+         exp |   .0492722   .0161178     3.06   0.002     .0176747    .0808697
+      expsqr |  -.0018129   .0005199    -3.49   0.000    -.0028322   -.0007936
+  highvocedu |    .186541   .0309011     6.04   0.000      .125962    .2471199
+  highgenedu |   .5358421   .0304903    17.57   0.000     .4760684    .5956157
+    adultedu |   .2818798   .0342997     8.22   0.000     .2146382    .3491214
+  TakeGaoKao |  -.0085632   .0267291    -0.32   0.749    -.0609632    .0438369
+         _m1 |   .3687209   .3521662     1.05   0.295    -.3216707    1.059112
+         _m2 |   .0529148   .1165194     0.45   0.650    -.1755115     .281341
+         _m3 |  -.5284167   .2646418    -2.00   0.046    -1.047224   -.0096092
+       _cons |   7.767163   .0574252   135.26   0.000     7.654585     7.87974
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .5367069          .        .       .            .           .
+        rho1 |   .5033025          .        .       .            .           .
+        rho2 |   .0722285          .        .       .            .           .
+        rho3 |  -.7212867          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu TakeGaoKa
+> o  m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. sum voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu TakeGaoKao m1 m2 
+> m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |          0
+        male |      5,282    .5382431    .4985825          0          1
+         exp |      5,282    15.03465    6.949144          0         33
+      expsqr |      5,282     274.322    232.0598          0       1089
+  highvocedu |      5,282    .2527452    .4346272          0          1
+-------------+---------------------------------------------------------
+  highgenedu |      5,282    .4040136    .4907466          0          1
+    adultedu |      5,282    .1099962    .3129147          0          1
+  TakeGaoKao |      5,282    .7552064    .4300055          0          1
+          m1 |      5,282   -.2755776    .0700389  -.4284056  -.0389473
+          m2 |      5,282    .4518425    .3425102   .0001547   2.301244
+-------------+---------------------------------------------------------
+          m3 |      5,282   -.2509943    .1967838   -.726001  -.0012229
+
+. tab TakeGaoKao educat if e(sample)
+
+           |   educat
+TakeGaoKao |         2 |     Total
+-----------+-----------+----------
+         0 |     1,293 |     1,293 
+         1 |     3,989 |     3,989 
+-----------+-----------+----------
+     Total |     5,282 |     5,282 
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog Urban Ga
+> oKao NoFirstStage.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *6) All parent indicators & Specified higher education, Sec Gen + inrange(birthyear, 1971, 
+> 1992) + Provincedums
+. selmlog gen_log_monthlyearning  male exp expsqr highvocedu highgenedu adultedu TakeGaoKao p
+> rovincedum2-provincedum15 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 
+> 25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relati
+> ve ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     5,282
+-------------+----------------------------------   F(24, 5257)     =     47.86
+       Model |  482.508943        24  20.1045393   Prob > F        =    0.0000
+    Residual |  2208.53001     5,257  .420112233   R-squared       =    0.1793
+-------------+----------------------------------   Adj R-squared   =    0.1756
+       Total |  2691.03895     5,281  .509569958   Root MSE        =    .64816
+
+-------------------------------------------------------------------------------
+gen_log_mon~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   .2087735   .0207708    10.05   0.000     .1680541     .249493
+          exp |   .0838043   .0165063     5.08   0.000     .0514451    .1161635
+       expsqr |   -.002273   .0005236    -4.34   0.000    -.0032995   -.0012465
+   highvocedu |    .181466   .0300194     6.04   0.000     .1226156    .2403164
+   highgenedu |   .4989858   .0302899    16.47   0.000     .4396051    .5583666
+     adultedu |   .2636036   .0334452     7.88   0.000     .1980371      .32917
+   TakeGaoKao |  -.0035514   .0259253    -0.14   0.891    -.0543757     .047273
+ provincedum2 |  -.6429797   .0483441   -13.30   0.000    -.7377542   -.5482052
+ provincedum3 |  -.3036993   .0459162    -6.61   0.000     -.393714   -.2136845
+ provincedum4 |  -.4660303    .048751    -9.56   0.000    -.5616025   -.3704581
+ provincedum5 |  -.0758843   .0432341    -1.76   0.079    -.1606411    .0088724
+ provincedum6 |  -.4065536   .0511576    -7.95   0.000    -.5068437   -.3062634
+ provincedum7 |  -.3746364   .0486574    -7.70   0.000     -.470025   -.2792477
+ provincedum8 |  -.6339958   .0471961   -13.43   0.000    -.7265197   -.5414718
+ provincedum9 |  -.1758553   .0449152    -3.92   0.000    -.2639076   -.0878029
+provincedum10 |  -.2272544   .0474251    -4.79   0.000    -.3202273   -.1342816
+provincedum11 |  -.1192684   .0406765    -2.93   0.003    -.1990112   -.0395255
+provincedum12 |  -.2992565   .0503522    -5.94   0.000    -.3979678   -.2005453
+provincedum13 |  -.2348793   .0467408    -5.03   0.000    -.3265107   -.1432479
+provincedum14 |  -.3185873   .0628426    -5.07   0.000    -.4417848   -.1953898
+provincedum15 |  -.4641437   .0561134    -8.27   0.000    -.5741494   -.3541381
+          _m1 |   1.161676   .3650115     3.18   0.001     .4461018     1.87725
+          _m2 |  -.1007215   .1175516    -0.86   0.392    -.3311714    .1297284
+          _m3 |  -.1820786   .2607335    -0.70   0.485    -.6932246    .3290674
+        _cons |    8.05864   .0650728   123.84   0.000      7.93107     8.18621
+-------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .7678827          .        .       .            .           .
+        rho1 |   1.325676          .        .       .            .           .
+        rho2 |   -.114941          .        .       .            .           .
+        rho3 |  -.2077837          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu TakeGaoKa
+> o provincedum2-provincedum15  m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlye
+> arning, 250, 25000)
+
+. sum gen_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu TakeGaoKao provin
+> cedum2-provincedum15 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      5,282    8.478096    .7138417   5.521461   10.12663
+        male |      5,282    .5382431    .4985825          0          1
+         exp |      5,282    15.03465    6.949144          0         33
+      expsqr |      5,282     274.322    232.0598          0       1089
+  highvocedu |      5,282    .2527452    .4346272          0          1
+-------------+---------------------------------------------------------
+  highgenedu |      5,282    .4040136    .4907466          0          1
+    adultedu |      5,282    .1099962    .3129147          0          1
+  TakeGaoKao |      5,282    .7552064    .4300055          0          1
+provincedum2 |      5,282    .0596365    .2368346          0          1
+provincedum3 |      5,282    .0630443    .2430656          0          1
+-------------+---------------------------------------------------------
+provincedum4 |      5,282     .056418     .230749          0          1
+provincedum5 |      5,282    .0815979     .273777          0          1
+provincedum6 |      5,282    .0533889     .224829          0          1
+provincedum7 |      5,282    .0620977    .2413557          0          1
+provincedum8 |      5,282    .0789474    .2696821          0          1
+-------------+---------------------------------------------------------
+provincedum9 |      5,282    .0706172    .2562086          0          1
+provinced~10 |      5,282    .0603938    .2382375          0          1
+provinced~11 |      5,282    .1321469    .3386825          0          1
+provinced~12 |      5,282    .0518743    .2217942          0          1
+provinced~13 |      5,282    .0664521    .2490943          0          1
+-------------+---------------------------------------------------------
+provinced~14 |      5,282     .028209    .1655852          0          1
+provinced~15 |      5,282    .0348353    .1833798          0          1
+          m1 |      5,282   -.2755776    .0700389  -.4284056  -.0389473
+          m2 |      5,282    .4518425    .3425102   .0001547   2.301244
+          m3 |      5,282   -.2509943    .1967838   -.726001  -.0012229
+
+. tab TakeGaoKao educat if e(sample)
+
+           |   educat
+TakeGaoKao |         2 |     Total
+-----------+-----------+----------
+         0 |     1,293 |     1,293 
+         1 |     3,989 |     3,989 
+-----------+-----------+----------
+     Total |     5,282 |     5,282 
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog Urban Ga
+> oKao NoFirstStage.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *7) All parent indicators & Combined higher education, Sec Gen + inrange(birthyear, 1971, 1
+> 992)
+. selmlog gen_log_monthlyearning  male exp expsqr higheredu TakeGaoKao if inrange(birthyear, 
+> 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_e
+> ntrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit g
+> en(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     5,282
+-------------+----------------------------------   F(8, 5273)      =     52.91
+       Model |  199.956959         8  24.9946199   Prob > F        =    0.0000
+    Residual |  2491.08199     5,273  .472422149   R-squared       =    0.0743
+-------------+----------------------------------   Adj R-squared   =    0.0729
+       Total |  2691.03895     5,281  .509569958   Root MSE        =    .68733
+
+------------------------------------------------------------------------------
+gen_log_mo~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .2278146   .0216568    10.52   0.000     .1853584    .2702708
+         exp |   .0525659   .0164442     3.20   0.001     .0203284    .0848034
+      expsqr |  -.0018775   .0005305    -3.54   0.000    -.0029175   -.0008375
+   higheredu |   .3376995   .0266617    12.67   0.000     .2854315    .3899674
+  TakeGaoKao |    .047502   .0255549     1.86   0.063    -.0025962    .0976002
+         _m1 |    .579188   .3591774     1.61   0.107    -.1249484    1.283324
+         _m2 |   .0594021   .1188973     0.50   0.617    -.1736857      .29249
+         _m3 |  -.4055772   .2695475    -1.50   0.132    -.9340018    .1228475
+       _cons |   7.816371   .0585135   133.58   0.000      7.70166    7.931081
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .5863929          .        .       .            .           .
+        rho1 |   .7563541          .        .       .            .           .
+        rho2 |   .0775725          .        .       .            .           .
+        rho3 |   -.529638          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning male exp expsqr higheredu TakeGaoKao  m1 m2 m3 if inrang
+> e(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. sum gen_log_monthlyearning male exp expsqr higheredu TakeGaoKao m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      5,282    8.478096    .7138417   5.521461   10.12663
+        male |      5,282    .5382431    .4985825          0          1
+         exp |      5,282    15.03465    6.949144          0         33
+      expsqr |      5,282     274.322    232.0598          0       1089
+   higheredu |      5,282     .766755    .4229369          0          1
+-------------+---------------------------------------------------------
+  TakeGaoKao |      5,282    .7552064    .4300055          0          1
+          m1 |      5,282   -.2755776    .0700389  -.4284056  -.0389473
+          m2 |      5,282    .4518425    .3425102   .0001547   2.301244
+          m3 |      5,282   -.2509943    .1967838   -.726001  -.0012229
+
+. tab TakeGaoKao educat if e(sample)
+
+           |   educat
+TakeGaoKao |         2 |     Total
+-----------+-----------+----------
+         0 |     1,293 |     1,293 
+         1 |     3,989 |     3,989 
+-----------+-----------+----------
+     Total |     5,282 |     5,282 
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog Urban Ga
+> oKao NoFirstStage.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *8) All parent indicators & Combined higher education, Sec Gen + inrange(birthyear, 1971, 1
+> 992) + Provincedums
+. selmlog gen_log_monthlyearning  male exp expsqr higheredu TakeGaoKao provincedum2-provinced
+> um15 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=ma
+> le exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_re
+> lative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     5,282
+-------------+----------------------------------   F(22, 5259)     =     41.80
+       Model |  400.555575        22  18.2070716   Prob > F        =    0.0000
+    Residual |  2290.48337     5,259  .435535915   R-squared       =    0.1488
+-------------+----------------------------------   Adj R-squared   =    0.1453
+       Total |  2691.03895     5,281  .509569958   Root MSE        =    .65995
+
+-------------------------------------------------------------------------------
+gen_log_mon~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |    .201808   .0211277     9.55   0.000      .160389    .2432271
+          exp |   .0938199   .0167822     5.59   0.000     .0609198    .1267201
+       expsqr |  -.0024666   .0005327    -4.63   0.000     -.003511   -.0014223
+    higheredu |    .305982   .0261902    11.68   0.000     .2546383    .3573257
+   TakeGaoKao |   .0512647   .0247124     2.07   0.038     .0028181    .0997112
+ provincedum2 |  -.7207613   .0488958   -14.74   0.000    -.8166174   -.6249051
+ provincedum3 |  -.3353683   .0466942    -7.18   0.000    -.4269083   -.2438283
+ provincedum4 |  -.4932179    .049597    -9.94   0.000    -.5904486   -.3959872
+ provincedum5 |  -.1061414    .043952    -2.41   0.016    -.1923056   -.0199773
+ provincedum6 |   -.472728   .0518615    -9.12   0.000    -.5743981   -.3710578
+ provincedum7 |  -.4346741   .0493391    -8.81   0.000    -.5313992    -.337949
+ provincedum8 |  -.7085173   .0477361   -14.84   0.000    -.8020998   -.6149347
+ provincedum9 |  -.2287574   .0455656    -5.02   0.000    -.3180848     -.13943
+provincedum10 |    -.30303   .0479706    -6.32   0.000    -.3970724   -.2089876
+provincedum11 |  -.1869393   .0411206    -4.55   0.000    -.2675528   -.1063257
+provincedum12 |  -.3572569   .0510899    -6.99   0.000    -.4574144   -.2570994
+provincedum13 |  -.3023633   .0473361    -6.39   0.000    -.3951617   -.2095649
+provincedum14 |  -.3647272   .0638906    -5.71   0.000    -.4899793   -.2394751
+provincedum15 |  -.4789883   .0571191    -8.39   0.000    -.5909654   -.3670112
+          _m1 |   1.528764   .3706231     4.12   0.000     .8021889    2.255339
+          _m2 |  -.1417497   .1195865    -1.19   0.236    -.3761888    .0926894
+          _m3 |  -.0667735   .2648862    -0.25   0.801    -.5860605    .4525135
+        _cons |   8.164368      .0658   124.08   0.000     8.035373    8.293364
+-------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   1.030841          .        .       .            .           .
+        rho1 |   1.505722          .        .       .            .           .
+        rho2 |  -.1396132          .        .       .            .           .
+        rho3 |  -.0657671          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning male exp expsqr higheredu TakeGaoKao provincedum2-provin
+> cedum15  m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. sum gen_log_monthlyearning male exp expsqr higheredu TakeGaoKao provincedum2-provincedum15 
+> m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      5,282    8.478096    .7138417   5.521461   10.12663
+        male |      5,282    .5382431    .4985825          0          1
+         exp |      5,282    15.03465    6.949144          0         33
+      expsqr |      5,282     274.322    232.0598          0       1089
+   higheredu |      5,282     .766755    .4229369          0          1
+-------------+---------------------------------------------------------
+  TakeGaoKao |      5,282    .7552064    .4300055          0          1
+provincedum2 |      5,282    .0596365    .2368346          0          1
+provincedum3 |      5,282    .0630443    .2430656          0          1
+provincedum4 |      5,282     .056418     .230749          0          1
+provincedum5 |      5,282    .0815979     .273777          0          1
+-------------+---------------------------------------------------------
+provincedum6 |      5,282    .0533889     .224829          0          1
+provincedum7 |      5,282    .0620977    .2413557          0          1
+provincedum8 |      5,282    .0789474    .2696821          0          1
+provincedum9 |      5,282    .0706172    .2562086          0          1
+provinced~10 |      5,282    .0603938    .2382375          0          1
+-------------+---------------------------------------------------------
+provinced~11 |      5,282    .1321469    .3386825          0          1
+provinced~12 |      5,282    .0518743    .2217942          0          1
+provinced~13 |      5,282    .0664521    .2490943          0          1
+provinced~14 |      5,282     .028209    .1655852          0          1
+provinced~15 |      5,282    .0348353    .1833798          0          1
+-------------+---------------------------------------------------------
+          m1 |      5,282   -.2755776    .0700389  -.4284056  -.0389473
+          m2 |      5,282    .4518425    .3425102   .0001547   2.301244
+          m3 |      5,282   -.2509943    .1967838   -.726001  -.0012229
+
+. tab TakeGaoKao educat if e(sample)
+
+           |   educat
+TakeGaoKao |         2 |     Total
+-----------+-----------+----------
+         0 |     1,293 |     1,293 
+         1 |     3,989 |     3,989 
+-----------+-----------+----------
+     Total |     5,282 |     5,282 
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Selmlog Urban Ga
+> oKao NoFirstStage.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Aiden/New Selmlog/GaoKao Indicator/Sel
+> mlog Urban GaoKao NoFirstStage.log
+  log type:  text
+ closed on:   6 Aug 2024, 18:07:51
+---------------------------------------------------------------------------------------------

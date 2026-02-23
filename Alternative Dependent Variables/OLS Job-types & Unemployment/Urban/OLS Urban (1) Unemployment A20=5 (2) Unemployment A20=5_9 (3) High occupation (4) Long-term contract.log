@@ -1,0 +1,1514 @@
+---------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/
+> OLS Job-types & Unemployment/OLS Urban (1) Unemployment A20=5 (2) Unemployment A20=5|9 (3) 
+> High occupation (4) Long-term contract.log
+  log type:  text
+ opened on:   6 Aug 2024, 17:45:39
+
+. use "`datapath'", clear
+
+. ****By convention in other folders, I combine the unemployment, high occupation, and long-t
+> erm contract dependent variables into this one .do file. If you wish to run one seperately,
+>  simply delete or nullify the other two parts of regressions. Search *1) Unemployment A20=5
+> , *2) Unemployment A20=5|9, *3) High occupation, or *4) Long-term contract in this file to 
+> jump to the regressions!
+. 
+. 
+. *Step One: Variables and Data Processing
+. 
+. *1) Monthly earning & it's ln value
+. 
+. gen annualearning = C05_1 if C05_1!=-99 & C05_1!=-88
+(17,426 missing values generated)
+
+. gen workmonths=C01_1 if C01_1!=-99
+(79 missing values generated)
+
+. gen monthlyearning = annualearning/workmonths
+(17,471 missing values generated)
+
+. gen log_monthlyearning = ln(monthlyearning)
+(17,516 missing values generated)
+
+. 
+. *2) Sex (Male)
+. 
+. gen male=1 if A03==1
+(18,084 missing values generated)
+
+. replace male=0 if A03==2
+(18,084 real changes made)
+
+. 
+. *3) Age & Exp
+. 
+. gen birthyear = A04_1 if A04_1!=-88 & A04_1!=-99
+
+. gen age = 2018-birthyear
+
+. gen agesqr = age*age
+
+. 
+. gen exp = age-A13_3-6 if A13_3>=0
+(3,412 missing values generated)
+
+. replace exp=0 if exp<0
+(3,271 real changes made)
+
+. gen expsqr = exp*exp
+(3,412 missing values generated)
+
+. 
+. *4) Secondary education (Sec Voc; Sec Gen; Sec Jun)
+. 
+. *Sec Voc
+. *filter by secondary school types.
+. 
+. gen secvocedu=1 if A14==5
+(33,350 missing values generated)
+
+. replace secvocedu =0 if A14!=5
+(33,350 real changes made)
+
+. *include who reported vocational secondary degrees
+. replace secvocedu=1 if inrange(A13_1, 5, 6) & A13_2==1
+(902 real changes made)
+
+. *remove who had not finished secondary vocational education.
+. replace secvocedu=0 if (inrange(A13_1,4,6) & A13_2>1) | A13_1<4
+(188 real changes made)
+
+. tab secvocedu
+
+  secvocedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     32,636       90.01       90.01
+          1 |      3,623        9.99      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec voc
+. gen voc_log_monthlyearning = log_monthlyearning if secvocedu==1
+(33,450 missing values generated)
+
+. 
+. *Sec Gen
+. *filter by secondary school types.
+. gen secgenedu = 1 if A14!=-99 & A14!=-88 & A14!=5
+(22,075 missing values generated)
+
+. replace secgenedu =0 if A14==-99 | A14==-88 | A14==5
+(22,075 real changes made)
+
+. *remove who had/have not finished secondary general schools.
+. replace secgenedu =0 if (A13_1==4 & A13_2>1) | inrange(A13_1, 5, 6) | A13_1<4
+(2,765 real changes made)
+
+. tab secgenedu
+
+  secgenedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     24,840       68.51       68.51
+          1 |     11,419       31.49      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec gen
+. gen gen_log_monthlyearning = log_monthlyearning if secgenedu==1
+(28,201 missing values generated)
+
+. 
+. *Only Sec Junior
+. *filter by A13_1
+. gen secjun = 1 if (A13_1 ==3 & A13_2 ==1) | (inrange(A13_1, 4, 6) & A13_2>1) 
+(26,513 missing values generated)
+
+. replace secjun = 0 if secjun!=1
+(26,513 real changes made)
+
+. tab secjun
+
+     secjun |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     26,513       73.12       73.12
+          1 |      9,746       26.88      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *Categotical variable of education
+. gen educat=1 if secvocedu==1
+(32,636 missing values generated)
+
+. replace educat=2 if secgenedu==1
+(11,419 real changes made)
+
+. replace educat=3 if secjun==1
+(9,746 real changes made)
+
+. tab educat
+
+     educat |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |      3,623       14.62       14.62
+          2 |     11,419       46.07       60.68
+          3 |      9,746       39.32      100.00
+------------+-----------------------------------
+      Total |     24,788      100.00
+
+. 
+. *5) Higher education (High Voc; High Gen; Adult Edu; Higher Edu)
+. 
+. *Higher vocational education (full-time)
+. gen highvocedu =1 if A13_1==7 & A13_2==1
+(32,394 missing values generated)
+
+. replace highvocedu=0 if highvocedu!=1
+(32,394 real changes made)
+
+. replace highvocedu=0 if A15_7==6
+(959 real changes made)
+
+. 
+. *Higher general education (full-time)
+. gen highgenedu =1 if (A13_1==8 & A13_2==1) | A13_1==9
+(32,336 missing values generated)
+
+. replace highgenedu =0 if highgenedu!=1
+(32,336 real changes made)
+
+. replace highgenedu=0 if A15_7==6
+(567 real changes made)
+
+. 
+. *Adult continuing education
+. gen adultedu = 1 if A15_7 == 6
+(34,552 missing values generated)
+
+. replace adultedu = 0 if A15_7!=6
+(34,552 real changes made)
+
+. replace adultedu = 0 if ((A13_1==7 | A13_1==8) & A13_2!=1) | A13_1<=6
+(181 real changes made)
+
+. tab adultedu
+
+   adultedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     34,733       95.79       95.79
+          1 |      1,526        4.21      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *higheredu (dummy variable of higher education)
+. gen higheredu=1 if highvocedu==1 | highgenedu==1 | adultedu==1
+(28,471 missing values generated)
+
+. replace higheredu=0 if higheredu!=1
+(28,471 real changes made)
+
+. 
+. *6) Instrument (NOT USING HERE)
+. 
+. 
+. *7) Province fixed effect (Method: By the first two digits of household code)
+. 
+. destring hhcode, generate(province_code) force float
+hhcode: contains nonnumeric characters; province_code generated as float
+(2 missing values generated)
+
+. replace province_code = floor(province_code/1000000000000) if province_code<100000000000000
+(35,938 real changes made)
+
+. replace province_code = floor(province_code/10000000000000) if province_code>=1000000000000
+> 00 & province_code<1000000000000000
+(319 real changes made)
+
+. replace province_code = floor(province_code/1000000000000000) if province_code>=10000000000
+> 000000
+(0 real changes made)
+
+. *The specific two; Do that for rural after special care.
+. replace province_code = 51 if province_code==.
+(2 real changes made)
+
+. tab province_code, gen(provincedum)
+
+     hhcode |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         11 |      2,836        7.82        7.82
+         14 |      2,555        7.05       14.87
+         15 |      1,760        4.85       19.72
+         21 |      2,218        6.12       25.84
+         32 |      2,943        8.12       33.96
+         34 |      2,254        6.22       40.17
+         37 |      2,396        6.61       46.78
+         41 |      2,959        8.16       54.94
+         42 |      2,447        6.75       61.69
+         43 |      2,289        6.31       68.00
+         44 |      4,331       11.94       79.95
+         50 |      2,115        5.83       85.78
+         51 |      2,798        7.72       93.50
+         53 |      1,226        3.38       96.88
+         62 |      1,132        3.12      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *8) Birth Month cohort
+. 
+. gen birthmonth = A04_2 if A04_2!=-88 & A04_2!=-99
+(13 missing values generated)
+
+. gen t = birthmonth - 9 + 12 * (birthyear - 1979)
+(13 missing values generated)
+
+. gen d = 1 if t >= 0 & t != .
+(18,362 missing values generated)
+
+. replace d = 0 if t < 1
+(18,418 real changes made)
+
+. gen td = t * d
+(13 missing values generated)
+
+. 
+. *9) Tenure
+. 
+. gen yearstart = C02 if C02!=-88 & C02!=-99
+(17,464 missing values generated)
+
+. gen tenure = 2018 - yearstart
+(17,464 missing values generated)
+
+. replace tenure = 0 if tenure == -1
+(49 real changes made)
+
+. gen tenuresqr = tenure * tenure
+(17,464 missing values generated)
+
+. 
+. *10) Dependent variables: job-types specifications
+. 
+. gen unemp_A20_5 = 1 if A20 == 5
+(35,581 missing values generated)
+
+. replace unemp_A20_5 = 0 if inrange(A20, 1, 4) | inrange(A20, 6, 9)
+(34,591 real changes made)
+
+. gen voc_unemp_A20_5 = unemp_A20_5 if educat == 1
+(32,694 missing values generated)
+
+. gen gen_unemp_A20_5 = unemp_A20_5 if educat == 2
+(24,957 missing values generated)
+
+. 
+. gen unemp_A20_59 = unemp_A20_5
+(990 missing values generated)
+
+. replace unemp_A20_59 = 1 if A20 == 9
+(3,949 real changes made)
+
+. gen voc_unemp_A20_59 = unemp_A20_59 if educat == 1
+(32,694 missing values generated)
+
+. gen gen_unemp_A20_59 = unemp_A20_59 if educat == 2
+(24,957 missing values generated)
+
+. 
+. gen highocc = 1 if C03_4 == 1 | C03_4 == 2
+(32,049 missing values generated)
+
+. replace highocc = 0 if inrange(C03_4, 3, 8)
+(14,667 real changes made)
+
+. gen voc_highocc = highocc if educat == 1
+(33,436 missing values generated)
+
+. gen gen_highocc = highocc if educat == 2
+(28,151 missing values generated)
+
+. 
+. gen longtermcontract = 1 if C07_1 == 1 | C07_1 == 2
+(29,167 missing values generated)
+
+. replace longtermcontract = 0 if inrange(C07_1, 3, 5)
+(8,506 real changes made)
+
+. gen voc_longtermcontract= longtermcontract if educat == 1
+(33,791 missing values generated)
+
+. gen gen_longtermcontract = longtermcontract if educat == 2
+(28,951 missing values generated)
+
+. 
+. sum unemp_A20_5, d
+
+                         unemp_A20_5
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs              35,269
+25%            0              0       Sum of wgt.      35,269
+
+50%            0                      Mean           .0192237
+                        Largest       Std. dev.      .1373123
+75%            0              1
+90%            0              1       Variance       .0188547
+95%            0              1       Skewness       7.002769
+99%            1              1       Kurtosis       50.03877
+
+. sum unemp_A20_59, d
+
+                        unemp_A20_59
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs              35,269
+25%            0              0       Sum of wgt.      35,269
+
+50%            0                      Mean           .1311917
+                        Largest       Std. dev.      .3376147
+75%            0              1
+90%            1              1       Variance       .1139837
+95%            1              1       Skewness       2.184819
+99%            1              1       Kurtosis       5.773435
+
+. sum highocc, d
+
+                           highocc
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs              18,877
+25%            0              0       Sum of wgt.      18,877
+
+50%            0                      Mean           .2230227
+                        Largest       Std. dev.      .4162845
+75%            0              1
+90%            1              1       Variance       .1732928
+95%            1              1       Skewness       1.330747
+99%            1              1       Kurtosis       2.770887
+
+. sum longtermcontract, d
+
+                      longtermcontract
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs              15,598
+25%            0              0       Sum of wgt.      15,598
+
+50%            0                      Mean           .4546737
+                        Largest       Std. dev.      .4979572
+75%            1              1
+90%            1              1       Variance       .2479614
+95%            1              1       Skewness       .1820549
+99%            1              1       Kurtosis       1.033144
+
+. 
+. 
+. *Step Two: Regressions
+. 
+. *1) Unemployment A20=5
+. 
+. regress voc_unemp_A20_5 male exp expsqr highvocedu highgenedu adultedu if inrange(birthyear
+> , 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,337
+-------------+----------------------------------   F(6, 2330)      =      1.94
+       Model |  .350896743         6   .05848279   Prob > F        =    0.0715
+    Residual |  70.3688294     2,330  .030201214   R-squared       =    0.0050
+-------------+----------------------------------   Adj R-squared   =    0.0024
+       Total |  70.7197261     2,336  .030273855   Root MSE        =    .17378
+
+------------------------------------------------------------------------------
+voc_unemp_~5 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |  -.0123657   .0072036    -1.72   0.086    -.0264917    .0017604
+         exp |  -.0004289   .0031582    -0.14   0.892    -.0066221    .0057644
+      expsqr |   .0000419   .0000864     0.49   0.628    -.0001275    .0002113
+  highvocedu |   .0097696   .0116194     0.84   0.401    -.0130158     .032555
+  highgenedu |  -.0179402   .0221889    -0.81   0.419    -.0614523    .0255719
+    adultedu |  -.0195909   .0102935    -1.90   0.057    -.0397762    .0005944
+       _cons |   .0321502   .0270477     1.19   0.235    -.0208899    .0851903
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath1'", replace ctitle(Sec Voc, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5.xls
+dir : seeout
+
+. 
+. regress voc_unemp_A20_5 male exp expsqr highvocedu highgenedu adultedu provincedum2-provinc
+> edum15 if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,337
+-------------+----------------------------------   F(20, 2316)     =      1.54
+       Model |  .929929697        20  .046496485   Prob > F        =    0.0582
+    Residual |  69.7897964     2,316  .030133764   R-squared       =    0.0131
+-------------+----------------------------------   Adj R-squared   =    0.0046
+       Total |  70.7197261     2,336  .030273855   Root MSE        =    .17359
+
+-------------------------------------------------------------------------------
+voc_unemp_A~5 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |  -.0124924   .0072058    -1.73   0.083    -.0266228    .0016381
+          exp |   .0000149    .003179     0.00   0.996     -.006219    .0062488
+       expsqr |   .0000302    .000087     0.35   0.728    -.0001403    .0002007
+   highvocedu |   .0103828   .0116838     0.89   0.374    -.0125291    .0332947
+   highgenedu |  -.0167037   .0223146    -0.75   0.454    -.0604624     .027055
+     adultedu |  -.0209519    .010399    -2.01   0.044    -.0413443   -.0005596
+ provincedum2 |  -.0302641   .0186416    -1.62   0.105      -.06682    .0062918
+ provincedum3 |  -.0329654   .0218523    -1.51   0.132    -.0758175    .0098868
+ provincedum4 |   .0097144   .0184527     0.53   0.599    -.0264712    .0459001
+ provincedum5 |   .0016116   .0179689     0.09   0.929    -.0336253    .0368486
+ provincedum6 |  -.0181206    .020819    -0.87   0.384    -.0589465    .0227052
+ provincedum7 |  -.0124709    .017377    -0.72   0.473     -.046547    .0216053
+ provincedum8 |   -.028404   .0177099    -1.60   0.109     -.063133    .0063249
+ provincedum9 |  -.0182681   .0187698    -0.97   0.331    -.0550754    .0185392
+provincedum10 |  -.0139356   .0184771    -0.75   0.451     -.050169    .0222977
+provincedum11 |  -.0180773   .0163375    -1.11   0.269     -.050115    .0139604
+provincedum12 |  -.0199205   .0195899    -1.02   0.309     -.058336    .0184951
+provincedum13 |  -.0175531   .0191393    -0.92   0.359     -.055085    .0199788
+provincedum14 |   .0381963   .0214528     1.78   0.075    -.0038724    .0802651
+provincedum15 |  -.0257657   .0247526    -1.04   0.298    -.0743054     .022774
+        _cons |   .0410656    .029625     1.39   0.166    -.0170287    .0991599
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath1'", append ctitle(Sec Voc, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5.xls
+dir : seeout
+
+. 
+. regress voc_unemp_A20_5 male exp expsqr higheredu if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,337
+-------------+----------------------------------   F(4, 2332)      =      1.79
+       Model |  .216965951         4  .054241488   Prob > F        =    0.1272
+    Residual |  70.5027602     2,332  .030232745   R-squared       =    0.0031
+-------------+----------------------------------   Adj R-squared   =    0.0014
+       Total |  70.7197261     2,336  .030273855   Root MSE        =    .17388
+
+------------------------------------------------------------------------------
+voc_unemp_~5 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |  -.0120521   .0072054    -1.67   0.095    -.0261817    .0020775
+         exp |  -.0014391   .0031134    -0.46   0.644    -.0075444    .0046661
+      expsqr |   .0000651   .0000855     0.76   0.446    -.0001025    .0002328
+   higheredu |  -.0080515   .0079654    -1.01   0.312    -.0236716    .0075686
+       _cons |   .0417432   .0265858     1.57   0.117    -.0103911    .0938776
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath1'", append ctitle(Sec Voc, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5.xls
+dir : seeout
+
+. 
+. regress voc_unemp_A20_5 male exp expsqr higheredu provincedum2-provincedum15 if inrange(bir
+> thyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,337
+-------------+----------------------------------   F(18, 2318)     =      1.44
+       Model |  .782623853        18  .043479103   Prob > F        =    0.1024
+    Residual |  69.9371023     2,318  .030171312   R-squared       =    0.0111
+-------------+----------------------------------   Adj R-squared   =    0.0034
+       Total |  70.7197261     2,336  .030273855   Root MSE        =     .1737
+
+-------------------------------------------------------------------------------
+voc_unemp_A~5 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   -.012187   .0072084    -1.69   0.091    -.0263225    .0019485
+          exp |  -.0010533   .0031358    -0.34   0.737    -.0072025    .0050959
+       expsqr |    .000055   .0000861     0.64   0.523    -.0001138    .0002238
+    higheredu |  -.0083307    .008045    -1.04   0.301    -.0241069    .0074455
+ provincedum2 |  -.0276959   .0186114    -1.49   0.137    -.0641926    .0088009
+ provincedum3 |  -.0313323   .0218457    -1.43   0.152    -.0741715     .011507
+ provincedum4 |   .0127092   .0184133     0.69   0.490    -.0233991    .0488174
+ provincedum5 |   .0045632   .0179295     0.25   0.799    -.0305964    .0397228
+ provincedum6 |  -.0171508   .0208242    -0.82   0.410    -.0579867    .0236852
+ provincedum7 |  -.0101408   .0173401    -0.58   0.559    -.0441445    .0238629
+ provincedum8 |   -.025862   .0176835    -1.46   0.144     -.060539    .0088151
+ provincedum9 |  -.0169745   .0187605    -0.90   0.366    -.0537636    .0198145
+provincedum10 |  -.0119222    .018458    -0.65   0.518    -.0481181    .0242736
+provincedum11 |  -.0158345   .0163159    -0.97   0.332    -.0478298    .0161608
+provincedum12 |  -.0184886   .0195856    -0.94   0.345    -.0568957    .0199185
+provincedum13 |  -.0153405   .0191239    -0.80   0.423    -.0528424    .0221613
+provincedum14 |   .0382599    .021451     1.78   0.075    -.0038052     .080325
+provincedum15 |  -.0256774   .0247673    -1.04   0.300    -.0742458     .022891
+        _cons |   .0492681   .0293295     1.68   0.093    -.0082466    .1067829
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath1'", append ctitle(Sec Voc, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5.xls
+dir : seeout
+
+. 
+. regress gen_unemp_A20_5 male exp expsqr highvocedu highgenedu adultedu if inrange(birthyear
+> , 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,842
+-------------+----------------------------------   F(6, 5835)      =      5.45
+       Model |  .676565276         6  .112760879   Prob > F        =    0.0000
+    Residual |  120.691459     5,835  .020684055   R-squared       =    0.0056
+-------------+----------------------------------   Adj R-squared   =    0.0046
+       Total |  121.368025     5,841  .020778638   Root MSE        =    .14382
+
+------------------------------------------------------------------------------
+gen_unemp_~5 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |  -.0111617   .0037736    -2.96   0.003    -.0185593   -.0037641
+         exp |  -.0030659   .0013039    -2.35   0.019     -.005622   -.0005098
+      expsqr |   .0000761   .0000393     1.94   0.053    -8.29e-07    .0001531
+  highvocedu |  -.0069132   .0056681    -1.22   0.223    -.0180247    .0041983
+  highgenedu |  -.0209886   .0053887    -3.89   0.000    -.0315526   -.0104247
+    adultedu |  -.0157766    .006962    -2.27   0.023    -.0294247   -.0021286
+       _cons |   .0638175   .0107903     5.91   0.000     .0426645    .0849705
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath1'", append ctitle(Sec Gen, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5.xls
+dir : seeout
+
+. 
+. regress gen_unemp_A20_5 male exp expsqr highvocedu highgenedu adultedu provincedum2-provinc
+> edum15 if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,842
+-------------+----------------------------------   F(20, 5821)     =      2.39
+       Model |  .987075764        20  .049353788   Prob > F        =    0.0005
+    Residual |  120.380949     5,821  .020680458   R-squared       =    0.0081
+-------------+----------------------------------   Adj R-squared   =    0.0047
+       Total |  121.368025     5,841  .020778638   Root MSE        =    .14381
+
+-------------------------------------------------------------------------------
+gen_unemp_A~5 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |  -.0111609   .0037787    -2.95   0.003    -.0185686   -.0037532
+          exp |  -.0030189   .0013075    -2.31   0.021    -.0055822   -.0004557
+       expsqr |   .0000743   .0000394     1.89   0.059    -2.84e-06    .0001515
+   highvocedu |  -.0073601   .0056865    -1.29   0.196    -.0185077    .0037874
+   highgenedu |  -.0220948   .0054406    -4.06   0.000    -.0327603   -.0114293
+     adultedu |  -.0169713    .006998    -2.43   0.015    -.0306899   -.0032526
+ provincedum2 |  -.0045173   .0096313    -0.47   0.639    -.0233982    .0143636
+ provincedum3 |  -.0175996   .0096558    -1.82   0.068    -.0365287    .0013294
+ provincedum4 |  -.0064715   .0097389    -0.66   0.506    -.0255635    .0126204
+ provincedum5 |  -.0029166   .0088676    -0.33   0.742    -.0203004    .0144671
+ provincedum6 |   .0071273   .0101713     0.70   0.484    -.0128123     .027067
+ provincedum7 |   -.006045   .0096493    -0.63   0.531    -.0249612    .0128712
+ provincedum8 |  -.0128339   .0088591    -1.45   0.147    -.0302011    .0045333
+ provincedum9 |   -.017032   .0092418    -1.84   0.065    -.0351492    .0010853
+provincedum10 |  -.0070085   .0097251    -0.72   0.471    -.0260733    .0120562
+provincedum11 |  -.0173758   .0078778    -2.21   0.027    -.0328192   -.0019325
+provincedum12 |  -.0060265   .0102808    -0.59   0.558    -.0261807    .0141276
+provincedum13 |   .0010157   .0094214     0.11   0.914    -.0174537     .019485
+provincedum14 |  -.0021385   .0127405    -0.17   0.867    -.0271146    .0228376
+provincedum15 |  -.0114129   .0117726    -0.97   0.332    -.0344915    .0116657
+        _cons |   .0718945   .0123693     5.81   0.000     .0476461    .0961429
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath1'", append ctitle(Sec Gen, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5.xls
+dir : seeout
+
+. 
+. regress gen_unemp_A20_5 male exp expsqr higheredu if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,842
+-------------+----------------------------------   F(4, 5837)      =      6.01
+       Model |  .497786323         4  .124446581   Prob > F        =    0.0001
+    Residual |  120.870238     5,837  .020707596   R-squared       =    0.0041
+-------------+----------------------------------   Adj R-squared   =    0.0034
+       Total |  121.368025     5,841  .020778638   Root MSE        =     .1439
+
+------------------------------------------------------------------------------
+gen_unemp_~5 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |  -.0113438   .0037719    -3.01   0.003    -.0187381   -.0039495
+         exp |   -.002836   .0012997    -2.18   0.029    -.0053839   -.0002881
+      expsqr |   .0000712   .0000392     1.81   0.070    -5.73e-06    .0001481
+   higheredu |  -.0150517   .0048002    -3.14   0.002    -.0244618   -.0056417
+       _cons |   .0615077   .0106855     5.76   0.000     .0405602    .0824551
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath1'", append ctitle(Sec Gen, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5.xls
+dir : seeout
+
+. 
+. regress gen_unemp_A20_5 male exp expsqr higheredu provincedum2-provincedum15 if inrange(bir
+> thyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,842
+-------------+----------------------------------   F(18, 5823)     =      2.13
+       Model |  .794042195        18  .044113455   Prob > F        =    0.0036
+    Residual |  120.573982     5,823  .020706506   R-squared       =    0.0065
+-------------+----------------------------------   Adj R-squared   =    0.0035
+       Total |  121.368025     5,841  .020778638   Root MSE        =     .1439
+
+-------------------------------------------------------------------------------
+gen_unemp_A~5 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |  -.0113805   .0037772    -3.01   0.003    -.0187853   -.0039757
+          exp |  -.0027674   .0013031    -2.12   0.034     -.005322   -.0002129
+       expsqr |   .0000687   .0000393     1.75   0.081    -8.40e-06    .0001458
+    higheredu |  -.0158112   .0048339    -3.27   0.001    -.0252874    -.006335
+ provincedum2 |  -.0022914   .0096085    -0.24   0.812    -.0211276    .0165448
+ provincedum3 |  -.0163246   .0096527    -1.69   0.091    -.0352475    .0025983
+ provincedum4 |  -.0061982   .0097434    -0.64   0.525    -.0252989    .0129024
+ provincedum5 |  -.0020834   .0088622    -0.24   0.814    -.0194567    .0152899
+ provincedum6 |   .0085902   .0101635     0.85   0.398     -.011334    .0285144
+ provincedum7 |  -.0044399   .0096345    -0.46   0.645    -.0233271    .0144472
+ provincedum8 |  -.0108825    .008838    -1.23   0.218    -.0282083    .0064434
+ provincedum9 |  -.0153935   .0092282    -1.67   0.095    -.0334842    .0026972
+provincedum10 |  -.0045813   .0096984    -0.47   0.637    -.0235938    .0144312
+provincedum11 |  -.0156905   .0078617    -2.00   0.046    -.0311024   -.0002786
+provincedum12 |  -.0048632     .01028    -0.47   0.636    -.0250159    .0152895
+provincedum13 |   .0028796   .0094075     0.31   0.760    -.0155626    .0213219
+provincedum14 |  -.0018074   .0127479    -0.14   0.887     -.026798    .0231832
+provincedum15 |  -.0113666   .0117776    -0.97   0.335     -.034455    .0117218
+        _cons |   .0680553   .0122552     5.55   0.000     .0440305      .09208
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath1'", append ctitle(Sec Gen, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5.xls
+dir : seeout
+
+. 
+. *2) Unemployment A20=5|9
+. 
+. regress voc_unemp_A20_59 male exp expsqr highvocedu highgenedu adultedu if inrange(birthyea
+> r, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,337
+-------------+----------------------------------   F(6, 2330)      =      4.71
+       Model |  1.65195924         6   .27532654   Prob > F        =    0.0001
+    Residual |  136.101571     2,330  .058412691   R-squared       =    0.0120
+-------------+----------------------------------   Adj R-squared   =    0.0094
+       Total |   137.75353     2,336  .058969833   Root MSE        =    .24169
+
+------------------------------------------------------------------------------
+voc_unemp~59 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |  -.0442484   .0100182    -4.42   0.000    -.0638939   -.0246029
+         exp |  -.0012739   .0043922    -0.29   0.772     -.009887    .0073391
+      expsqr |   .0000442   .0001201     0.37   0.713    -.0001914    .0002798
+  highvocedu |   .0041866   .0161594     0.26   0.796    -.0275016    .0358748
+  highgenedu |  -.0413345   .0308587    -1.34   0.181    -.1018479    .0191789
+    adultedu |  -.0389336   .0143154    -2.72   0.007    -.0670058   -.0108614
+       _cons |   .0973497   .0376159     2.59   0.010     .0235854    .1711139
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath2'", replace ctitle(Sec Voc, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5|9.xls
+dir : seeout
+
+. 
+. regress voc_unemp_A20_59 male exp expsqr highvocedu highgenedu adultedu provincedum2-provin
+> cedum15 if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,337
+-------------+----------------------------------   F(20, 2316)     =      2.13
+       Model |  2.48806698        20  .124403349   Prob > F        =    0.0025
+    Residual |  135.265463     2,316  .058404777   R-squared       =    0.0181
+-------------+----------------------------------   Adj R-squared   =    0.0096
+       Total |   137.75353     2,336  .058969833   Root MSE        =    .24167
+
+-------------------------------------------------------------------------------
+voc_unemp_~59 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |  -.0447215   .0100318    -4.46   0.000    -.0643937   -.0250493
+          exp |  -.0006055   .0044257    -0.14   0.891    -.0092842    .0080732
+       expsqr |   .0000252   .0001211     0.21   0.835    -.0002122    .0002626
+   highvocedu |   .0020212   .0162661     0.12   0.901    -.0298763    .0339188
+   highgenedu |  -.0425692   .0310661    -1.37   0.171    -.1034895    .0183511
+     adultedu |  -.0409579   .0144774    -2.83   0.005    -.0693478   -.0125679
+ provincedum2 |  -.0193772   .0259526    -0.75   0.455    -.0702698    .0315155
+ provincedum3 |   .0062973   .0304225     0.21   0.836    -.0533609    .0659555
+ provincedum4 |   .0260182   .0256897     1.01   0.311    -.0243589    .0763953
+ provincedum5 |   .0163251   .0250161     0.65   0.514    -.0327312    .0653815
+ provincedum6 |  -.0282478    .028984    -0.97   0.330    -.0850851    .0285894
+ provincedum7 |  -.0113882   .0241921    -0.47   0.638    -.0588286    .0360522
+ provincedum8 |   -.032451   .0246555    -1.32   0.188    -.0808002    .0158982
+ provincedum9 |  -.0070069    .026131    -0.27   0.789    -.0582496    .0442358
+provincedum10 |   -.006948   .0257235    -0.27   0.787    -.0573915    .0434956
+provincedum11 |  -.0220404   .0227449    -0.97   0.333    -.0666428     .022562
+provincedum12 |  -.0327906   .0272728    -1.20   0.229    -.0862722     .020691
+provincedum13 |  -.0089878   .0266454    -0.34   0.736    -.0612392    .0432636
+provincedum14 |   .0307139   .0298663     1.03   0.304    -.0278536    .0892814
+provincedum15 |   -.033729   .0344603    -0.98   0.328    -.1013053    .0338472
+        _cons |   .1015919   .0412435     2.46   0.014     .0207138    .1824701
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath2'", append ctitle(Sec Voc, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5|9.xls
+dir : seeout
+
+. 
+. regress voc_unemp_A20_59 male exp expsqr higheredu if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,337
+-------------+----------------------------------   F(4, 2332)      =      5.78
+       Model |  1.35228323         4  .338070807   Prob > F        =    0.0001
+    Residual |  136.401247     2,332  .058491101   R-squared       =    0.0098
+-------------+----------------------------------   Adj R-squared   =    0.0081
+       Total |   137.75353     2,336  .058969833   Root MSE        =    .24185
+
+------------------------------------------------------------------------------
+voc_unemp~59 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |  -.0437645   .0100222    -4.37   0.000    -.0634179   -.0241112
+         exp |  -.0027312   .0043305    -0.63   0.528    -.0112232    .0057608
+      expsqr |   .0000775   .0001189     0.65   0.514    -.0001557    .0003107
+   higheredu |  -.0224358   .0110794    -2.03   0.043    -.0441623   -.0007093
+       _cons |   .1112215   .0369791     3.01   0.003     .0387061    .1837368
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath2'", append ctitle(Sec Voc, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5|9.xls
+dir : seeout
+
+. 
+. regress voc_unemp_A20_59 male exp expsqr higheredu provincedum2-provincedum15 if inrange(bi
+> rthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,337
+-------------+----------------------------------   F(18, 2318)     =      2.09
+       Model |  2.19619562        18  .122010868   Prob > F        =    0.0047
+    Residual |  135.557335     2,318    .0584803   R-squared       =    0.0159
+-------------+----------------------------------   Adj R-squared   =    0.0083
+       Total |   137.75353     2,336  .058969833   Root MSE        =    .24183
+
+-------------------------------------------------------------------------------
+voc_unemp_~59 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |  -.0442655   .0100356    -4.41   0.000    -.0639453   -.0245858
+          exp |   -.002029   .0043657    -0.46   0.642    -.0105901     .006532
+       expsqr |    .000058   .0001198     0.48   0.628     -.000177     .000293
+    higheredu |  -.0243355   .0112004    -2.17   0.030    -.0462994   -.0023716
+ provincedum2 |  -.0156367   .0259112    -0.60   0.546    -.0664482    .0351748
+ provincedum3 |   .0083998   .0304141     0.28   0.782    -.0512418    .0680414
+ provincedum4 |   .0302766   .0256353     1.18   0.238     -.019994    .0805472
+ provincedum5 |   .0205164   .0249618     0.82   0.411    -.0284334    .0694662
+ provincedum6 |   -.026774   .0289918    -0.92   0.356    -.0836266    .0300786
+ provincedum7 |  -.0083606   .0241412    -0.35   0.729    -.0557012      .03898
+ provincedum8 |  -.0288713   .0246192    -1.17   0.241    -.0771493    .0194068
+ provincedum9 |  -.0049833   .0261187    -0.19   0.849    -.0562017    .0462351
+provincedum10 |  -.0039543   .0256975    -0.15   0.878    -.0543469    .0464382
+provincedum11 |  -.0188721   .0227153    -0.83   0.406    -.0634166    .0256724
+provincedum12 |  -.0306345   .0272674    -1.12   0.261    -.0841057    .0228366
+provincedum13 |   -.005826   .0266247    -0.22   0.827    -.0580367    .0463848
+provincedum14 |   .0310594   .0298645     1.04   0.298    -.0275044    .0896233
+provincedum15 |  -.0335461   .0344816    -0.97   0.331     -.101164    .0340718
+        _cons |   .1123859   .0408331     2.75   0.006     .0323128    .1924591
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath2'", append ctitle(Sec Voc, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5|9.xls
+dir : seeout
+
+. 
+. regress gen_unemp_A20_59 male exp expsqr highvocedu highgenedu adultedu if inrange(birthyea
+> r, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,842
+-------------+----------------------------------   F(6, 5835)      =     11.00
+       Model |  2.85011781         6  .475019635   Prob > F        =    0.0000
+    Residual |  251.947041     5,835  .043178585   R-squared       =    0.0112
+-------------+----------------------------------   Adj R-squared   =    0.0102
+       Total |  254.797159     5,841  .043622181   Root MSE        =    .20779
+
+------------------------------------------------------------------------------
+gen_unemp~59 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |  -.0260568   .0054522    -4.78   0.000     -.036745   -.0153685
+         exp |  -.0031981   .0018839    -1.70   0.090    -.0068913     .000495
+      expsqr |   .0000664   .0000567     1.17   0.242    -.0000448    .0001776
+  highvocedu |  -.0196867   .0081894    -2.40   0.016    -.0357409   -.0036325
+  highgenedu |  -.0449451   .0077858    -5.77   0.000    -.0602082    -.029682
+    adultedu |  -.0409614   .0100588    -4.07   0.000    -.0606805   -.0212424
+       _cons |   .1160178   .0155902     7.44   0.000     .0854553    .1465803
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath2'", append ctitle(Sec Gen, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5|9.xls
+dir : seeout
+
+. 
+. regress gen_unemp_A20_59 male exp expsqr highvocedu highgenedu adultedu provincedum2-provin
+> cedum15 if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,842
+-------------+----------------------------------   F(20, 5821)     =      5.28
+       Model |  4.54382676        20  .227191338   Prob > F        =    0.0000
+    Residual |  250.253332     5,821  .042991467   R-squared       =    0.0178
+-------------+----------------------------------   Adj R-squared   =    0.0145
+       Total |  254.797159     5,841  .043622181   Root MSE        =    .20734
+
+-------------------------------------------------------------------------------
+gen_unemp_~59 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |  -.0253679   .0054482    -4.66   0.000    -.0360484   -.0146873
+          exp |  -.0033159   .0018852    -1.76   0.079    -.0070116    .0003799
+       expsqr |   .0000682   .0000567     1.20   0.230    -.0000431    .0001794
+   highvocedu |  -.0217249   .0081989    -2.65   0.008    -.0377977   -.0056521
+   highgenedu |  -.0491451   .0078443    -6.27   0.000    -.0645229   -.0337673
+     adultedu |  -.0454588   .0100898    -4.51   0.000    -.0652386    -.025679
+ provincedum2 |   .0044402   .0138866     0.32   0.749    -.0227827     .031663
+ provincedum3 |  -.0324407    .013922    -2.33   0.020    -.0597329   -.0051484
+ provincedum4 |   .0044287   .0140418     0.32   0.752    -.0230985    .0319558
+ provincedum5 |  -.0196969   .0127855    -1.54   0.123    -.0447612    .0053674
+ provincedum6 |  -.0199021   .0146652    -1.36   0.175    -.0486515    .0088472
+ provincedum7 |  -.0300949   .0139125    -2.16   0.031    -.0573687   -.0028212
+ provincedum8 |  -.0331396   .0127733    -2.59   0.009    -.0581799   -.0080992
+ provincedum9 |  -.0463524   .0133249    -3.48   0.001    -.0724743   -.0202306
+provincedum10 |  -.0312803   .0140218    -2.23   0.026    -.0587682   -.0037923
+provincedum11 |  -.0429658   .0113583    -3.78   0.000    -.0652323   -.0206992
+provincedum12 |  -.0412725    .014823    -2.78   0.005    -.0703311   -.0122138
+provincedum13 |  -.0095173   .0135839    -0.70   0.484    -.0361468    .0171122
+provincedum14 |  -.0156072   .0183695    -0.85   0.396    -.0516182    .0204039
+provincedum15 |  -.0347898   .0169739    -2.05   0.040    -.0680649   -.0015146
+        _cons |   .1433426   .0178343     8.04   0.000     .1083808    .1783044
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath2'", append ctitle(Sec Gen, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5|9.xls
+dir : seeout
+
+. 
+. regress gen_unemp_A20_59 male exp expsqr higheredu if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,842
+-------------+----------------------------------   F(4, 5837)      =     13.01
+       Model |  2.25230099         4  .563075249   Prob > F        =    0.0000
+    Residual |  252.544858     5,837  .043266208   R-squared       =    0.0088
+-------------+----------------------------------   Adj R-squared   =    0.0082
+       Total |  254.797159     5,841  .043622181   Root MSE        =    .20801
+
+------------------------------------------------------------------------------
+gen_unemp~59 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |  -.0262525   .0054522    -4.82   0.000    -.0369408   -.0155642
+         exp |  -.0028518   .0018787    -1.52   0.129    -.0065347    .0008312
+      expsqr |   .0000579   .0000567     1.02   0.307    -.0000533    .0001691
+   higheredu |  -.0354002   .0069385    -5.10   0.000    -.0490022   -.0217982
+       _cons |   .1129673   .0154455     7.31   0.000     .0826884    .1432463
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath2'", append ctitle(Sec Gen, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5|9.xls
+dir : seeout
+
+. 
+. regress gen_unemp_A20_59 male exp expsqr higheredu provincedum2-provincedum15 if inrange(bi
+> rthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,842
+-------------+----------------------------------   F(18, 5823)     =      4.96
+       Model |    3.846084        18  .213671333   Prob > F        =    0.0000
+    Residual |  250.951075     5,823  .043096527   R-squared       =    0.0151
+-------------+----------------------------------   Adj R-squared   =    0.0121
+       Total |  254.797159     5,841  .043622181   Root MSE        =     .2076
+
+-------------------------------------------------------------------------------
+gen_unemp_~59 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |  -.0256386   .0054493    -4.70   0.000    -.0363213   -.0149559
+          exp |    -.00292   .0018799    -1.55   0.120    -.0066054    .0007654
+       expsqr |   .0000581   .0000567     1.02   0.306    -.0000531    .0001694
+    higheredu |  -.0386546   .0069737    -5.54   0.000    -.0523256   -.0249835
+ provincedum2 |   .0087608   .0138619     0.63   0.527    -.0184137    .0359353
+ provincedum3 |  -.0299921   .0139257    -2.15   0.031    -.0572916   -.0026926
+ provincedum4 |   .0050856   .0140565     0.36   0.718    -.0224704    .0326416
+ provincedum5 |  -.0178162   .0127853    -1.39   0.164    -.0428802    .0072478
+ provincedum6 |  -.0169307   .0146626    -1.15   0.248    -.0456748    .0118134
+ provincedum7 |  -.0267557   .0138994    -1.92   0.054    -.0540037    .0004923
+ provincedum8 |   -.029245   .0127504    -2.29   0.022    -.0542405   -.0042495
+ provincedum9 |  -.0430346   .0133133    -3.23   0.001    -.0691336   -.0169356
+provincedum10 |  -.0266586   .0139916    -1.91   0.057    -.0540874    .0007702
+provincedum11 |  -.0396539   .0113419    -3.50   0.000    -.0618882   -.0174196
+provincedum12 |  -.0391416   .0148307    -2.64   0.008    -.0682154   -.0100679
+provincedum13 |  -.0060192    .013572    -0.44   0.657    -.0326252    .0205869
+provincedum14 |  -.0150455    .018391    -0.82   0.413    -.0510987    .0210078
+provincedum15 |  -.0344855   .0169912    -2.03   0.042    -.0677945   -.0011765
+        _cons |   .1372262   .0176803     7.76   0.000     .1025664    .1718861
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath2'", append ctitle(Sec Gen, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Unemployment A20=5|9.xls
+dir : seeout
+
+. 
+. *3) High occupation
+. 
+. regress voc_highocc male exp expsqr highvocedu highgenedu adultedu if inrange(birthyear, 19
+> 71, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,137
+-------------+----------------------------------   F(6, 2130)      =     32.39
+       Model |  34.9897391         6  5.83162319   Prob > F        =    0.0000
+    Residual |  383.440771     2,130  .180019141   R-squared       =    0.0836
+-------------+----------------------------------   Adj R-squared   =    0.0810
+       Total |   418.43051     2,136  .195894434   Root MSE        =    .42429
+
+------------------------------------------------------------------------------
+ voc_highocc | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .1198023   .0183923     6.51   0.000     .0837336     .155871
+         exp |   .0139784   .0079928     1.75   0.080    -.0016961    .0296529
+      expsqr |  -.0003186   .0002183    -1.46   0.145    -.0007468    .0001095
+  highvocedu |   .1012313     .02975     3.40   0.001     .0428891    .1595735
+  highgenedu |   .3979336   .0559937     7.11   0.000     .2881255    .5077417
+    adultedu |   .2745567   .0256966    10.68   0.000     .2241635    .3249498
+       _cons |   .0047488   .0688028     0.07   0.945     -.130179    .1396765
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath3'", replace ctitle(Sec Voc, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban High occupation.xls
+dir : seeout
+
+. 
+. regress voc_highocc male exp expsqr highvocedu highgenedu adultedu provincedum2-provincedum
+> 15 if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,137
+-------------+----------------------------------   F(20, 2116)     =     10.62
+       Model |  38.1599477        20  1.90799739   Prob > F        =    0.0000
+    Residual |  380.270562     2,116  .179711986   R-squared       =    0.0912
+-------------+----------------------------------   Adj R-squared   =    0.0826
+       Total |   418.43051     2,136  .195894434   Root MSE        =    .42392
+
+-------------------------------------------------------------------------------
+  voc_highocc | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   .1203061   .0184058     6.54   0.000     .0842107    .1564015
+          exp |   .0137667   .0080368     1.71   0.087    -.0019941    .0295275
+       expsqr |  -.0003221   .0002195    -1.47   0.143    -.0007526    .0001085
+   highvocedu |   .1057747    .029948     3.53   0.000     .0470441    .1645053
+   highgenedu |    .400867   .0563056     7.12   0.000     .2904468    .5112871
+     adultedu |   .2729423   .0259983    10.50   0.000     .2219575    .3239272
+ provincedum2 |  -.0404836   .0486029    -0.83   0.405    -.1357981     .054831
+ provincedum3 |  -.0184964   .0555967    -0.33   0.739    -.1275264    .0905336
+ provincedum4 |  -.0246775    .047485    -0.52   0.603    -.1177998    .0684447
+ provincedum5 |  -.0261275   .0462839    -0.56   0.572    -.1168941    .0646391
+ provincedum6 |   .0454967   .0530489     0.86   0.391    -.0585367    .1495301
+ provincedum7 |  -.0178684   .0444924    -0.40   0.688    -.1051217     .069385
+ provincedum8 |  -.0038247   .0459305    -0.08   0.934    -.0938983    .0862489
+ provincedum9 |   .0587298   .0481302     1.22   0.223    -.0356577    .1531172
+provincedum10 |    .048529   .0473072     1.03   0.305    -.0442445    .1413025
+provincedum11 |  -.0404061   .0420876    -0.96   0.337    -.1229435    .0421314
+provincedum12 |  -.0715944   .0501377    -1.43   0.153    -.1699186    .0267299
+provincedum13 |   -.034629   .0486123    -0.71   0.476    -.1299618    .0607039
+provincedum14 |  -.0551987    .054539    -1.01   0.312    -.1621544     .051757
+provincedum15 |   .0783384   .0631612     1.24   0.215    -.0455262     .202203
+        _cons |   .0198979   .0756159     0.26   0.792    -.1283914    .1681873
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath3'", append ctitle(Sec Voc, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban High occupation.xls
+dir : seeout
+
+. 
+. regress voc_highocc male exp expsqr higheredu if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,137
+-------------+----------------------------------   F(4, 2132)      =     39.30
+       Model |  28.7365505         4  7.18413763   Prob > F        =    0.0000
+    Residual |   389.69396     2,132  .182783283   R-squared       =    0.0687
+-------------+----------------------------------   Adj R-squared   =    0.0669
+       Total |   418.43051     2,136  .195894434   Root MSE        =    .42753
+
+------------------------------------------------------------------------------
+ voc_highocc | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .1165609   .0185245     6.29   0.000     .0802329    .1528889
+         exp |   .0193908   .0079277     2.45   0.015     .0038439    .0349376
+      expsqr |  -.0004394   .0002174    -2.02   0.043    -.0008657    -.000013
+   higheredu |   .2210897   .0203083    10.89   0.000     .1812636    .2609158
+       _cons |  -.0472996   .0680685    -0.69   0.487    -.1807873     .086188
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath3'", append ctitle(Sec Voc, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban High occupation.xls
+dir : seeout
+
+. 
+. regress voc_highocc male exp expsqr higheredu provincedum2-provincedum15 if inrange(birthye
+> ar, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     2,137
+-------------+----------------------------------   F(18, 2118)     =      9.82
+       Model |  32.2227749        18  1.79015416   Prob > F        =    0.0000
+    Residual |  386.207735     2,118  .182345484   R-squared       =    0.0770
+-------------+----------------------------------   Adj R-squared   =    0.0692
+       Total |   418.43051     2,136  .195894434   Root MSE        =    .42702
+
+-------------------------------------------------------------------------------
+  voc_highocc | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |    .117333   .0185327     6.33   0.000     .0809887    .1536773
+          exp |   .0188071   .0079725     2.36   0.018     .0031724    .0344418
+       expsqr |  -.0004353   .0002186    -1.99   0.047     -.000864   -6.62e-06
+    higheredu |   .2218245   .0205325    10.80   0.000     .1815585    .2620904
+ provincedum2 |  -.0614496   .0488186    -1.26   0.208     -.157187    .0342878
+ provincedum3 |  -.0309845   .0559403    -0.55   0.580    -.1406882    .0787191
+ provincedum4 |  -.0432213   .0477116    -0.91   0.365    -.1367877    .0503452
+ provincedum5 |  -.0470662   .0464689    -1.01   0.311    -.1381957    .0440632
+ provincedum6 |   .0355053   .0534062     0.66   0.506    -.0692287    .1402393
+ provincedum7 |  -.0289643   .0446682    -0.65   0.517    -.1165624    .0586337
+ provincedum8 |  -.0184939   .0461832    -0.40   0.689     -.109063    .0720752
+ provincedum9 |     .04617   .0484202     0.95   0.340    -.0487861    .1411262
+provincedum10 |   .0312299   .0475552     0.66   0.511      -.06203    .1244897
+provincedum11 |  -.0567711   .0422893    -1.34   0.180    -.1397041    .0261618
+provincedum12 |  -.0848252   .0504493    -1.68   0.093    -.1837606    .0141103
+provincedum13 |  -.0501379   .0488867    -1.03   0.305    -.1460088    .0457331
+provincedum14 |  -.0616175    .054891    -1.12   0.262    -.1692633    .0460284
+provincedum15 |    .074192    .063618     1.17   0.244    -.0505682    .1989523
+        _cons |  -.0146382   .0753488    -0.19   0.846    -.1624035    .1331271
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath3'", append ctitle(Sec Voc, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban High occupation.xls
+dir : seeout
+
+. 
+. regress gen_highocc male exp expsqr highvocedu highgenedu adultedu if inrange(birthyear, 19
+> 71, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,463
+-------------+----------------------------------   F(6, 5456)      =     91.46
+       Model |  111.482952         6   18.580492   Prob > F        =    0.0000
+    Residual |  1108.45774     5,456  .203163076   R-squared       =    0.0914
+-------------+----------------------------------   Adj R-squared   =    0.0904
+       Total |  1219.94069     5,462  .223350548   Root MSE        =    .45074
+
+------------------------------------------------------------------------------
+ gen_highocc | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .1220304    .012262     9.95   0.000     .0979919    .1460688
+         exp |   .0125237   .0043344     2.89   0.004     .0040265    .0210209
+      expsqr |  -.0002063     .00013    -1.59   0.112    -.0004611    .0000484
+  highvocedu |   .1564392   .0186375     8.39   0.000     .1199023    .1929761
+  highgenedu |   .3552273   .0175849    20.20   0.000     .3207538    .3897008
+    adultedu |   .1904003   .0225187     8.46   0.000     .1462546     .234546
+       _cons |  -.0650588   .0359732    -1.81   0.071    -.1355806    .0054631
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath3'", append ctitle(Sec Gen, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban High occupation.xls
+dir : seeout
+
+. 
+. regress gen_highocc male exp expsqr highvocedu highgenedu adultedu provincedum2-provincedum
+> 15 if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,463
+-------------+----------------------------------   F(20, 5442)     =     28.42
+       Model |  115.354031        20  5.76770157   Prob > F        =    0.0000
+    Residual |  1104.58666     5,442  .202974396   R-squared       =    0.0946
+-------------+----------------------------------   Adj R-squared   =    0.0912
+       Total |  1219.94069     5,462  .223350548   Root MSE        =    .45053
+
+-------------------------------------------------------------------------------
+  gen_highocc | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   .1213679   .0122732     9.89   0.000     .0973075    .1454283
+          exp |   .0123312   .0043445     2.84   0.005     .0038142    .0208482
+       expsqr |  -.0001984   .0001302    -1.52   0.128    -.0004537     .000057
+   highvocedu |   .1571995   .0186957     8.41   0.000     .1205483    .1938506
+   highgenedu |   .3571799    .017769    20.10   0.000     .3223455    .3920142
+     adultedu |   .1908895   .0226462     8.43   0.000     .1464939    .2352852
+ provincedum2 |  -.0493551   .0316526    -1.56   0.119     -.111407    .0126967
+ provincedum3 |  -.0035339   .0310084    -0.11   0.909    -.0643228     .057255
+ provincedum4 |  -.0106041   .0317042    -0.33   0.738     -.072757    .0515487
+ provincedum5 |  -.0102612   .0287094    -0.36   0.721     -.066543    .0460207
+ provincedum6 |  -.0048297   .0329066    -0.15   0.883    -.0693398    .0596805
+ provincedum7 |   .0148922   .0313285     0.48   0.635    -.0465241    .0763086
+ provincedum8 |  -.0435166   .0290925    -1.50   0.135    -.1005495    .0135162
+ provincedum9 |   .0510112   .0300269     1.70   0.089    -.0078537     .109876
+provincedum10 |   .0318784    .031572     1.01   0.313    -.0300154    .0937722
+provincedum11 |   -.007993    .025545    -0.31   0.754    -.0580713    .0420853
+provincedum12 |  -.0162398   .0333405    -0.49   0.626    -.0816006     .049121
+provincedum13 |   .0246552   .0306031     0.81   0.420     -.035339    .0846494
+provincedum14 |   .0045941   .0409569     0.11   0.911    -.0756977    .0848859
+provincedum15 |  -.0516779   .0378188    -1.37   0.172    -.1258179     .022462
+        _cons |  -.0612159   .0409176    -1.50   0.135    -.1414308     .018999
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath3'", append ctitle(Sec Gen, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban High occupation.xls
+dir : seeout
+
+. 
+. regress gen_highocc male exp expsqr higheredu if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,463
+-------------+----------------------------------   F(4, 5458)      =     89.10
+       Model |  74.7770198         4   18.694255   Prob > F        =    0.0000
+    Residual |  1145.16367     5,458  .209813791   R-squared       =    0.0613
+-------------+----------------------------------   Adj R-squared   =    0.0606
+       Total |  1219.94069     5,462  .223350548   Root MSE        =    .45805
+
+------------------------------------------------------------------------------
+ gen_highocc | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .1237121   .0124509     9.94   0.000     .0993033    .1481209
+         exp |   .0086158   .0043913     1.96   0.050     7.20e-06    .0172244
+      expsqr |  -.0001461    .000132    -1.11   0.268    -.0004049    .0001127
+   higheredu |   .2540329   .0160087    15.87   0.000     .2226495    .2854163
+       _cons |  -.0145445   .0362021    -0.40   0.688     -.085515     .056426
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath3'", append ctitle(Sec Gen, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban High occupation.xls
+dir : seeout
+
+. 
+. regress gen_highocc male exp expsqr higheredu provincedum2-provincedum15 if inrange(birthye
+> ar, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     5,463
+-------------+----------------------------------   F(18, 5444)     =     20.85
+       Model |  78.6912553        18  4.37173641   Prob > F        =    0.0000
+    Residual |  1141.24944     5,444  .209634356   R-squared       =    0.0645
+-------------+----------------------------------   Adj R-squared   =    0.0614
+       Total |  1219.94069     5,462  .223350548   Root MSE        =    .45786
+
+-------------------------------------------------------------------------------
+  gen_highocc | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |    .123619   .0124634     9.92   0.000     .0991858    .1480523
+          exp |   .0082322   .0044009     1.87   0.061    -.0003953    .0168596
+       expsqr |  -.0001325   .0001323    -1.00   0.317    -.0003917    .0001268
+    higheredu |   .2532945   .0161342    15.70   0.000      .221665     .284924
+ provincedum2 |  -.0766871   .0320782    -2.39   0.017    -.1395732    -.013801
+ provincedum3 |  -.0212843   .0314796    -0.68   0.499    -.0829968    .0404283
+ provincedum4 |   -.012334   .0322129    -0.38   0.702    -.0754841    .0508161
+ provincedum5 |  -.0173878   .0291433    -0.60   0.551    -.0745202    .0397447
+ provincedum6 |  -.0220255   .0333909    -0.66   0.510     -.087485    .0434341
+ provincedum7 |  -.0012654   .0317771    -0.04   0.968    -.0635613    .0610304
+ provincedum8 |  -.0655935   .0294789    -2.23   0.026     -.123384    -.007803
+ provincedum9 |   .0321793   .0304507     1.06   0.291    -.0275162    .0918748
+provincedum10 |  -.0005602   .0319779    -0.02   0.986    -.0632497    .0621292
+provincedum11 |  -.0292944   .0258902    -1.13   0.258    -.0800495    .0214607
+provincedum12 |  -.0355507   .0338495    -1.05   0.294    -.1019094    .0308079
+provincedum13 |  -.0029097   .0310231    -0.09   0.925    -.0637273     .057908
+provincedum14 |  -.0040386   .0416163    -0.10   0.923    -.0856231     .077546
+provincedum15 |  -.0505322   .0384264    -1.32   0.189    -.1258634    .0247989
+        _cons |   .0080771   .0411835     0.20   0.845    -.0726591    .0888133
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath3'", append ctitle(Sec Gen, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban High occupation.xls
+dir : seeout
+
+. 
+. *4) Long-term contract
+. 
+. regress voc_longtermcontract male exp expsqr highvocedu highgenedu adultedu if inrange(birt
+> hyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     1,856
+-------------+----------------------------------   F(6, 1849)      =     24.63
+       Model |  33.6359815         6  5.60599691   Prob > F        =    0.0000
+    Residual |  420.833307     1,849  .227600491   R-squared       =    0.0740
+-------------+----------------------------------   Adj R-squared   =    0.0710
+       Total |  454.469289     1,855  .244996921   Root MSE        =    .47707
+
+------------------------------------------------------------------------------
+voc_longte~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .0617873   .0221811     2.79   0.005     .0182847    .1052899
+         exp |   .0251395   .0096003     2.62   0.009     .0063111     .043968
+      expsqr |  -.0004558    .000263    -1.73   0.083    -.0009717    .0000601
+  highvocedu |     .11273   .0352828     3.20   0.001     .0435317    .1819282
+  highgenedu |   .2963995   .0642103     4.62   0.000     .1704673    .4223317
+    adultedu |   .2985104   .0299508     9.97   0.000     .2397695    .3572513
+       _cons |   .1818941   .0823674     2.21   0.027     .0203512    .3434369
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath4'", replace ctitle(Sec Voc, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Long-term contract.xls
+dir : seeout
+
+. 
+. regress voc_longtermcontract male exp expsqr highvocedu highgenedu adultedu provincedum2-pr
+> ovincedum15 if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     1,856
+-------------+----------------------------------   F(20, 1835)     =     10.23
+       Model |   45.573381        20  2.27866905   Prob > F        =    0.0000
+    Residual |  408.895908     1,835  .222831557   R-squared       =    0.1003
+-------------+----------------------------------   Adj R-squared   =    0.0905
+       Total |  454.469289     1,855  .244996921   Root MSE        =    .47205
+
+-------------------------------------------------------------------------------
+voc_longter~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   .0619125   .0219814     2.82   0.005     .0188013    .1050237
+          exp |   .0255376   .0095591     2.67   0.008     .0067897    .0442856
+       expsqr |  -.0004833    .000262    -1.84   0.065     -.000997    .0000305
+   highvocedu |   .0978363   .0351892     2.78   0.005     .0288213    .1668513
+   highgenedu |   .2561647   .0639899     4.00   0.000      .130664    .3816654
+     adultedu |   .2992794   .0300101     9.97   0.000     .2404219    .3581369
+ provincedum2 |    .004097   .0564264     0.07   0.942    -.1065698    .1147638
+ provincedum3 |   .0295065   .0678817     0.43   0.664     -.103627    .1626399
+ provincedum4 |  -.0846321   .0548709    -1.54   0.123    -.1922482    .0229839
+ provincedum5 |   .0316924   .0536543     0.59   0.555    -.0735374    .1369222
+ provincedum6 |  -.0238367   .0627429    -0.38   0.704    -.1468916    .0992183
+ provincedum7 |   .1110899   .0521873     2.13   0.033     .0087371    .2134427
+ provincedum8 |  -.1272806   .0545947    -2.33   0.020    -.2343548   -.0202064
+ provincedum9 |  -.1166894   .0567159    -2.06   0.040    -.2279238    -.005455
+provincedum10 |  -.1280209   .0559844    -2.29   0.022    -.2378208   -.0182211
+provincedum11 |  -.1274929   .0490395    -2.60   0.009    -.2236719   -.0313139
+provincedum12 |  -.1579802   .0585208    -2.70   0.007    -.2727546   -.0432057
+provincedum13 |  -.0206453   .0579805    -0.36   0.722    -.1343601    .0930694
+provincedum14 |  -.1306079    .063873    -2.04   0.041    -.2558794   -.0053364
+provincedum15 |  -.0717606   .0736131    -0.97   0.330    -.2161348    .0726136
+        _cons |   .2399759   .0895508     2.68   0.007     .0643436    .4156082
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath4'", append ctitle(Sec Voc, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Long-term contract.xls
+dir : seeout
+
+. 
+. regress voc_longtermcontract male exp expsqr higheredu if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     1,856
+-------------+----------------------------------   F(4, 1851)      =     31.50
+       Model |  28.9607719         4  7.24019297   Prob > F        =    0.0000
+    Residual |  425.508517     1,851  .229880344   R-squared       =    0.0637
+-------------+----------------------------------   Adj R-squared   =    0.0617
+       Total |  454.469289     1,855  .244996921   Root MSE        =    .47946
+
+------------------------------------------------------------------------------
+voc_longte~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .0592168   .0222838     2.66   0.008     .0155128    .1029208
+         exp |   .0321583   .0094874     3.39   0.001     .0135513    .0507654
+      expsqr |  -.0006185   .0002611    -2.37   0.018    -.0011305   -.0001065
+   higheredu |   .2308622   .0238964     9.66   0.000     .1839954    .2777289
+       _cons |   .1160151   .0811691     1.43   0.153    -.0431775    .2752077
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath4'", append ctitle(Sec Voc, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Long-term contract.xls
+dir : seeout
+
+. 
+. regress voc_longtermcontract male exp expsqr higheredu provincedum2-provincedum15 if inrang
+> e(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     1,856
+-------------+----------------------------------   F(18, 1837)     =      9.96
+       Model |  40.4251137        18  2.24583965   Prob > F        =    0.0000
+    Residual |  414.044175     1,837  .225391494   R-squared       =    0.0890
+-------------+----------------------------------   Adj R-squared   =    0.0800
+       Total |  454.469289     1,855  .244996921   Root MSE        =    .47475
+
+-------------------------------------------------------------------------------
+voc_longter~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   .0595335   .0221004     2.69   0.007     .0161889    .1028781
+          exp |   .0331497   .0094614     3.50   0.000     .0145936    .0517058
+       expsqr |  -.0006621   .0002603    -2.54   0.011    -.0011726   -.0001516
+    higheredu |   .2216148   .0239576     9.25   0.000     .1746279    .2686017
+ provincedum2 |  -.0143118   .0565907    -0.25   0.800    -.1253007    .0966772
+ provincedum3 |   .0166828   .0682122     0.24   0.807    -.1170989    .1504645
+ provincedum4 |  -.1028515   .0550469    -1.87   0.062    -.2108126    .0051096
+ provincedum5 |   .0106484   .0537679     0.20   0.843    -.0948042     .116101
+ provincedum6 |  -.0302505   .0630704    -0.48   0.632    -.1539477    .0934467
+ provincedum7 |   .0936932   .0523211     1.79   0.074    -.0089218    .1963083
+ provincedum8 |  -.1393604   .0548432    -2.54   0.011    -.2469219   -.0317989
+ provincedum9 |  -.1225692   .0569714    -2.15   0.032    -.2343046   -.0108337
+provincedum10 |  -.1376955   .0562255    -2.45   0.014     -.247968    -.027423
+provincedum11 |  -.1420768   .0492194    -2.89   0.004    -.2386086    -.045545
+provincedum12 |  -.1682471   .0587903    -2.86   0.004    -.2835499   -.0529443
+provincedum13 |   -.034066   .0582397    -0.58   0.559    -.1482889     .080157
+provincedum14 |  -.1280426   .0641766    -2.00   0.046    -.2539093   -.0021759
+provincedum15 |  -.0737317   .0740304    -1.00   0.319    -.2189244    .0714609
+        _cons |   .1809004   .0889944     2.03   0.042     .0063596    .3554412
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath4'", append ctitle(Sec Voc, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Long-term contract.xls
+dir : seeout
+
+. 
+. regress gen_longtermcontract male exp expsqr highvocedu highgenedu adultedu if inrange(birt
+> hyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     4,938
+-------------+----------------------------------   F(6, 4931)      =    115.09
+       Model |   137.84154         6  22.9735901   Prob > F        =    0.0000
+    Residual |  984.259715     4,931  .199606513   R-squared       =    0.1228
+-------------+----------------------------------   Adj R-squared   =    0.1218
+       Total |  1122.10126     4,937   .22728403   Root MSE        =    .44677
+
+------------------------------------------------------------------------------
+gen_longte~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |    .040603   .0127615     3.18   0.001     .0155848    .0656212
+         exp |   .0199758   .0045201     4.42   0.000     .0111144    .0288371
+      expsqr |  -.0002748   .0001367    -2.01   0.045    -.0005428   -6.71e-06
+  highvocedu |   .2304282   .0200231    11.51   0.000     .1911741    .2696823
+  highgenedu |    .463778   .0187334    24.76   0.000     .4270522    .5005037
+    adultedu |   .3266124   .0235202    13.89   0.000     .2805022    .3727226
+       _cons |   .1125388   .0373107     3.02   0.003     .0393932    .1856845
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath4'", append ctitle(Sec Gen, Higheredu Seperate,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Long-term contract.xls
+dir : seeout
+
+. 
+. regress gen_longtermcontract male exp expsqr highvocedu highgenedu adultedu provincedum2-pr
+> ovincedum15 if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     4,938
+-------------+----------------------------------   F(20, 4917)     =     39.56
+       Model |  155.521071        20  7.77605354   Prob > F        =    0.0000
+    Residual |  966.580185     4,917  .196579253   R-squared       =    0.1386
+-------------+----------------------------------   Adj R-squared   =    0.1351
+       Total |  1122.10126     4,937   .22728403   Root MSE        =    .44337
+
+-------------------------------------------------------------------------------
+gen_longter~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   .0410552   .0126802     3.24   0.001     .0161963     .065914
+          exp |   .0194654   .0044983     4.33   0.000     .0106467    .0282842
+       expsqr |  -.0002695   .0001361    -1.98   0.048    -.0005363   -2.73e-06
+   highvocedu |   .2193121   .0199512    10.99   0.000     .1801989    .2584253
+   highgenedu |   .4466924   .0188061    23.75   0.000      .409824    .4835609
+     adultedu |   .3156475   .0234809    13.44   0.000     .2696144    .3616806
+ provincedum2 |   -.044352   .0319764    -1.39   0.165    -.1070401     .018336
+ provincedum3 |   .0033078   .0318162     0.10   0.917    -.0590661    .0656816
+ provincedum4 |  -.1586967     .03263    -4.86   0.000    -.2226662   -.0947273
+ provincedum5 |   .0379151   .0292264     1.30   0.195    -.0193816    .0952119
+ provincedum6 |  -.0258895    .034047    -0.76   0.447    -.0926368    .0408577
+ provincedum7 |  -.0179776   .0321103    -0.56   0.576    -.0809281     .044973
+ provincedum8 |   -.055659   .0298915    -1.86   0.063    -.1142597    .0029417
+ provincedum9 |  -.0446714   .0311484    -1.43   0.152    -.1057362    .0163934
+provincedum10 |  -.0915492   .0324701    -2.82   0.005    -.1552051   -.0278932
+provincedum11 |  -.1466594   .0259372    -5.65   0.000    -.1975079   -.0958109
+provincedum12 |  -.1278986    .033814    -3.78   0.000    -.1941892   -.0616081
+provincedum13 |  -.0725395   .0315684    -2.30   0.022    -.1344277   -.0106512
+provincedum14 |  -.0623529   .0424704    -1.47   0.142    -.1456139    .0209081
+provincedum15 |  -.0004714   .0383033    -0.01   0.990     -.075563    .0746202
+        _cons |   .1861092   .0418654     4.45   0.000     .1040344     .268184
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath4'", append ctitle(Sec Gen, Higheredu Seperate, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Long-term contract.xls
+dir : seeout
+
+. 
+. regress gen_longtermcontract male exp expsqr higheredu if inrange(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     4,938
+-------------+----------------------------------   F(4, 4933)      =    113.87
+       Model |  94.8527657         4  23.7131914   Prob > F        =    0.0000
+    Residual |  1027.24849     4,933  .208240116   R-squared       =    0.0845
+-------------+----------------------------------   Adj R-squared   =    0.0838
+       Total |  1122.10126     4,937   .22728403   Root MSE        =    .45633
+
+------------------------------------------------------------------------------
+gen_longte~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        male |   .0430608   .0130222     3.31   0.001     .0175315    .0685901
+         exp |    .016493    .004605     3.58   0.000     .0074652    .0255209
+      expsqr |  -.0002213   .0001396    -1.59   0.113     -.000495    .0000524
+   higheredu |   .3598491   .0173604    20.73   0.000      .325815    .3938832
+       _cons |   .1569963   .0377639     4.16   0.000     .0829623    .2310303
+------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath4'", append ctitle(Sec Gen, Higheredu Together,) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Long-term contract.xls
+dir : seeout
+
+. 
+. regress gen_longtermcontract male exp expsqr higheredu provincedum2-provincedum15 if inrang
+> e(birthyear, 1971, 1992)
+
+      Source |       SS           df       MS      Number of obs   =     4,938
+-------------+----------------------------------   F(18, 4919)     =     31.34
+       Model |  115.437542        18  6.41319677   Prob > F        =    0.0000
+    Residual |  1006.66371     4,919  .204648041   R-squared       =    0.1029
+-------------+----------------------------------   Adj R-squared   =    0.0996
+       Total |  1122.10126     4,937   .22728403   Root MSE        =    .45238
+
+-------------------------------------------------------------------------------
+gen_longter~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         male |   .0439723   .0129258     3.40   0.001     .0186318    .0693127
+          exp |   .0159198   .0045773     3.48   0.001     .0069461    .0248934
+       expsqr |  -.0002115   .0001388    -1.52   0.128    -.0004835    .0000606
+    higheredu |   .3434114   .0173617    19.78   0.000     .3093748    .3774481
+ provincedum2 |  -.0786418   .0325218    -2.42   0.016    -.1423991   -.0148845
+ provincedum3 |  -.0147823   .0324342    -0.46   0.649    -.0783678    .0488032
+ provincedum4 |  -.1611557   .0332877    -4.84   0.000    -.2264145   -.0958969
+ provincedum5 |   .0242102   .0297789     0.81   0.416    -.0341698    .0825901
+ provincedum6 |   -.044814   .0346937    -1.29   0.197    -.1128291    .0232012
+ provincedum7 |  -.0406529   .0326903    -1.24   0.214    -.1047405    .0234347
+ provincedum8 |  -.0830514     .03041    -2.73   0.006    -.1426686   -.0234342
+ provincedum9 |  -.0675073   .0317235    -2.13   0.033    -.1296996   -.0053151
+provincedum10 |  -.1267261   .0330294    -3.84   0.000    -.1914785   -.0619736
+provincedum11 |  -.1733806   .0263851    -6.57   0.000    -.2251072    -.121654
+provincedum12 |  -.1504211   .0344633    -4.36   0.000    -.2179845   -.0828578
+provincedum13 |  -.1032794   .0321325    -3.21   0.001    -.1662734   -.0402855
+provincedum14 |  -.0712483   .0433271    -1.64   0.100    -.1561889    .0136922
+provincedum15 |    .000549   .0390735     0.01   0.989    -.0760525    .0771505
+        _cons |   .2511877   .0423298     5.93   0.000     .1682024    .3341731
+-------------------------------------------------------------------------------
+
+. outreg2 using "`xlspath4'", append ctitle(Sec Gen, Higheredu Together, Province Dum) pvalue
+/Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/OLS Job-types
+>  & Unemployment/OLS Urban Long-term contract.xls
+dir : seeout
+
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Aiden/Alternative Dependent Variables/
+> OLS Job-types & Unemployment/OLS Urban (1) Unemployment A20=5 (2) Unemployment A20=5|9 (3) 
+> High occupation (4) Long-term contract.log
+  log type:  text
+ closed on:   6 Aug 2024, 17:45:48
+---------------------------------------------------------------------------------------------

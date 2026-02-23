@@ -1,0 +1,1066 @@
+---------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/Ur
+> ban/Indicator DID Urban 1979.log
+  log type:  text
+ opened on:   8 Aug 2024, 13:54:37
+
+. use "`datapath'", clear
+
+. ****DIFF if DIFF has two procedures. First it creates a new dataset with parents info, then
+>  it merges the new dataset for further regressions.
+. ****Urban and Rural codes are in two .do files, but they are stored in the same excel workb
+> ook (if we make the xlsxfolderpath the same).
+. 
+. *Step Zero: A New Dataset for Merging
+. 
+. gen headsecedu = .
+(36,259 missing values generated)
+
+. gen headhighedu = .
+(36,259 missing values generated)
+
+. gen spousesecedu = .
+(36,259 missing values generated)
+
+. gen spousehighedu = .
+(36,259 missing values generated)
+
+. gen headparty = .
+(36,259 missing values generated)
+
+. gen spouseparty = .
+(36,259 missing values generated)
+
+. gen spouseparentsecedu = .
+(36,259 missing values generated)
+
+. gen spouseparenthighedu = .
+(36,259 missing values generated)
+
+. gen spouseparentparty = .
+(36,259 missing values generated)
+
+. gen headparentsecedu = .
+(36,259 missing values generated)
+
+. gen headparenthighedu = .
+(36,259 missing values generated)
+
+. gen headparentparty = .
+(36,259 missing values generated)
+
+. replace headsecedu = 1 if A02 == 1 & inrange(A13_1, 4, 9)
+(6,181 real changes made)
+
+. replace headsecedu = 0 if A02 == 1 & inrange(A13_1, 1, 3)
+(5,310 real changes made)
+
+. replace headhighedu = 1 if A02 == 1 & inrange(A13_1, 7, 9)
+(3,235 real changes made)
+
+. replace headhighedu = 0 if A02 == 1 & inrange(A13_1, 1, 6)
+(8,256 real changes made)
+
+. replace spousesecedu = 1 if A02 == 2 & inrange(A13_1, 4, 9)
+(4,780 real changes made)
+
+. replace spousesecedu = 0 if A02 == 2 & inrange(A13_1, 1, 3)
+(5,112 real changes made)
+
+. replace spousehighedu = 1 if A02 == 2 & inrange(A13_1, 7, 9)
+(2,420 real changes made)
+
+. replace spousehighedu = 0 if A02 == 2 & inrange(A13_1, 1, 6)
+(7,472 real changes made)
+
+. replace headparty = 1 if A02 == 1 & A07_1 == 1
+(2,477 real changes made)
+
+. replace headparty = 0 if A02 == 1 & inrange(A07_1, 2, 4)
+(9,027 real changes made)
+
+. replace spouseparty = 1 if A02 == 2 & A07_1 == 1
+(1,231 real changes made)
+
+. replace spouseparty = 0 if A02 == 2 & inrange(A07_1, 2, 4)
+(8,672 real changes made)
+
+. replace spouseparentsecedu = 0 if A02 == 5 & inrange(A13_1, 1, 3)
+(239 real changes made)
+
+. replace spouseparentsecedu = 1 if A02 == 5 & inrange(A13_1, 4, 9)
+(63 real changes made)
+
+. replace spouseparenthighedu = 0 if A02 == 5 & inrange(A13_1, 1, 6)
+(289 real changes made)
+
+. replace spouseparenthighedu = 1 if A02 == 5 & inrange(A13_1, 7, 9)
+(13 real changes made)
+
+. replace spouseparentparty = 0 if A02 == 5 & inrange(A07_1, 2, 4)
+(273 real changes made)
+
+. replace spouseparentparty = 1 if A02 == 5 & A07_1 == 1
+(33 real changes made)
+
+. replace headparentsecedu = 0 if A02 == 4 & inrange(A13_1, 1, 3)
+(1,208 real changes made)
+
+. replace headparentsecedu = 1 if A02 == 4 & inrange(A13_1, 4, 9)
+(308 real changes made)
+
+. replace headparenthighedu = 0 if A02 == 4 & inrange(A13_1, 1, 6)
+(1,450 real changes made)
+
+. replace headparenthighedu = 1 if A02 == 4 & inrange(A13_1, 7, 9)
+(66 real changes made)
+
+. replace headparentparty = 0 if A02 == 4 & inrange(A07_1, 2, 4)
+(1,366 real changes made)
+
+. replace headparentparty = 1 if A02 == 4 & A07_1 == 1
+(160 real changes made)
+
+. collapse (max) headsecedu headhighedu spousesecedu spousehighedu headparty spouseparty spou
+> separentsecedu spouseparenthighedu spouseparentparty headparentsecedu headparenthighedu hea
+> dparentparty, by(hhcode)
+
+. 
+. save "`folderpath'/`logname'.dta", replace
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator &
+    DIff-in-diff/1979/Urban/Indicator DID Urban 1979.dta saved
+
+. 
+. use "`datapath'", clear
+
+. 
+. *Step One: Variables and Data Processing
+. 
+. *1) Monthly earning & it's ln value
+. 
+. gen annualearning = C05_1 if C05_1!=-99 & C05_1!=-88
+(17,426 missing values generated)
+
+. gen workmonths=C01_1 if C01_1!=-99
+(79 missing values generated)
+
+. gen monthlyearning = annualearning/workmonths
+(17,471 missing values generated)
+
+. gen log_monthlyearning = ln(monthlyearning)
+(17,516 missing values generated)
+
+. 
+. *2) Sex (Male)
+. 
+. gen male=1 if A03==1
+(18,084 missing values generated)
+
+. replace male=0 if A03==2
+(18,084 real changes made)
+
+. 
+. *3) Age & Exp
+. 
+. gen birthyear = A04_1 if A04_1!=-88 & A04_1!=-99
+
+. gen age = 2018-birthyear
+
+. gen agesqr = age*age
+
+. 
+. gen exp = age-A13_3-6 if A13_3>=0
+(3,412 missing values generated)
+
+. replace exp=0 if exp<0
+(3,271 real changes made)
+
+. gen expsqr = exp*exp
+(3,412 missing values generated)
+
+. 
+. *4) Secondary education (Sec Voc; Sec Gen; Sec Jun)
+. 
+. *Sec Voc
+. *filter by secondary school types.
+. 
+. gen secvocedu=1 if A14==5
+(33,350 missing values generated)
+
+. replace secvocedu =0 if A14!=5
+(33,350 real changes made)
+
+. *include who reported vocational secondary degrees
+. replace secvocedu=1 if inrange(A13_1, 5, 6) & A13_2==1
+(902 real changes made)
+
+. *remove who had not finished secondary vocational education.
+. replace secvocedu=0 if (inrange(A13_1,4,6) & A13_2>1) | A13_1<4
+(188 real changes made)
+
+. tab secvocedu
+
+  secvocedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     32,636       90.01       90.01
+          1 |      3,623        9.99      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec voc
+. gen voc_log_monthlyearning = log_monthlyearning if secvocedu==1
+(33,450 missing values generated)
+
+. 
+. *Sec Gen
+. *filter by secondary school types.
+. gen secgenedu = 1 if A14!=-99 & A14!=-88 & A14!=5
+(22,075 missing values generated)
+
+. replace secgenedu =0 if A14==-99 | A14==-88 | A14==5
+(22,075 real changes made)
+
+. *remove who had/have not finished secondary general schools.
+. replace secgenedu =0 if (A13_1==4 & A13_2>1) | inrange(A13_1, 5, 6) | A13_1<4
+(2,765 real changes made)
+
+. tab secgenedu
+
+  secgenedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     24,840       68.51       68.51
+          1 |     11,419       31.49      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec gen
+. gen gen_log_monthlyearning = log_monthlyearning if secgenedu==1
+(28,201 missing values generated)
+
+. 
+. *Only Sec Junior
+. *filter by A13_1
+. gen secjun = 1 if (A13_1 ==3 & A13_2 ==1) | (inrange(A13_1, 4, 6) & A13_2>1) 
+(26,513 missing values generated)
+
+. replace secjun = 0 if secjun!=1
+(26,513 real changes made)
+
+. tab secjun
+
+     secjun |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     26,513       73.12       73.12
+          1 |      9,746       26.88      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for secjun
+. gen jun_log_monthlyearning = log_monthlyearning if secjun == 1
+(30,659 missing values generated)
+
+. 
+. *Categotical variable of education
+. gen educat=1 if secvocedu==1
+(32,636 missing values generated)
+
+. replace educat=2 if secgenedu==1
+(11,419 real changes made)
+
+. replace educat=3 if secjun==1
+(9,746 real changes made)
+
+. tab educat
+
+     educat |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |      3,623       14.62       14.62
+          2 |     11,419       46.07       60.68
+          3 |      9,746       39.32      100.00
+------------+-----------------------------------
+      Total |     24,788      100.00
+
+. 
+. *5) Higher education (High Voc; High Gen; Adult Edu; Higher Edu)
+. 
+. *Higher vocational education (full-time)
+. gen highvocedu =1 if A13_1==7 & A13_2==1
+(32,394 missing values generated)
+
+. replace highvocedu=0 if highvocedu!=1
+(32,394 real changes made)
+
+. replace highvocedu=0 if A15_7==6
+(959 real changes made)
+
+. 
+. *Higher general education (full-time)
+. gen highgenedu =1 if (A13_1==8 & A13_2==1) | A13_1==9
+(32,336 missing values generated)
+
+. replace highgenedu =0 if highgenedu!=1
+(32,336 real changes made)
+
+. replace highgenedu=0 if A15_7==6
+(567 real changes made)
+
+. 
+. *Adult continuing education
+. gen adultedu = 1 if A15_7 == 6
+(34,552 missing values generated)
+
+. replace adultedu = 0 if A15_7!=6
+(34,552 real changes made)
+
+. replace adultedu = 0 if ((A13_1==7 | A13_1==8) & A13_2!=1) | A13_1<=6
+(181 real changes made)
+
+. tab adultedu
+
+   adultedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     34,733       95.79       95.79
+          1 |      1,526        4.21      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *higheredu (dummy variable of higher education)
+. gen higheredu=1 if highvocedu==1 | highgenedu==1 | adultedu==1
+(28,471 missing values generated)
+
+. replace higheredu=0 if higheredu!=1
+(28,471 real changes made)
+
+. 
+. *6) Instrument
+. 
+. gen yearat15 = birthyear+15
+
+. local obsnum = _N
+
+. 
+. forval i =  1/`obsnum' {
+  2.         
+.         *extract the observation's year at age 15
+.         qui sum yearat15  in `i'
+  3.         local yearvalue = round(mod(r(mean),100))
+  4.         
+.         *get the variables' names for this observation
+.         *graduates of mid and sec schools
+.         if inrange(`yearvalue', 0, 9) {
+  5.                 local czgrad_year = "czgrad0`yearvalue'"
+  6.                 local gzgrad_year = "gzgrad0`yearvalue'"
+  7.         }
+  8.         else {
+  9.                 local czgrad_year = "czgrad`yearvalue'"
+ 10.                 local gzgrad_year = "gzgrad`yearvalue'"
+ 11.         }
+ 12.         *entrants of sec and universities
+.         if inrange(`yearvalue'+1, 0, 9) {
+ 13.                 local gzentrant_year = "gzentrant0`=`yearvalue'+1'"
+ 14.                 local gxentrant_year = "gxentrant0`=`yearvalue'+1'"
+ 15.                 local vsentrant_year = "vsentrant0`=`yearvalue'+1'"
+ 16.                 local tsentrant_year = "tsentrant0`=`yearvalue'+1'"
+ 17.         }
+ 18.         else{
+ 19.                 if `yearvalue' == 99 {
+ 20.                 local gzentrant_year = "gzentrant00"
+ 21.                 local gxentrant_year = "gxentrant00"
+ 22.                 local vsentrant_year = "vsentrant00"
+ 23.                 local tsentrant_year = "tsentrant00"
+ 24.                 }
+ 25.         else {
+ 26.                 local gzentrant_year = "gzentrant`=`yearvalue'+1'"
+ 27.                 local gxentrant_year = "gxentrant`=`yearvalue'+1'"
+ 28.                 local vsentrant_year = "vsentrant`=`yearvalue'+1'"
+ 29.                 local tsentrant_year = "tsentrant`=`yearvalue'+1'"
+ 30.         }
+ 31.         }
+ 32.         
+.         
+.         *For Ins 1 & 2: check whether the variable names exist (whether we have those years
+> ' or not)
+.         capture ds `czgrad_year' `gzgrad_year' `gzentrant_year' `gxentrant_year'
+ 33.         if _rc == 0 {
+ 34.                 *generate/replace the instrument
+.                 capture ds ins1_secgen_entrant_relative ins2_highedu_entrant_relative
+ 35.                 if _rc!=0 {
+ 36.                         qui gen ins1_secgen_entrant_relative = `gzentrant_year'/`czgrad_
+> year' if _n == `i'
+ 37.                         qui gen ins2_highedu_entrant_relative = `gxentrant_year'/`gzgrad
+> _year' if _n == `i'
+ 38.                 
+.                 }
+ 39.                 else {
+ 40.                         qui replace ins1_secgen_entrant_relative = `gzentrant_year'/`czg
+> rad_year' if _n == `i'
+ 41.                         qui replace ins2_highedu_entrant_relative = `gxentrant_year'/`gz
+> grad_year' if _n == `i'
+ 42.                 }
+ 43.         }
+ 44.         
+.         *For Ins 3
+.         capture ds `czgrad_year' `vsentrant_year'
+ 45.         if _rc == 0 {
+ 46.                 *generate/replace the instrument
+.                 capture ds ins3_vs_entrant_relative
+ 47.                 if _rc!=0 {
+ 48.                         qui gen ins3_vs_entrant_relative = `vsentrant_year'/`czgrad_year
+> ' if _n == `i'
+ 49.                 }
+ 50.                 else {
+ 51.                         qui replace ins3_vs_entrant_relative = `vsentrant_year'/`czgrad_
+> year' if _n == `i'
+ 52.                 }
+ 53.         }
+ 54. }
+
+. 
+. 
+. sum ins1_secgen_entrant_relative, d
+
+                ins1_secgen_entrant_relative
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     .1551793       .0699308
+ 5%     .1673149       .0699308
+10%      .186534       .0699308       Obs              14,600
+25%      .212766       .0699308       Sum of wgt.      14,600
+
+50%     .2705238                      Mean           .3109947
+                        Largest       Std. dev.      .1165706
+75%     .4141782       .6448125
+90%     .4786784       .6448125       Variance       .0135887
+95%     .5186297       .6448125       Skewness       .6285488
+99%     .5868049       .6448125       Kurtosis       2.318413
+
+. sum ins2_highedu_entrant_relative, d
+
+                ins2_highedu_entrant_relative
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%      .152784       .0821429
+ 5%     .1734805       .0886667
+10%     .2178154       .0925698       Obs              14,600
+25%     .2949015       .1380375       Sum of wgt.      14,600
+
+50%      .563901                      Mean           .6110964
+                        Largest       Std. dev.      .4193773
+75%     .8148931       2.985416
+90%     1.023507       2.985416       Variance       .1758773
+95%     1.167059       2.985416       Skewness       2.172976
+99%     2.425508       2.985416       Kurtosis       10.34083
+
+. sum ins3_vs_entrant_relative, d
+
+                  ins3_vs_entrant_relative
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     .1185751       .0849628
+ 5%     .1372715       .0849628
+10%     .1456793       .0852398       Obs              14,942
+25%      .184019       .0852398       Sum of wgt.      14,942
+
+50%     .2320418                      Mean            .249079
+                        Largest       Std. dev.      .0890765
+75%     .3028006       .6566039
+90%     .3705537       .6566039       Variance       .0079346
+95%     .4302979       .6566039       Skewness       .9809564
+99%     .5072184       .6566039       Kurtosis       4.050356
+
+. 
+. *7) Province fixed effect (Method: By the first two digits of household code)
+. 
+. destring hhcode, generate(province_code) force float
+hhcode: contains nonnumeric characters; province_code generated as float
+(2 missing values generated)
+
+. replace province_code = floor(province_code/1000000000000) if province_code<100000000000000
+(35,938 real changes made)
+
+. replace province_code = floor(province_code/10000000000000) if province_code>=1000000000000
+> 00 & province_code<1000000000000000
+(319 real changes made)
+
+. replace province_code = floor(province_code/1000000000000000) if province_code>=10000000000
+> 000000
+(0 real changes made)
+
+. *The specific two; Do that for rural after special care.
+. replace province_code = 51 if province_code==.
+(2 real changes made)
+
+. tab province_code, gen(provincedum)
+
+     hhcode |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         11 |      2,836        7.82        7.82
+         14 |      2,555        7.05       14.87
+         15 |      1,760        4.85       19.72
+         21 |      2,218        6.12       25.84
+         32 |      2,943        8.12       33.96
+         34 |      2,254        6.22       40.17
+         37 |      2,396        6.61       46.78
+         41 |      2,959        8.16       54.94
+         42 |      2,447        6.75       61.69
+         43 |      2,289        6.31       68.00
+         44 |      4,331       11.94       79.95
+         50 |      2,115        5.83       85.78
+         51 |      2,798        7.72       93.50
+         53 |      1,226        3.38       96.88
+         62 |      1,132        3.12      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *8) Birth Month cohort
+. 
+. gen birthmonth = A04_2 if A04_2!=-88 & A04_2!=-99
+(13 missing values generated)
+
+. gen t = birthmonth - 9 + 12 * (birthyear - 1979)
+(13 missing values generated)
+
+. gen d = 1 if t >= 0 & t != .
+(18,362 missing values generated)
+
+. replace d = 0 if t < 1
+(18,418 real changes made)
+
+. gen td = t * d
+(13 missing values generated)
+
+. 
+. *9) Parent Indicators
+. merge m:1 hhcode using "`folderpath'/`logname'.dta"
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                            36,259  (_merge==3)
+    -----------------------------------------
+
+. *parent_secedu
+. gen parent_secedu = 0 if (A02==1 & (inrange(H03_R1, 1, 3) | inrange(H03_R2, 1, 3))) | (A02=
+> =2 & (inrange(H03_R3, 1, 3) | inrange(H03_R4, 1, 3)))
+(25,313 missing values generated)
+
+. replace parent_secedu = 0 if A02 ==3 & (headsecedu == 0 | spousesecedu == 0)
+(6,013 real changes made)
+
+. replace parent_secedu = 0 if (A02 == 2 & spouseparentsecedu == 0) | (A02 == 1 & headparents
+> ecedu == 0)
+(241 real changes made)
+
+. replace parent_secedu=1 if (A02==1 & (inrange(H03_R1, 4, 9) | inrange(H03_R2, 4, 9)))|(A02=
+> =2 & (inrange(H03_R3, 4, 9) | inrange(H03_R4, 4, 9)))
+(2,797 real changes made)
+
+. replace parent_secedu = 1 if A02 ==3 & (headsecedu == 1 | spousesecedu == 1)
+(5,871 real changes made)
+
+. replace parent_secedu = 1 if (A02 == 2 & spouseparentsecedu == 1) | (A02 == 1 & headparents
+> ecedu == 1)
+(60 real changes made)
+
+. tab parent_secedu
+
+parent_sece |
+         du |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     13,468       60.68       60.68
+          1 |      8,728       39.32      100.00
+------------+-----------------------------------
+      Total |     22,196      100.00
+
+.  *parent_highedu
+. gen parent_highedu = 0 if (A02==1 & (inrange(H03_R1, 1, 6) | inrange(H03_R2, 1, 6))) | (A02
+> ==2 & (inrange(H03_R3, 1, 6) | inrange(H03_R4, 1, 6)))
+(24,480 missing values generated)
+
+. replace parent_highedu = 0 if A02 == 3 & (headhighedu == 0 | spousehighedu == 0)
+(8,028 real changes made)
+
+. replace parent_highedu = 0 if (A02 == 2 & spouseparenthighedu == 0) | (A02 == 1 & headparen
+> thighedu == 0)
+(256 real changes made)
+
+. replace parent_highedu=1 if (A02==1 & (inrange(H03_R1, 7, 9) | inrange(H03_R2, 7, 9)))|(A02
+> ==2 & (inrange(H03_R3, 7, 9) | inrange(H03_R4, 7, 9)))
+(546 real changes made)
+
+. replace parent_highedu = 1 if A02 == 3 & (headhighedu == 1 | spousehighedu == 1)
+(3,206 real changes made)
+
+. replace parent_highedu = 1 if (A02 == 2 & spouseparenthighedu == 1) | (A02 == 1 & headparen
+> thighedu == 1)
+(18 real changes made)
+
+. tab parent_highedu
+
+parent_high |
+        edu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     18,426       83.01       83.01
+          1 |      3,770       16.99      100.00
+------------+-----------------------------------
+      Total |     22,196      100.00
+
+. *parent_partymember
+. gen parent_partymember = 0 if ((A02==1 & (inrange(H07_R1, 2, 4) | inrange(H07_R2, 2, 4))) |
+>  (A02==2 & (inrange(H07_R3, 2, 4) | inrange(H07_R4, 2, 4))))
+(24,599 missing values generated)
+
+. replace parent_partymember = 0 if A02 == 3 & (headparty == 0 | spouseparty == 0)
+(9,506 real changes made)
+
+. replace parent_partymember = 0 if (A02 == 2 & spouseparentparty == 0) | (A02 == 1 & headpar
+> entparty == 0)
+(246 real changes made)
+
+. replace parent_partymember=1 if (A02==1 & (H07_R1 == 1 | H07_R2 == 1)) | (A02==2 & (H07_R3 
+> == 1 | H07_R4 == 1))
+(2,132 real changes made)
+
+. replace parent_partymember = 1 if A02 == 3 & (headparty == 1 | spouseparty == 1)
+(2,343 real changes made)
+
+. replace parent_partymember = 1 if (A02 == 2 & spouseparentparty == 1) | (A02 == 1 & headpar
+> entparty == 1)
+(42 real changes made)
+
+. tab parent_partymember
+
+parent_part |
+    ymember |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     17,694       79.66       79.66
+          1 |      4,517       20.34      100.00
+------------+-----------------------------------
+      Total |     22,211      100.00
+
+. 
+. *10) GaoKao Indicator
+. gen TakeGaoKao = 1 if A15_1 == 1
+(27,995 missing values generated)
+
+. replace TakeGaoKao = 0 if A15_1 == 2
+(22,524 real changes made)
+
+. tab TakeGaoKao
+
+ TakeGaoKao |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     22,524       73.16       73.16
+          1 |      8,264       26.84      100.00
+------------+-----------------------------------
+      Total |     30,788      100.00
+
+. 
+. *11) Key School Indicator
+. 
+. gen Keyschool = 0 if A14 != .
+
+. replace Keyschool = 1 if inrange(A14, 1, 3)
+(5,933 real changes made)
+
+. 
+. *12) Birth Year Dums
+. keep if inrange(birthyear, 1971, 1992)
+(22,964 observations deleted)
+
+. tab birthyear, gen(birthyeardum)
+
+  birthyear |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       1971 |        686        5.16        5.16
+       1972 |        702        5.28       10.44
+       1973 |        664        4.99       15.43
+       1974 |        641        4.82       20.26
+       1975 |        673        5.06       25.32
+       1976 |        595        4.48       29.79
+       1977 |        508        3.82       33.61
+       1978 |        524        3.94       37.56
+       1979 |        591        4.45       42.00
+       1980 |        512        3.85       45.85
+       1981 |        619        4.66       50.51
+       1982 |        668        5.02       55.53
+       1983 |        540        4.06       59.59
+       1984 |        615        4.63       64.22
+       1985 |        592        4.45       68.67
+       1986 |        675        5.08       73.75
+       1987 |        697        5.24       78.99
+       1988 |        649        4.88       83.87
+       1989 |        714        5.37       89.24
+       1990 |        588        4.42       93.67
+       1991 |        446        3.35       97.02
+       1992 |        396        2.98      100.00
+------------+-----------------------------------
+      Total |     13,295      100.00
+
+. 
+. *Step Two: Regressions
+. 
+. *Formulate excel sheet
+. putexcel set "`xlsxpath'", modify
+
+. putexcel C1:D1 E1:F1 G1:H1, merge hcenter
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. putexcel A2:B2 A4:A5 A6:A7 A8:A9 A10:A11 A12:A13, merge left
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. putexcel A2="Sum Statistics of" B3="Total Obs" A4="Keyschool" A6="parent_secedu" A8="parent
+> _highedu" A10="parent_partymember" A12="TakeGaoKao"
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. putexcel B4="mean" B6="mean" B8="mean" B10="mean" B12="mean" B5="obs" B7="obs" B9="obs" B11
+> ="obs" B13="obs"
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. putexcel A1="Urban 1979" C1="SecVoc Track" E1="SecGen Track" G1="SecJun Track"
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. putexcel C2="t<0" D2="t>=0" E2="t<0" F2="t>=0" G2="t<0" H2="t>=0"
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. 
+. qui selmlog voc_log_monthlyearning male  highvocedu highgenedu adultedu birthyeardum2-birth
+> yeardum22 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educ
+> at=male  ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relativ
+> e) dmf(2) showmlogit gen(m)
+
+. qui regress voc_log_monthlyearning male  highvocedu highgenedu adultedu m1 m2 m3 birthyeard
+> um2-birthyeardum22 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. drop m1 m2 m3
+
+. 
+. sum Keyschool parent_secedu parent_highedu parent_partymember TakeGaoKao if e(sample) & t <
+>  0
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+   Keyschool |        798    .0438596    .2049112          0          1
+parent_sec~u |        746    .2506702    .4336897          0          1
+parent_hig~u |        746    .0589812    .2357476          0          1
+parent_par~r |        749    .2696929    .4440968          0          1
+  TakeGaoKao |        783    .1302682    .3368134          0          1
+
+. sum Keyschool parent_secedu parent_highedu parent_partymember TakeGaoKao if e(sample) & t >
+> = 0
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+   Keyschool |      1,274    .0431711     .203322          0          1
+parent_sec~u |      1,134    .3289242    .4700297          0          1
+parent_hig~u |      1,134     .031746    .1754005          0          1
+parent_par~r |      1,134     .164903    .3712567          0          1
+  TakeGaoKao |      1,238    .1987076    .3991887          0          1
+
+. 
+. qui sum monthlyearning if e(sample) & t < 0
+
+. putexcel C3=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum monthlyearning if e(sample) & t >= 0
+
+. putexcel D3=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum Keyschool if e(sample) & t < 0
+
+. putexcel C4=`r(mean)' C5=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum Keyschool if e(sample) & t >= 0
+
+. putexcel D4=`r(mean)' D5=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_secedu if e(sample) & t < 0
+
+. putexcel C6=`r(mean)' C7=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_secedu if e(sample) & t >= 0
+
+. putexcel D6=`r(mean)' D7=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_highedu if e(sample) & t < 0
+
+. putexcel C8=`r(mean)' C9=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_highedu if e(sample) & t >= 0
+
+. putexcel D8=`r(mean)' D9=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_partymember if e(sample) & t < 0
+
+. putexcel C10=`r(mean)' C11=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_partymember if e(sample) & t >= 0
+
+. putexcel D10=`r(mean)' D11=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum TakeGaoKao if e(sample) & t < 0
+
+. putexcel C12=`r(mean)' C13=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum TakeGaoKao if e(sample) & t >= 0
+
+. putexcel D12=`r(mean)' D13=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. 
+. qui selmlog gen_log_monthlyearning male  highvocedu highgenedu adultedu birthyeardum2-birth
+> yeardum22 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educ
+> at=male  ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relativ
+> e) dmf(2) showmlogit gen(m)
+
+. qui regress gen_log_monthlyearning male  highvocedu highgenedu adultedu m1 m2 m3 birthyeard
+> um2-birthyeardum22 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. drop m1 m2 m3
+
+. 
+. sum Keyschool parent_secedu parent_highedu parent_partymember TakeGaoKao if e(sample) & t <
+>  0
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+   Keyschool |      1,660    .4198795    .4936877          0          1
+parent_sec~u |      1,596    .3026316    .4595411          0          1
+parent_hig~u |      1,596    .0776942    .2677737          0          1
+parent_par~r |      1,593     .309479     .462424          0          1
+  TakeGaoKao |      1,657    .6047073    .4890611          0          1
+
+. sum Keyschool parent_secedu parent_highedu parent_partymember TakeGaoKao if e(sample) & t >
+> = 0
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+   Keyschool |      3,652    .4912377    .4999917          0          1
+parent_sec~u |      3,272    .4446822    .4970065          0          1
+parent_hig~u |      3,272    .1173594    .3218973          0          1
+parent_par~r |      3,272    .2286064    .4199993          0          1
+  TakeGaoKao |      3,643    .8234971    .3812998          0          1
+
+. 
+. qui sum monthlyearning if e(sample) & t < 0
+
+. putexcel E3=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum monthlyearning if e(sample) & t >= 0
+
+. putexcel F3=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum Keyschool if e(sample) & t < 0
+
+. putexcel E4=`r(mean)' E5=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum Keyschool if e(sample) & t >= 0
+
+. putexcel F4=`r(mean)' F5=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_secedu if e(sample) & t < 0
+
+. putexcel E6=`r(mean)' E7=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_secedu if e(sample) & t >= 0
+
+. putexcel F6=`r(mean)' F7=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_highedu if e(sample) & t < 0
+
+. putexcel E8=`r(mean)' E9=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_highedu if e(sample) & t >= 0
+
+. putexcel F8=`r(mean)' F9=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_partymember if e(sample) & t < 0
+
+. putexcel E10=`r(mean)' E11=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_partymember if e(sample) & t >= 0
+
+. putexcel F10=`r(mean)' F11=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum TakeGaoKao if e(sample) & t < 0
+
+. putexcel E12=`r(mean)' E13=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum TakeGaoKao if e(sample) & t >= 0
+
+. putexcel F12=`r(mean)' F13=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. 
+. qui selmlog jun_log_monthlyearning male  highvocedu highgenedu adultedu birthyeardum1-birth
+> yeardum22 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educ
+> at=male  ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relativ
+> e) dmf(2) showmlogit gen(m)
+
+. qui regress jun_log_monthlyearning male  highvocedu highgenedu adultedu m1 m2 m3 birthyeard
+> um1-birthyeardum22 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. drop m1 m2 m3
+
+. 
+. sum Keyschool parent_secedu parent_highedu parent_partymember TakeGaoKao if e(sample) & t <
+>  0
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+   Keyschool |      1,631    .0183936    .1344112          0          1
+parent_sec~u |      1,506    .0783533    .2688159          0          1
+parent_hig~u |      1,506    .0112882    .1056796          0          1
+parent_par~r |      1,511    .1211118    .3263652          0          1
+  TakeGaoKao |      1,396    .0007163    .0267644          0          1
+
+. sum Keyschool parent_secedu parent_highedu parent_partymember TakeGaoKao if e(sample) & t >
+> = 1
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+   Keyschool |      1,519    .0164582    .1272713          0          1
+parent_sec~u |      1,316    .1557751    .3627798          0          1
+parent_hig~u |      1,316    .0030395    .0550689          0          1
+parent_par~r |      1,322    .0801815    .2716768          0          1
+  TakeGaoKao |      1,241    .0056406    .0749221          0          1
+
+. 
+. qui sum monthlyearning if e(sample) & t < 0
+
+. putexcel G3=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum monthlyearning if e(sample) & t >= 0
+
+. putexcel H3=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum Keyschool if e(sample) & t < 0
+
+. putexcel G4=`r(mean)' G5=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum Keyschool if e(sample) & t >= 0
+
+. putexcel H4=`r(mean)' H5=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_secedu if e(sample) & t < 0
+
+. putexcel G6=`r(mean)' G7=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_secedu if e(sample) & t >= 0
+
+. putexcel H6=`r(mean)' H7=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_highedu if e(sample) & t < 0
+
+. putexcel G8=`r(mean)' G9=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_highedu if e(sample) & t >= 0
+
+. putexcel H8=`r(mean)' H9=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_partymember if e(sample) & t < 0
+
+. putexcel G10=`r(mean)' G11=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum parent_partymember if e(sample) & t >= 0
+
+. putexcel H10=`r(mean)' H11=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum TakeGaoKao if e(sample) & t < 0
+
+. putexcel G12=`r(mean)' G13=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. qui sum TakeGaoKao if e(sample) & t >= 0
+
+. putexcel H12=`r(mean)' H13=`r(N)'
+file /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/DID 1979.x
+> lsx saved
+
+. 
+. putexcel save
+
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Aiden/Indicator & DIff-in-diff/1979/Ur
+> ban/Indicator DID Urban 1979.log
+  log type:  text
+ closed on:   8 Aug 2024, 13:55:51
+---------------------------------------------------------------------------------------------

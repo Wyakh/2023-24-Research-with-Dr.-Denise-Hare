@@ -1,0 +1,2737 @@
+---------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Fra
+> me/Tenure/IV Urban ATF Tenure 1982 3years.log
+  log type:  text
+ opened on:   6 Aug 2024, 17:44:00
+
+. use "`datapath'", clear
+
+. 
+. *Step One: Variables and Data Processing
+. 
+. *1) Monthly earning & it's ln value
+. 
+. gen annualearning = C05_1 if C05_1!=-99 & C05_1!=-88
+(17,426 missing values generated)
+
+. gen workmonths=C01_1 if C01_1!=-99
+(79 missing values generated)
+
+. gen monthlyearning = annualearning/workmonths
+(17,471 missing values generated)
+
+. gen log_monthlyearning = ln(monthlyearning)
+(17,516 missing values generated)
+
+. 
+. *2) Sex (Male)
+. 
+. gen male=1 if A03==1
+(18,084 missing values generated)
+
+. replace male=0 if A03==2
+(18,084 real changes made)
+
+. 
+. *3) Age & Exp
+. 
+. gen birthyear = A04_1 if A04_1!=-88 & A04_1!=-99
+
+. gen age = 2018-birthyear
+
+. gen agesqr = age*age
+
+. 
+. gen exp = age-A13_3-6 if A13_3>=0
+(3,412 missing values generated)
+
+. replace exp=0 if exp<0
+(3,271 real changes made)
+
+. gen expsqr = exp*exp
+(3,412 missing values generated)
+
+. 
+. *4) Secondary education (Sec Voc; Sec Gen; Sec Jun)
+. 
+. *Sec Voc
+. *filter by secondary school types.
+. gen secvocedu=1 if A14==5
+(33,350 missing values generated)
+
+. replace secvocedu =0 if A14!=5
+(33,350 real changes made)
+
+. *include who reported vocational secondary degrees
+. replace secvocedu=1 if inrange(A13_1, 5, 6) & A13_2==1
+(902 real changes made)
+
+. *remove who had not finished secondary vocational education.
+. replace secvocedu=0 if (inrange(A13_1,4,6) & A13_2>1) | A13_1<4
+(188 real changes made)
+
+. tab secvocedu
+
+  secvocedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     32,636       90.01       90.01
+          1 |      3,623        9.99      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec voc
+. gen voc_log_monthlyearning = log_monthlyearning if secvocedu==1
+(33,450 missing values generated)
+
+. 
+. *Sec Gen
+. *filter by secondary school types.
+. gen secgenedu = 1 if A14!=-99 & A14!=-88 & A14!=5
+(22,075 missing values generated)
+
+. replace secgenedu =0 if A14==-99 | A14==-88 | A14==5
+(22,075 real changes made)
+
+. *remove who had/have not finished secondary general schools.
+. replace secgenedu =0 if (A13_1==4 & A13_2>1) | inrange(A13_1, 5, 6) | A13_1<4
+(2,765 real changes made)
+
+. tab secgenedu
+
+  secgenedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     24,840       68.51       68.51
+          1 |     11,419       31.49      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec gen
+. gen gen_log_monthlyearning = log_monthlyearning if secgenedu==1
+(28,201 missing values generated)
+
+. 
+. *Only Sec Junior
+. *filter by A13_1
+. gen secjun = 1 if (A13_1 ==3 & A13_2 ==1) | (inrange(A13_1, 4, 6) & A13_2>1) 
+(26,513 missing values generated)
+
+. replace secjun = 0 if secjun!=1
+(26,513 real changes made)
+
+. tab secjun
+
+     secjun |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     26,513       73.12       73.12
+          1 |      9,746       26.88      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *Categotical variable of education
+. gen educat=1 if secvocedu==1
+(32,636 missing values generated)
+
+. replace educat=2 if secgenedu==1
+(11,419 real changes made)
+
+. replace educat=3 if secjun==1
+(9,746 real changes made)
+
+. tab educat
+
+     educat |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |      3,623       14.62       14.62
+          2 |     11,419       46.07       60.68
+          3 |      9,746       39.32      100.00
+------------+-----------------------------------
+      Total |     24,788      100.00
+
+. 
+. *5) Higher education (High Voc; High Gen; Adult Edu; Higher Edu)
+. 
+. *Higher vocational education (full-time)
+. gen highvocedu =1 if A13_1==7 & A13_2==1
+(32,394 missing values generated)
+
+. replace highvocedu=0 if highvocedu!=1
+(32,394 real changes made)
+
+. replace highvocedu=0 if A15_7==6
+(959 real changes made)
+
+. 
+. *Higher general education (full-time)
+. gen highgenedu =1 if (A13_1==8 & A13_2==1) | A13_1==9
+(32,336 missing values generated)
+
+. replace highgenedu =0 if highgenedu!=1
+(32,336 real changes made)
+
+. replace highgenedu=0 if A15_7==6
+(567 real changes made)
+
+. 
+. *Adult continuing education
+. gen adultedu = 1 if A15_7 == 6
+(34,552 missing values generated)
+
+. replace adultedu = 0 if A15_7!=6
+(34,552 real changes made)
+
+. replace adultedu = 0 if ((A13_1==7 | A13_1==8) & A13_2!=1) | A13_1<=6
+(181 real changes made)
+
+. tab adultedu
+
+   adultedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     34,733       95.79       95.79
+          1 |      1,526        4.21      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *higheredu (dummy variable of higher education)
+. gen higheredu=1 if highvocedu==1 | highgenedu==1 | adultedu==1
+(28,471 missing values generated)
+
+. replace higheredu=0 if higheredu!=1
+(28,471 real changes made)
+
+. 
+. *7) Province fixed effect (Method: By the first two digits of household code)
+. 
+. destring hhcode, generate(province_code) force float
+hhcode: contains nonnumeric characters; province_code generated as float
+(2 missing values generated)
+
+. replace province_code = floor(province_code/1000000000000) if province_code<100000000000000
+(35,938 real changes made)
+
+. replace province_code = floor(province_code/10000000000000) if province_code>=1000000000000
+> 00 & province_code<1000000000000000
+(319 real changes made)
+
+. replace province_code = floor(province_code/1000000000000000) if province_code>=10000000000
+> 000000
+(0 real changes made)
+
+. tab province_code, gen(provincedum)
+
+     hhcode |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         11 |      2,836        7.82        7.82
+         14 |      2,555        7.05       14.87
+         15 |      1,760        4.85       19.72
+         21 |      2,218        6.12       25.84
+         32 |      2,943        8.12       33.96
+         34 |      2,254        6.22       40.17
+         37 |      2,396        6.61       46.78
+         41 |      2,959        8.16       54.94
+         42 |      2,447        6.75       61.69
+         43 |      2,289        6.31       68.01
+         44 |      4,331       11.95       79.95
+         50 |      2,115        5.83       85.78
+         51 |      2,796        7.71       93.50
+         53 |      1,226        3.38       96.88
+         62 |      1,132        3.12      100.00
+------------+-----------------------------------
+      Total |     36,257      100.00
+
+. 
+. *8) Birth Month cohort
+. 
+. gen birthmonth = A04_2 if A04_2!=-88 & A04_2!=-99
+(13 missing values generated)
+
+. gen t = birthmonth - 9 + 12 * (birthyear - 1982)
+(13 missing values generated)
+
+. gen d = 1 if t >= 0 & t != .
+(20,114 missing values generated)
+
+. replace d = 0 if t < 1
+(20,164 real changes made)
+
+. gen td = t * d
+(13 missing values generated)
+
+. 
+. 
+. *9) Tenure
+. gen yearstart = C02 if C02!=-88 & C02!=-99
+(17,464 missing values generated)
+
+. gen tenure = 2018 - yearstart
+(17,464 missing values generated)
+
+. gen tenuresqr = tenure * tenure
+(17,464 missing values generated)
+
+. 
+. 
+. *Step Two: Regressions
+. 
+. gen secvochighedu = secvocedu * higheredu
+
+. gen secgenhighedu = secgenedu * higheredu
+
+. 
+. local months = 36
+
+. 
+. 
+. *1)
+. ivregress 2sls log_monthlyearning tenure tenuresqr male (higheredu secgenhighedu secgenedu 
+> = t d td) if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 25000) & educ
+> at != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,930
+                                                        F(6, 2923)    =  30.20
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0584
+                                                        Adj R-squared = 0.0564
+                                                        Root MSE      = 0.4855
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0492173   .0053136     9.26   0.000     .0387985    .0596361
+   tenuresqr |  -.0018026   .0002949    -6.11   0.000    -.0023809   -.0012244
+        male |  -.0225871   .0180402    -1.25   0.211      -.05796    .0127858
+           t |   .0017703    .001167     1.52   0.129    -.0005179    .0040586
+           d |   .0573271   .0347879     1.65   0.099    -.0108841    .1255383
+          td |  -.0018678   .0017104    -1.09   0.275    -.0052215    .0014859
+       _cons |   .2731336   .0301687     9.05   0.000     .2139795    .3322876
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,930
+                                                        F(6, 2923)    =  26.09
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0508
+                                                        Adj R-squared = 0.0489
+                                                        Root MSE      = 0.4802
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0528287   .0052558    10.05   0.000     .0425232    .0631342
+   tenuresqr |  -.0023285   .0002917    -7.98   0.000    -.0029005   -.0017565
+        male |   .0008068   .0178441     0.05   0.964    -.0341816    .0357951
+           t |   .0005422   .0011543     0.47   0.639    -.0017212    .0028056
+           d |   .0701353   .0344097     2.04   0.042     .0026657     .137605
+          td |   .0001497   .0016918     0.09   0.929    -.0031675    .0034669
+       _cons |   .1850949   .0298407     6.20   0.000      .126584    .2436059
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,930
+                                                        F(6, 2923)    =  18.43
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0364
+                                                        Adj R-squared = 0.0345
+                                                        Root MSE      = 0.4912
+
+------------------------------------------------------------------------------
+   secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0468055    .005376     8.71   0.000     .0362643    .0573468
+   tenuresqr |  -.0022125   .0002984    -7.41   0.000    -.0027976   -.0016274
+        male |   .0140876   .0182523     0.77   0.440     -.021701    .0498762
+           t |   .0005804   .0011807     0.49   0.623    -.0017347    .0028956
+           d |    .033101   .0351967     0.94   0.347    -.0359118    .1021139
+          td |   .0013827   .0017305     0.80   0.424    -.0020104    .0047758
+       _cons |    .322028   .0305233    10.55   0.000     .2621788    .3818773
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,930
+                                                  Wald chi2(6)    =      49.15
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     1.5432
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -1.705916   2.810688    -0.61   0.544    -7.214765    3.802932
+secgenhighedu |   6.365561   4.579397     1.39   0.165    -2.609891    15.34101
+    secgenedu |  -4.651059   3.176685    -1.46   0.143    -10.87725    1.575129
+       tenure |   .0138065   .0391493     0.35   0.724    -.0629246    .0905377
+    tenuresqr |  -.0001375   .0020963    -0.07   0.948    -.0042461    .0039711
+         male |   .2942127   .0850451     3.46   0.001     .1275274    .4608981
+        _cons |   8.754878   .6416896    13.64   0.000      7.49719    10.01257
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  tenure tenuresqr male t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  14.8697  (p = 0.0019)
+  Wu-Hausman F(3,2920)            =  4.96484  (p = 0.0019)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   2.672  Chi-sq(6) P-value = 0.8488
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,930    8.411809    .6860455   5.521461   10.12663
+      tenure |      2,930    7.423549    5.586569         -1         25
+   tenuresqr |      2,930    86.30819    101.5566          0        625
+        male |      2,930    .5293515    .4992229          0          1
+
+. outreg2 using "`xlspath'", replace ctitle(IV: higheredu secgenedu & their product, Pooled) 
+> pvalue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "E
+> ndogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroskedasti
+> city df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr male provincedum2-provincedum15 (highere
+> du secgenhighedu secgenedu = t d td ) if inrange(t, -`months', `months'-1) & inrange(monthl
+> yearning, 250, 25000) & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,930
+                                                        F(20, 2909)   =  15.56
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0966
+                                                        Adj R-squared = 0.0904
+                                                        Root MSE      = 0.4767
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0466524   .0052447     8.90   0.000     .0363687    .0569361
+    tenuresqr |  -.0016891   .0002905    -5.81   0.000    -.0022588   -.0011195
+         male |  -.0234135   .0177485    -1.32   0.187    -.0582145    .0113874
+ provincedum2 |  -.2446216   .0450332    -5.43   0.000    -.3329218   -.1563214
+ provincedum3 |   -.186881   .0487048    -3.84   0.000    -.2823804   -.0913816
+ provincedum4 |  -.1916978   .0459749    -4.17   0.000    -.2818444   -.1015511
+ provincedum5 |  -.2882192   .0418298    -6.89   0.000    -.3702382   -.2062002
+ provincedum6 |  -.3092788    .050092    -6.17   0.000    -.4074981   -.2110594
+ provincedum7 |  -.2155827   .0444048    -4.85   0.000    -.3026507   -.1285147
+ provincedum8 |  -.2762636   .0447876    -6.17   0.000    -.3640822    -.188445
+ provincedum9 |  -.2504076   .0435903    -5.74   0.000    -.3358786   -.1649366
+provincedum10 |  -.3031761   .0465448    -6.51   0.000    -.3944402   -.2119121
+provincedum11 |   -.385257    .037117   -10.38   0.000    -.4580352   -.3124788
+provincedum12 |  -.2496685   .0499408    -5.00   0.000    -.3475914   -.1517455
+provincedum13 |  -.2802146   .0461442    -6.07   0.000    -.3706932    -.189736
+provincedum14 |  -.2523337   .0570215    -4.43   0.000    -.3641402   -.1405272
+provincedum15 |  -.1929562   .0561932    -3.43   0.001    -.3031387   -.0827737
+            t |   .0015837   .0011482     1.38   0.168    -.0006676     .003835
+            d |   .0605335   .0342312     1.77   0.077    -.0065865    .1276534
+           td |  -.0016675   .0016831    -0.99   0.322    -.0049676    .0016326
+        _cons |    .528433   .0411907    12.83   0.000      .447667    .6091989
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,930
+                                                        F(20, 2909)   =  13.38
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0843
+                                                        Adj R-squared = 0.0780
+                                                        Root MSE      = 0.4728
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0508389   .0052022     9.77   0.000     .0406385    .0610393
+    tenuresqr |  -.0022405   .0002882    -7.78   0.000    -.0028055   -.0016755
+         male |  -.0003919   .0176047    -0.02   0.982    -.0349108    .0341271
+ provincedum2 |  -.2470342   .0446683    -5.53   0.000    -.3346189   -.1594496
+ provincedum3 |  -.1653938   .0483102    -3.42   0.001    -.2601194   -.0706682
+ provincedum4 |  -.1621768   .0456024    -3.56   0.000     -.251593   -.0727606
+ provincedum5 |  -.2472396   .0414908    -5.96   0.000     -.328594   -.1658852
+ provincedum6 |  -.2846277   .0496861    -5.73   0.000    -.3820512   -.1872042
+ provincedum7 |  -.1444722    .044045    -3.28   0.001    -.2308347   -.0581097
+ provincedum8 |  -.2589337   .0444247    -5.83   0.000    -.3460407   -.1718268
+ provincedum9 |  -.1746026   .0432371    -4.04   0.000    -.2593811   -.0898242
+provincedum10 |  -.2864599   .0461676    -6.20   0.000    -.3769844   -.1959354
+provincedum11 |  -.3254733   .0368162    -8.84   0.000    -.3976618   -.2532848
+provincedum12 |  -.2054763   .0495362    -4.15   0.000    -.3026058   -.1083468
+provincedum13 |  -.2776067   .0457703    -6.07   0.000    -.3673521   -.1878613
+provincedum14 |    -.27291   .0565594    -4.83   0.000    -.3838105   -.1620094
+provincedum15 |  -.1453264   .0557379    -2.61   0.009    -.2546161   -.0360367
+            t |   .0003909   .0011389     0.34   0.731    -.0018422     .002624
+            d |   .0740519   .0339539     2.18   0.029     .0074759     .140628
+           td |   .0003359   .0016694     0.20   0.841    -.0029374    .0036093
+        _cons |   .4058873    .040857     9.93   0.000     .3257758    .4859988
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,930
+                                                        F(20, 2909)   =   9.58
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0618
+                                                        Adj R-squared = 0.0553
+                                                        Root MSE      = 0.4858
+
+-------------------------------------------------------------------------------
+    secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0453644   .0053457     8.49   0.000     .0348826    .0558462
+    tenuresqr |  -.0021405   .0002961    -7.23   0.000    -.0027211   -.0015599
+         male |   .0125907   .0180904     0.70   0.486    -.0228807     .048062
+ provincedum2 |  -.2517338   .0459007    -5.48   0.000    -.3417349   -.1617326
+ provincedum3 |  -.1492901    .049643    -3.01   0.003    -.2466291    -.051951
+ provincedum4 |  -.1753073   .0468605    -3.74   0.000    -.2671905   -.0834241
+ provincedum5 |  -.2170018   .0426356    -5.09   0.000    -.3006008   -.1334029
+ provincedum6 |  -.2394205   .0510569    -4.69   0.000    -.3395319   -.1393091
+ provincedum7 |  -.1397632   .0452602    -3.09   0.002    -.2285084    -.051018
+ provincedum8 |  -.2082667   .0456503    -4.56   0.000    -.2977769   -.1187564
+ provincedum9 |  -.1070614     .04443    -2.41   0.016    -.1941788   -.0199439
+provincedum10 |  -.2760677   .0474414    -5.82   0.000    -.3690897   -.1830456
+provincedum11 |  -.2589237    .037832    -6.84   0.000    -.3331039   -.1847435
+provincedum12 |  -.1564944   .0509028    -3.07   0.002    -.2563036   -.0566851
+provincedum13 |  -.2426165   .0470331    -5.16   0.000     -.334838    -.150395
+provincedum14 |   -.277111   .0581199    -4.77   0.000    -.3910713   -.1631508
+provincedum15 |  -.1110272   .0572757    -1.94   0.053    -.2233322    .0012777
+            t |   .0004513   .0011703     0.39   0.700    -.0018434     .002746
+            d |     .03656   .0348906     1.05   0.295    -.0318528    .1049729
+           td |   .0015278   .0017155     0.89   0.373    -.0018358    .0048915
+        _cons |   .5115591   .0419842    12.18   0.000     .4292373    .5938808
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,930
+                                                  Wald chi2(20)   =      98.57
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     1.4339
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   -1.63624   2.688251    -0.61   0.543    -6.905114    3.632635
+secgenhighedu |   5.941285   4.314337     1.38   0.168    -2.514659    14.39723
+    secgenedu |  -4.298382   3.007533    -1.43   0.153    -10.19304    1.596274
+       tenure |   .0163693   .0350555     0.47   0.641    -.0523382    .0850768
+    tenuresqr |  -.0001521   .0018785    -0.08   0.935    -.0038338    .0035297
+         male |   .2915662   .0792027     3.68   0.000     .1363319    .4468006
+ provincedum2 |  -.6654413   .2404518    -2.77   0.006    -1.136718   -.1941644
+ provincedum3 |  -.3741622   .1994805    -1.88   0.061    -.7651368    .0168124
+ provincedum4 |   -.584969   .2499793    -2.34   0.019    -1.074919   -.0950187
+ provincedum5 |  -.1190676   .2569724    -0.46   0.643    -.6227242    .3845891
+ provincedum6 |  -.2262247   .2547774    -0.89   0.375    -.7255792    .2731298
+ provincedum7 |  -.4783166   .2947282    -1.62   0.105    -1.055973      .09934
+ provincedum8 |  -.3819241   .2242345    -1.70   0.089    -.8214156    .0575673
+ provincedum9 |   -.092791   .2755737    -0.34   0.736    -.6329056    .4473236
+provincedum10 |  -.2534559   .2734087    -0.93   0.354     -.789327    .2824153
+provincedum11 |  -.0509669   .3058246    -0.17   0.868     -.650372    .5484383
+provincedum12 |  -.2532474   .2445339    -1.04   0.300    -.7325252    .2260303
+provincedum13 |  -.0603416   .2250881    -0.27   0.789    -.5015061     .380823
+provincedum14 |  -.3333014   .2613591    -1.28   0.202    -.8455558    .1789529
+provincedum15 |  -.4898265   .2408549    -2.03   0.042    -.9618935   -.0177595
+        _cons |   8.950848   .7582911    11.80   0.000     7.464625    10.43707
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  tenure tenuresqr male provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  13.6426  (p = 0.0034)
+  Wu-Hausman F(3,2906)            =  4.53139  (p = 0.0036)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   5.326  Chi-sq(20) P-value = 0.9995
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,930    8.411809    .6860455   5.521461   10.12663
+      tenure |      2,930    7.423549    5.586569         -1         25
+   tenuresqr |      2,930    86.30819    101.5566          0        625
+        male |      2,930    .5293515    .4992229          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Pooled Pr
+> ovince) pvalue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `w
+> u_p', "Endogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Hetero
+> skedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr (higheredu secgenhighedu secgenedu = t d
+>  td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 25000) & male == 
+> 1 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,551
+                                                        F(5, 1545)    =  10.77
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0337
+                                                        Adj R-squared = 0.0306
+                                                        Root MSE      = 0.4921
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0431211    .007569     5.70   0.000     .0282744    .0579677
+   tenuresqr |  -.0017514   .0004121    -4.25   0.000    -.0025598    -.000943
+           t |   .0023733   .0015998     1.48   0.138    -.0007647    .0055112
+           d |   .0094336   .0482769     0.20   0.845    -.0852615    .1041287
+          td |  -.0017944   .0023574    -0.76   0.447    -.0064185    .0028297
+       _cons |      .3163   .0418423     7.56   0.000     .2342264    .3983736
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,551
+                                                        F(5, 1545)    =  10.68
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0334
+                                                        Adj R-squared = 0.0303
+                                                        Root MSE      = 0.4863
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0468898   .0074805     6.27   0.000     .0322168    .0615627
+   tenuresqr |   -.002127   .0004073    -5.22   0.000     -.002926   -.0013281
+           t |   .0011296    .001581     0.71   0.475    -.0019716    .0042308
+           d |   .0370676   .0477121     0.78   0.437    -.0565197    .1306548
+          td |  -.0006457   .0023298    -0.28   0.782    -.0052157    .0039243
+       _cons |    .237098   .0413527     5.73   0.000     .1559845    .3182114
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,551
+                                                        F(5, 1545)    =   7.82
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0247
+                                                        Adj R-squared = 0.0215
+                                                        Root MSE      = 0.4940
+
+------------------------------------------------------------------------------
+   secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0421117   .0075983     5.54   0.000     .0272075    .0570158
+   tenuresqr |  -.0019932   .0004137    -4.82   0.000    -.0028047   -.0011816
+           t |   .0010424   .0016059     0.65   0.516    -.0021077    .0041925
+           d |  -.0058713   .0484638    -0.12   0.904    -.1009331    .0891905
+          td |   .0009968   .0023666     0.42   0.674    -.0036452    .0056388
+       _cons |    .375403   .0420043     8.94   0.000     .2930116    .4577944
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,551
+                                                  Wald chi2(5)    =       6.63
+                                                  Prob > chi2     =     0.2499
+                                                  R-squared       =          .
+                                                  Root MSE        =     1.1027
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -2.861615   2.858426    -1.00   0.317    -8.464027    2.740797
+secgenhighedu |   4.798552   3.237835     1.48   0.138    -1.547487    11.14459
+    secgenedu |  -2.121829   2.355732    -0.90   0.368    -6.738979    2.495321
+       tenure |   .0144045   .0485533     0.30   0.767    -.0807582    .1095672
+    tenuresqr |  -.0000539   .0026077    -0.02   0.984     -.005165    .0050571
+        _cons |   8.918625   .4877945    18.28   0.000     7.962565    9.874684
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  tenure tenuresqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  7.02203  (p = 0.0712)
+  Wu-Hausman F(3,1542)            =  2.33768  (p = 0.0719)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   1.959  Chi-sq(5) P-value = 0.8548
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,551    8.550134    .6794348   5.521461   10.12663
+      tenure |      1,551    7.742102    5.489276         -1         24
+   tenuresqr |      1,551    90.05287    101.6976          0        576
+        male |      1,551           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Male) pva
+> lue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endo
+> geneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroskedasticit
+> y df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr provincedum2-provincedum15 (higheredu se
+> cgenhighedu secgenedu = t d td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearn
+> ing, 250, 25000) & male == 1 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,551
+                                                        F(19, 1531)   =   7.16
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0816
+                                                        Adj R-squared = 0.0702
+                                                        Root MSE      = 0.4819
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0399166   .0074867     5.33   0.000     .0252314    .0546018
+    tenuresqr |  -.0015688   .0004067    -3.86   0.000    -.0023665   -.0007711
+ provincedum2 |  -.2907819   .0608879    -4.78   0.000    -.4102144   -.1713494
+ provincedum3 |  -.2159326   .0650268    -3.32   0.001    -.3434837   -.0883816
+ provincedum4 |  -.2614233    .063561    -4.11   0.000    -.3860992   -.1367475
+ provincedum5 |  -.3237151    .057696    -5.61   0.000    -.4368866   -.2105435
+ provincedum6 |  -.3810663   .0684602    -5.57   0.000     -.515352   -.2467806
+ provincedum7 |  -.2725815   .0613419    -4.44   0.000    -.3929045   -.1522584
+ provincedum8 |  -.2712651   .0612858    -4.43   0.000    -.3914781   -.1510521
+ provincedum9 |  -.2067464   .0598405    -3.45   0.001    -.3241244   -.0893683
+provincedum10 |  -.2902008   .0655616    -4.43   0.000     -.418801   -.1616007
+provincedum11 |  -.4044671   .0505679    -8.00   0.000    -.5036568   -.3052774
+provincedum12 |  -.2696633   .0704034    -3.83   0.000    -.4077607    -.131566
+provincedum13 |  -.2349407   .0661064    -3.55   0.000    -.3646095    -.105272
+provincedum14 |  -.2043342   .0814902    -2.51   0.012    -.3641785     -.04449
+provincedum15 |   -.104534   .0815893    -1.28   0.200    -.2645727    .0555046
+            t |   .0025107   .0015724     1.60   0.111    -.0005737     .005595
+            d |   .0051684   .0474206     0.11   0.913    -.0878478    .0981845
+           td |  -.0018696   .0023178    -0.81   0.420    -.0064161    .0026768
+        _cons |   .5882811   .0567375    10.37   0.000     .4769897    .6995725
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,551
+                                                        F(19, 1531)   =   6.79
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0778
+                                                        Adj R-squared = 0.0663
+                                                        Root MSE      = 0.4772
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0438887   .0074135     5.92   0.000     .0293471    .0584304
+    tenuresqr |   -.001962   .0004027    -4.87   0.000    -.0027519   -.0011721
+ provincedum2 |  -.3293965   .0602928    -5.46   0.000    -.4476617   -.2111313
+ provincedum3 |  -.2065952   .0643912    -3.21   0.001    -.3328995   -.0802908
+ provincedum4 |  -.2398051   .0629398    -3.81   0.000    -.3632623   -.1163478
+ provincedum5 |  -.2906902   .0571321    -5.09   0.000    -.4027557   -.1786248
+ provincedum6 |  -.3569829   .0677911    -5.27   0.000     -.489956   -.2240097
+ provincedum7 |  -.2223405   .0607423    -3.66   0.000    -.3414875   -.1031935
+ provincedum8 |  -.2608768   .0606868    -4.30   0.000    -.3799148   -.1418387
+ provincedum9 |  -.1646393   .0592556    -2.78   0.006      -.28087   -.0484085
+provincedum10 |  -.2714161   .0649208    -4.18   0.000    -.3987592   -.1440729
+provincedum11 |  -.3697676   .0500736    -7.38   0.000    -.4679878   -.2715474
+provincedum12 |  -.2562422   .0697153    -3.68   0.000    -.3929898   -.1194946
+provincedum13 |   -.271845   .0654603    -4.15   0.000    -.4002464   -.1434436
+provincedum14 |  -.1945202   .0806937    -2.41   0.016    -.3528021   -.0362382
+provincedum15 |  -.0947364   .0807919    -1.17   0.241    -.2532108     .063738
+            t |   .0014067    .001557     0.90   0.366    -.0016474    .0044609
+            d |   .0310819   .0469571     0.66   0.508    -.0610251    .1231889
+           td |  -.0008141   .0022952    -0.35   0.723    -.0053161    .0036879
+        _cons |   .4946887   .0561829     8.80   0.000     .3844851    .6048923
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,551
+                                                        F(19, 1531)   =   5.07
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0592
+                                                        Adj R-squared = 0.0475
+                                                        Root MSE      = 0.4874
+
+-------------------------------------------------------------------------------
+    secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0402339   .0075716     5.31   0.000      .025382    .0550858
+    tenuresqr |   -.001878   .0004113    -4.57   0.000    -.0026847   -.0010712
+ provincedum2 |  -.3313468    .061579    -5.38   0.000    -.4521348   -.2105587
+ provincedum3 |  -.1650468   .0657649    -2.51   0.012    -.2940455   -.0360481
+ provincedum4 |  -.2402643   .0642824    -3.74   0.000    -.3663552   -.1141734
+ provincedum5 |  -.2580364   .0583509    -4.42   0.000    -.3724925   -.1435803
+ provincedum6 |  -.3106775   .0692372    -4.49   0.000    -.4464873   -.1748677
+ provincedum7 |  -.2038735   .0620381    -3.29   0.001    -.3255622   -.0821849
+ provincedum8 |  -.2230915   .0619814    -3.60   0.000    -.3446689   -.1015141
+ provincedum9 |  -.1140883   .0605197    -1.89   0.060    -.2327985     .004622
+provincedum10 |  -.2290023   .0663058    -3.45   0.001     -.359062   -.0989426
+provincedum11 |  -.2998807   .0511418    -5.86   0.000    -.4001961   -.1995652
+provincedum12 |  -.2301896   .0712025    -3.23   0.001    -.3698543   -.0905248
+provincedum13 |  -.2073327   .0668567    -3.10   0.002    -.3384732   -.0761922
+provincedum14 |  -.2442583   .0824151    -2.96   0.003    -.4059167   -.0825998
+provincedum15 |  -.0791482   .0825153    -0.96   0.338    -.2410032    .0827069
+            t |   .0013789   .0015903     0.87   0.386    -.0017404    .0044982
+            d |  -.0114524   .0479588    -0.24   0.811    -.1055243    .0826195
+           td |   .0007148   .0023441     0.30   0.760    -.0038833    .0053128
+        _cons |   .5978454   .0573814    10.42   0.000     .4852909    .7103999
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,551
+                                                  Wald chi2(19)   =      44.98
+                                                  Prob > chi2     =     0.0007
+                                                  R-squared       =          .
+                                                  Root MSE        =     1.0933
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -2.513626   3.142394    -0.80   0.424    -8.672606    3.645354
+secgenhighedu |   4.750639   3.374289     1.41   0.159    -1.862846    11.36412
+    secgenedu |  -2.435072   2.406229    -1.01   0.312    -7.151194    2.281049
+       tenure |   .0156804   .0450989     0.35   0.728    -.0727118    .1040726
+    tenuresqr |  -.0001457   .0024985    -0.06   0.954    -.0050426    .0047512
+ provincedum2 |  -.5752636   .3767048    -1.53   0.127    -1.313591    .1630643
+ provincedum3 |  -.2091561   .2223154    -0.94   0.347    -.6448862     .226574
+ provincedum4 |  -.5560539   .2752561    -2.02   0.043    -1.095546   -.0165619
+ provincedum5 |  -.1743203   .2962397    -0.59   0.556    -.7549396    .4062989
+ provincedum6 |  -.3430535   .3403257    -1.01   0.313     -1.01008    .3239725
+ provincedum7 |  -.4237431   .2786095    -1.52   0.128    -.9698078    .1223215
+ provincedum8 |  -.5293505   .2586682    -2.05   0.041    -1.036331   -.0223702
+ provincedum9 |  -.1615754   .2431945    -0.66   0.506    -.6382278     .315077
+provincedum10 |  -.1936717   .2774865    -0.70   0.485    -.7375353    .3501919
+provincedum11 |   -.185301   .3409183    -0.54   0.587    -.8534885    .4828865
+provincedum12 |  -.3948935   .2733245    -1.44   0.149    -.9305998    .1408127
+provincedum13 |    .049449   .2947834     0.17   0.867    -.5283157    .6272138
+provincedum14 |  -.4321143   .3159934    -1.37   0.171     -1.05145    .1872213
+provincedum15 |  -.5037788   .2036697    -2.47   0.013    -.9029641   -.1045935
+        _cons |   9.213366   .6326928    14.56   0.000     7.973311    10.45342
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  tenure tenuresqr provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  7.01709  (p = 0.0714)
+  Wu-Hausman F(3,1528)            =  2.31482  (p = 0.0741)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   4.478  Chi-sq(19) P-value = 0.9997
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,551    8.550134    .6794348   5.521461   10.12663
+      tenure |      1,551    7.742102    5.489276         -1         24
+   tenuresqr |      1,551    90.05287    101.6976          0        576
+        male |      1,551           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Male Prov
+> ince) pvalue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_
+> p', "Endogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heterosk
+> edasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr (higheredu secgenhighedu secgenedu = t d
+>  td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 25000) & male == 
+> 0 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,379
+                                                        F(5, 1373)    =  28.77
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0948
+                                                        Adj R-squared = 0.0915
+                                                        Root MSE      = 0.4765
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0538377     .00746     7.22   0.000     .0392036    .0684719
+   tenuresqr |  -.0017561   .0004228    -4.15   0.000    -.0025856   -.0009267
+           t |   .0010901   .0017035     0.64   0.522    -.0022517    .0044319
+           d |   .1112109   .0500529     2.22   0.026     .0130226    .2093993
+          td |  -.0020103   .0024791    -0.81   0.418    -.0068735    .0028529
+       _cons |   .2114856   .0408187     5.18   0.000     .1314118    .2915594
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,379
+                                                        F(5, 1373)    =  21.82
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0736
+                                                        Adj R-squared = 0.0702
+                                                        Root MSE      = 0.4732
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0582341   .0074074     7.86   0.000     .0437031    .0727652
+   tenuresqr |  -.0025022   .0004199    -5.96   0.000    -.0033259   -.0016786
+           t |  -.0001277   .0016915    -0.08   0.940    -.0034459    .0031906
+           d |   .1078072   .0497002     2.17   0.030     .0103107    .2053037
+          td |   .0009734   .0024616     0.40   0.693    -.0038556    .0058023
+       _cons |   .1355113   .0405311     3.34   0.001     .0560017    .2150209
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,379
+                                                        F(5, 1373)    =  14.74
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0509
+                                                        Adj R-squared = 0.0475
+                                                        Root MSE      = 0.4882
+
+------------------------------------------------------------------------------
+   secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0515545    .007642     6.75   0.000     .0365632    .0665459
+   tenuresqr |  -.0024447   .0004331    -5.64   0.000    -.0032944    -.001595
+           t |   .0000725   .0017451     0.04   0.967    -.0033509    .0034958
+           d |   .0778714   .0512745     1.52   0.129    -.0227135    .1784563
+          td |   .0016959   .0025396     0.67   0.504     -.003286    .0066778
+       _cons |   .2828166    .041815     6.76   0.000     .2007883    .3648448
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,379
+                                                  Wald chi2(5)    =      17.42
+                                                  Prob > chi2     =     0.0038
+                                                  R-squared       =          .
+                                                  Root MSE        =     1.8577
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   .4263754     4.4104     0.10   0.923    -8.217849      9.0706
+secgenhighedu |   5.977502   11.75383     0.51   0.611    -17.05958    29.01458
+    secgenedu |  -5.905036   9.362667    -0.63   0.528    -24.25553    12.44545
+       tenure |    .000127   .0624604     0.00   0.998    -.1222931    .1225472
+    tenuresqr |  -.0006872   .0033178    -0.21   0.836      -.00719    .0058157
+        _cons |   8.645204   1.665376     5.19   0.000     5.381128    11.90928
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  tenure tenuresqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  11.2282  (p = 0.0106)
+  Wu-Hausman F(3,1370)            =  3.74883  (p = 0.0107)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   1.037  Chi-sq(5) P-value = 0.9595
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,379    8.256232    .6598452   5.521461   10.12663
+      tenure |      1,379    7.065265    5.674666         -1         25
+   tenuresqr |      1,379    82.09645    101.2692          0        625
+        male |      1,379           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Female) p
+> value addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "En
+> dogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroskedastic
+> ity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr provincedum2-provincedum15 (higheredu se
+> cgenhighedu secgenedu = t d td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearn
+> ing, 250, 25000) & male == 0 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,379
+                                                        F(19, 1359)   =  11.32
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.1366
+                                                        Adj R-squared = 0.1245
+                                                        Root MSE      = 0.4678
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0522473   .0073655     7.09   0.000     .0377983    .0666963
+    tenuresqr |  -.0017087   .0004169    -4.10   0.000    -.0025264   -.0008909
+ provincedum2 |  -.1892151   .0668306    -2.83   0.005    -.3203175   -.0581127
+ provincedum3 |  -.1399429   .0733201    -1.91   0.057    -.2837758    .0038899
+ provincedum4 |  -.1102372   .0663329    -1.66   0.097    -.2403632    .0198888
+ provincedum5 |  -.2459963   .0604686    -4.07   0.000    -.3646183   -.1273743
+ provincedum6 |   -.221305     .07314    -3.03   0.003    -.3647845   -.0778255
+ provincedum7 |  -.1485792   .0641954    -2.31   0.021     -.274512   -.0226463
+ provincedum8 |   -.271816   .0654088    -4.16   0.000    -.4001292   -.1435029
+ provincedum9 |  -.3060331   .0633544    -4.83   0.000    -.4303162     -.18175
+provincedum10 |   -.315058   .0658664    -4.78   0.000    -.4442688   -.1858471
+provincedum11 |  -.3568113    .054414    -6.56   0.000    -.4635559   -.2500667
+provincedum12 |  -.2254654   .0705813    -3.19   0.001    -.3639255   -.0870053
+provincedum13 |  -.3188982   .0644133    -4.95   0.000    -.4452584    -.192538
+provincedum14 |  -.2943231   .0795233    -3.70   0.000    -.4503248   -.1383214
+provincedum15 |   -.260221   .0773298    -3.37   0.001    -.4119198   -.1085221
+            t |   .0009645   .0016859     0.57   0.567    -.0023427    .0042717
+            d |   .1181074   .0494898     2.39   0.017     .0210227    .2151921
+           td |  -.0020139   .0024514    -0.82   0.411    -.0068229    .0027951
+        _cons |   .4482207   .0576895     7.77   0.000     .3350505    .5613908
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,379
+                                                        F(19, 1359)   =   8.89
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.1105
+                                                        Adj R-squared = 0.0981
+                                                        Root MSE      = 0.4660
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0572798   .0073377     7.81   0.000     .0428853    .0716742
+    tenuresqr |  -.0024759   .0004153    -5.96   0.000    -.0032905   -.0016612
+ provincedum2 |  -.1461357   .0665784    -2.19   0.028    -.2767432   -.0155281
+ provincedum3 |   -.109435   .0730434    -1.50   0.134     -.252725     .033855
+ provincedum4 |  -.0725975   .0660825    -1.10   0.272    -.2022323    .0570374
+ provincedum5 |  -.1960099   .0602404    -3.25   0.001    -.3141841   -.0778356
+ provincedum6 |   -.195799   .0728639    -2.69   0.007     -.338737   -.0528611
+ provincedum7 |  -.0547146   .0639531    -0.86   0.392    -.1801722    .0707429
+ provincedum8 |  -.2525425   .0651619    -3.88   0.000    -.3803714   -.1247137
+ provincedum9 |   -.190349   .0631153    -3.02   0.003     -.314163   -.0665349
+provincedum10 |   -.295402   .0656178    -4.50   0.000    -.4241252   -.1666788
+provincedum11 |  -.2706048   .0542086    -4.99   0.000    -.3769465   -.1642631
+provincedum12 |  -.1444188   .0703149    -2.05   0.040    -.2823563   -.0064813
+provincedum13 |   -.274326   .0641701    -4.27   0.000    -.4002092   -.1484427
+provincedum14 |   -.336839   .0792231    -4.25   0.000    -.4922519    -.181426
+provincedum15 |  -.1734677    .077038    -2.25   0.024    -.3245939   -.0223414
+            t |  -.0002842   .0016795    -0.17   0.866     -.003579    .0030105
+            d |   .1169819    .049303     2.37   0.018     .0202637    .2137002
+           td |   .0010016   .0024422     0.41   0.682    -.0037892    .0057925
+        _cons |   .3171055   .0574718     5.52   0.000     .2043625    .4298485
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,379
+                                                        F(19, 1359)   =   6.19
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0797
+                                                        Adj R-squared = 0.0668
+                                                        Root MSE      = 0.4832
+
+-------------------------------------------------------------------------------
+    secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0505734   .0076077     6.65   0.000     .0356492    .0654975
+    tenuresqr |  -.0024003   .0004306    -5.57   0.000    -.0032449   -.0015556
+ provincedum2 |  -.1523968   .0690282    -2.21   0.027    -.2878102   -.0169833
+ provincedum3 |  -.1313523   .0757311    -1.73   0.083    -.2799148    .0172103
+ provincedum4 |  -.1000043   .0685141    -1.46   0.145    -.2344093    .0344006
+ provincedum5 |  -.1695368    .062457    -2.71   0.007    -.2920595   -.0470141
+ provincedum6 |  -.1533686   .0755451    -2.03   0.043    -.3015662    -.005171
+ provincedum7 |  -.0664305   .0663064    -1.00   0.317    -.1965044    .0636435
+ provincedum8 |  -.1884068   .0675596    -2.79   0.005    -.3209393   -.0558742
+ provincedum9 |  -.1018017   .0654377    -1.56   0.120    -.2301716    .0265683
+provincedum10 |  -.3146245   .0680323    -4.62   0.000    -.4480842   -.1811647
+provincedum11 |  -.2105017   .0562033    -3.75   0.000    -.3207564   -.1002469
+provincedum12 |  -.0713242   .0729022    -0.98   0.328    -.2143373     .071689
+provincedum13 |   -.265668   .0665314    -3.99   0.000    -.3961833   -.1351527
+provincedum14 |  -.2994667   .0821383    -3.65   0.000    -.4605982   -.1383351
+provincedum15 |  -.1238781   .0798727    -1.55   0.121    -.2805653     .032809
+            t |  -.0002023   .0017413    -0.12   0.908    -.0036183    .0032137
+            d |   .0874253   .0511172     1.71   0.087    -.0128518    .1877025
+           td |   .0019086    .002532     0.75   0.451    -.0030585    .0068757
+        _cons |   .4353207   .0595865     7.31   0.000     .3184292    .5522122
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,379
+                                                  Wald chi2(19)   =      33.51
+                                                  Prob > chi2     =     0.0210
+                                                  R-squared       =          .
+                                                  Root MSE        =     1.7636
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -.5318622   4.822958    -0.11   0.912    -9.984687    8.920963
+secgenhighedu |   6.628408   12.79104     0.52   0.604    -18.44157    31.69839
+    secgenedu |  -5.733113   9.908734    -0.58   0.563    -25.15388    13.68765
+       tenure |   .0030714   .0582349     0.05   0.958    -.1110669    .1172098
+    tenuresqr |  -.0001003   .0031442    -0.03   0.975    -.0062628    .0060623
+ provincedum2 |  -.7172239   .5153224    -1.39   0.164    -1.727237    .2927894
+ provincedum3 |  -.7136719   .5462454    -1.31   0.191    -1.784293    .3569494
+ provincedum4 |  -.6656869   .5690447    -1.17   0.242    -1.780994    .4496202
+ provincedum5 |  -.0646603   .3819279    -0.17   0.866    -.8132251    .6839046
+ provincedum6 |  -.1420667   .3546844    -0.40   0.689    -.8372354     .553102
+ provincedum7 |  -.5646234   .6703346    -0.84   0.400    -1.878455    .7492083
+ provincedum8 |  -.1429914   .4510164    -0.32   0.751    -1.026967    .7409845
+ provincedum9 |   .1021445    .558052     0.18   0.855    -.9916174    1.195906
+provincedum10 |  -.3861417   .7037281    -0.55   0.583    -1.765423    .9931399
+provincedum11 |   .1122719   .4634657     0.24   0.809    -.7961041    1.020648
+provincedum12 |  -.0019794   .4955904    -0.00   0.997    -.9733188    .9693601
+provincedum13 |  -.1587658   .5572948    -0.28   0.776    -1.251044    .9335119
+provincedum14 |  -.0982044   .4179356    -0.23   0.814    -.9173431    .7209342
+provincedum15 |  -.3259272   .4629961    -0.70   0.481    -1.233383    .5815285
+        _cons |   8.899979   2.006628     4.44   0.000     4.967061     12.8329
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  tenure tenuresqr provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  8.59989  (p = 0.0351)
+  Wu-Hausman F(3,1356)            =  2.83651  (p = 0.0370)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   1.281  Chi-sq(19) P-value = 1.0000
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,379    8.256232    .6598452   5.521461   10.12663
+      tenure |      1,379    7.065265    5.674666         -1         25
+   tenuresqr |      1,379    82.09645    101.2692          0        625
+        male |      1,379           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Female Pr
+> ovince) pvalue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `w
+> u_p', "Endogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Hetero
+> skedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. *2)
+. ivregress 2sls log_monthlyearning tenure tenuresqr male (higheredu secgenhighedu = t d td )
+>  if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 25000) & educat != ., 
+> first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,930
+                                                        F(6, 2923)    =  30.20
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0584
+                                                        Adj R-squared = 0.0564
+                                                        Root MSE      = 0.4855
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0492173   .0053136     9.26   0.000     .0387985    .0596361
+   tenuresqr |  -.0018026   .0002949    -6.11   0.000    -.0023809   -.0012244
+        male |  -.0225871   .0180402    -1.25   0.211      -.05796    .0127858
+           t |   .0017703    .001167     1.52   0.129    -.0005179    .0040586
+           d |   .0573271   .0347879     1.65   0.099    -.0108841    .1255383
+          td |  -.0018678   .0017104    -1.09   0.275    -.0052215    .0014859
+       _cons |   .2731336   .0301687     9.05   0.000     .2139795    .3322876
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,930
+                                                        F(6, 2923)    =  26.09
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0508
+                                                        Adj R-squared = 0.0489
+                                                        Root MSE      = 0.4802
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0528287   .0052558    10.05   0.000     .0425232    .0631342
+   tenuresqr |  -.0023285   .0002917    -7.98   0.000    -.0029005   -.0017565
+        male |   .0008068   .0178441     0.05   0.964    -.0341816    .0357951
+           t |   .0005422   .0011543     0.47   0.639    -.0017212    .0028056
+           d |   .0701353   .0344097     2.04   0.042     .0026657     .137605
+          td |   .0001497   .0016918     0.09   0.929    -.0031675    .0034669
+       _cons |   .1850949   .0298407     6.20   0.000      .126584    .2436059
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,930
+                                                  Wald chi2(5)    =     250.40
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0497
+                                                  Root MSE        =     .66865
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -.0430657   1.113988    -0.04   0.969    -2.226442    2.140311
+secgenhighedu |   .7491024   1.083702     0.69   0.489    -1.374915     2.87312
+       tenure |   .0106208   .0169367     0.63   0.531    -.0225746    .0438161
+    tenuresqr |   .0001198   .0009051     0.13   0.895    -.0016541    .0018938
+         male |   .2722262   .0362701     7.51   0.000     .2011382    .3433142
+        _cons |   7.890216   .1087518    72.55   0.000     7.677067    8.103366
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  tenure tenuresqr male t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  2.12876  (p = 0.3449)
+  Wu-Hausman F(2,2922)            =  1.06224  (p = 0.3458)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  11.4183  (p = 0.0007)
+  Basmann chi2(1)        =  11.4356  (p = 0.0007)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   7.304  Chi-sq(6) P-value = 0.2937
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,930    8.411809    .6860455   5.521461   10.12663
+      tenure |      2,930    7.423549    5.586569         -1         25
+   tenuresqr |      2,930    86.30819    101.5566          0        625
+        male |      2,930    .5293515    .4992229          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Pooled) pvalue addsta
+> t("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df
+> ", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p',
+>  "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Het
+> eroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr male provincedum2-provincedum15 (highere
+> du secgenhighedu = t d td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 
+> 250, 25000) & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,930
+                                                        F(20, 2909)   =  15.56
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0966
+                                                        Adj R-squared = 0.0904
+                                                        Root MSE      = 0.4767
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0466524   .0052447     8.90   0.000     .0363687    .0569361
+    tenuresqr |  -.0016891   .0002905    -5.81   0.000    -.0022588   -.0011195
+         male |  -.0234135   .0177485    -1.32   0.187    -.0582145    .0113874
+ provincedum2 |  -.2446216   .0450332    -5.43   0.000    -.3329218   -.1563214
+ provincedum3 |   -.186881   .0487048    -3.84   0.000    -.2823804   -.0913816
+ provincedum4 |  -.1916978   .0459749    -4.17   0.000    -.2818444   -.1015511
+ provincedum5 |  -.2882192   .0418298    -6.89   0.000    -.3702382   -.2062002
+ provincedum6 |  -.3092788    .050092    -6.17   0.000    -.4074981   -.2110594
+ provincedum7 |  -.2155827   .0444048    -4.85   0.000    -.3026507   -.1285147
+ provincedum8 |  -.2762636   .0447876    -6.17   0.000    -.3640822    -.188445
+ provincedum9 |  -.2504076   .0435903    -5.74   0.000    -.3358786   -.1649366
+provincedum10 |  -.3031761   .0465448    -6.51   0.000    -.3944402   -.2119121
+provincedum11 |   -.385257    .037117   -10.38   0.000    -.4580352   -.3124788
+provincedum12 |  -.2496685   .0499408    -5.00   0.000    -.3475914   -.1517455
+provincedum13 |  -.2802146   .0461442    -6.07   0.000    -.3706932    -.189736
+provincedum14 |  -.2523337   .0570215    -4.43   0.000    -.3641402   -.1405272
+provincedum15 |  -.1929562   .0561932    -3.43   0.001    -.3031387   -.0827737
+            t |   .0015837   .0011482     1.38   0.168    -.0006676     .003835
+            d |   .0605335   .0342312     1.77   0.077    -.0065865    .1276534
+           td |  -.0016675   .0016831    -0.99   0.322    -.0049676    .0016326
+        _cons |    .528433   .0411907    12.83   0.000      .447667    .6091989
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,930
+                                                        F(20, 2909)   =  13.38
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0843
+                                                        Adj R-squared = 0.0780
+                                                        Root MSE      = 0.4728
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0508389   .0052022     9.77   0.000     .0406385    .0610393
+    tenuresqr |  -.0022405   .0002882    -7.78   0.000    -.0028055   -.0016755
+         male |  -.0003919   .0176047    -0.02   0.982    -.0349108    .0341271
+ provincedum2 |  -.2470342   .0446683    -5.53   0.000    -.3346189   -.1594496
+ provincedum3 |  -.1653938   .0483102    -3.42   0.001    -.2601194   -.0706682
+ provincedum4 |  -.1621768   .0456024    -3.56   0.000     -.251593   -.0727606
+ provincedum5 |  -.2472396   .0414908    -5.96   0.000     -.328594   -.1658852
+ provincedum6 |  -.2846277   .0496861    -5.73   0.000    -.3820512   -.1872042
+ provincedum7 |  -.1444722    .044045    -3.28   0.001    -.2308347   -.0581097
+ provincedum8 |  -.2589337   .0444247    -5.83   0.000    -.3460407   -.1718268
+ provincedum9 |  -.1746026   .0432371    -4.04   0.000    -.2593811   -.0898242
+provincedum10 |  -.2864599   .0461676    -6.20   0.000    -.3769844   -.1959354
+provincedum11 |  -.3254733   .0368162    -8.84   0.000    -.3976618   -.2532848
+provincedum12 |  -.2054763   .0495362    -4.15   0.000    -.3026058   -.1083468
+provincedum13 |  -.2776067   .0457703    -6.07   0.000    -.3673521   -.1878613
+provincedum14 |    -.27291   .0565594    -4.83   0.000    -.3838105   -.1620094
+provincedum15 |  -.1453264   .0557379    -2.61   0.009    -.2546161   -.0360367
+            t |   .0003909   .0011389     0.34   0.731    -.0018422     .002624
+            d |   .0740519   .0339539     2.18   0.029     .0074759     .140628
+           td |   .0003359   .0016694     0.20   0.841    -.0029374    .0036093
+        _cons |   .4058873    .040857     9.93   0.000     .3257758    .4859988
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,930
+                                                  Wald chi2(19)   =     474.35
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.1107
+                                                  Root MSE        =     .64685
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -.0372793   1.102687    -0.03   0.973    -2.198505    2.123947
+secgenhighedu |   .7395032   1.045034     0.71   0.479    -1.308726    2.787733
+       tenure |   .0109255   .0157202     0.69   0.487    -.0198856    .0417366
+    tenuresqr |    .000138   .0008424     0.16   0.870    -.0015132    .0017891
+         male |   .2743475   .0353133     7.77   0.000     .2051347    .3435603
+ provincedum2 |  -.4799301   .0913081    -5.26   0.000    -.6588908   -.3009695
+ provincedum3 |  -.2959546   .0865355    -3.42   0.001    -.4655612   -.1263481
+ provincedum4 |   -.365641   .0890175    -4.11   0.000     -.540112   -.1911699
+ provincedum5 |  -.0066807   .1103617    -0.06   0.952    -.2229857    .2096242
+ provincedum6 |  -.1748093    .113781    -1.54   0.124    -.3978159    .0481973
+ provincedum7 |  -.2805855   .1173959    -2.39   0.017    -.5106771   -.0504938
+ provincedum8 |  -.3920736   .1011035    -3.88   0.000    -.5902329   -.1939143
+ provincedum9 |  -.1362212   .1235558    -1.10   0.270    -.3783861    .1059437
+provincedum10 |  -.0682853   .1086097    -0.63   0.530    -.2811564    .1445858
+provincedum11 |  -.0166783   .1375352    -0.12   0.903    -.2862423    .2528857
+provincedum12 |  -.2466314   .1102918    -2.24   0.025    -.4627994   -.0304634
+provincedum13 |  -.0078774   .1001799    -0.08   0.937    -.2042265    .1884717
+provincedum14 |  -.1553365   .1036603    -1.50   0.134    -.3585069    .0478339
+provincedum15 |  -.4631486   .1083251    -4.28   0.000     -.675462   -.2508352
+        _cons |   8.060484   .1950248    41.33   0.000     7.678242    8.442725
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  tenure tenuresqr male provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  2.44986  (p = 0.2938)
+  Wu-Hausman F(2,2908)            =  1.21675  (p = 0.2963)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  10.0375  (p = 0.0015)
+  Basmann chi2(1)        =  9.99981  (p = 0.0016)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  28.165  Chi-sq(20) P-value = 0.1056
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,930    8.411809    .6860455   5.521461   10.12663
+      tenure |      2,930    7.423549    5.586569         -1         25
+   tenuresqr |      2,930    86.30819    101.5566          0        625
+        male |      2,930    .5293515    .4992229          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Pooled Province) pval
+> ue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endog
+> eneity df", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `b
+> asman_p', "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall
+> _p', "Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr (higheredu secgenhighedu = t d td ) if i
+> nrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 25000) & male == 1 & educat
+>  != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,551
+                                                        F(5, 1545)    =  10.77
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0337
+                                                        Adj R-squared = 0.0306
+                                                        Root MSE      = 0.4921
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0431211    .007569     5.70   0.000     .0282744    .0579677
+   tenuresqr |  -.0017514   .0004121    -4.25   0.000    -.0025598    -.000943
+           t |   .0023733   .0015998     1.48   0.138    -.0007647    .0055112
+           d |   .0094336   .0482769     0.20   0.845    -.0852615    .1041287
+          td |  -.0017944   .0023574    -0.76   0.447    -.0064185    .0028297
+       _cons |      .3163   .0418423     7.56   0.000     .2342264    .3983736
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,551
+                                                        F(5, 1545)    =  10.68
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0334
+                                                        Adj R-squared = 0.0303
+                                                        Root MSE      = 0.4863
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0468898   .0074805     6.27   0.000     .0322168    .0615627
+   tenuresqr |   -.002127   .0004073    -5.22   0.000     -.002926   -.0013281
+           t |   .0011296    .001581     0.71   0.475    -.0019716    .0042308
+           d |   .0370676   .0477121     0.78   0.437    -.0565197    .1306548
+          td |  -.0006457   .0023298    -0.28   0.782    -.0052157    .0039243
+       _cons |    .237098   .0413527     5.73   0.000     .1559845    .3182114
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,551
+                                                  Wald chi2(4)    =       6.17
+                                                  Prob > chi2     =     0.1872
+                                                  R-squared       =          .
+                                                  Root MSE        =      1.071
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   -3.35921   2.723748    -1.23   0.217    -8.697658    1.979237
+secgenhighedu |   3.637638   2.884685     1.26   0.207     -2.01624    9.291517
+       tenure |   .0015803   .0450817     0.04   0.972    -.0867783    .0899389
+    tenuresqr |   .0008041   .0023576     0.34   0.733    -.0038167    .0054249
+        _cons |    8.54969   .2572614    33.23   0.000     8.045467    9.053913
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  tenure tenuresqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  4.60861  (p = 0.0998)
+  Wu-Hausman F(2,1544)            =  2.30074  (p = 0.1005)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  .860114  (p = 0.3537)
+  Basmann chi2(1)        =  .857262  (p = 0.3545)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   1.714  Chi-sq(5) P-value = 0.8872
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,551    8.550134    .6794348   5.521461   10.12663
+      tenure |      1,551    7.742102    5.489276         -1         24
+   tenuresqr |      1,551    90.05287    101.6976          0        576
+        male |      1,551           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Male) pvalue addstat(
+> "Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df",
+>  `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "
+> Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heter
+> oskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr provincedum2-provincedum15 (higheredu se
+> cgenhighedu = t d td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 
+> 25000) & male == 1 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,551
+                                                        F(19, 1531)   =   7.16
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0816
+                                                        Adj R-squared = 0.0702
+                                                        Root MSE      = 0.4819
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0399166   .0074867     5.33   0.000     .0252314    .0546018
+    tenuresqr |  -.0015688   .0004067    -3.86   0.000    -.0023665   -.0007711
+ provincedum2 |  -.2907819   .0608879    -4.78   0.000    -.4102144   -.1713494
+ provincedum3 |  -.2159326   .0650268    -3.32   0.001    -.3434837   -.0883816
+ provincedum4 |  -.2614233    .063561    -4.11   0.000    -.3860992   -.1367475
+ provincedum5 |  -.3237151    .057696    -5.61   0.000    -.4368866   -.2105435
+ provincedum6 |  -.3810663   .0684602    -5.57   0.000     -.515352   -.2467806
+ provincedum7 |  -.2725815   .0613419    -4.44   0.000    -.3929045   -.1522584
+ provincedum8 |  -.2712651   .0612858    -4.43   0.000    -.3914781   -.1510521
+ provincedum9 |  -.2067464   .0598405    -3.45   0.001    -.3241244   -.0893683
+provincedum10 |  -.2902008   .0655616    -4.43   0.000     -.418801   -.1616007
+provincedum11 |  -.4044671   .0505679    -8.00   0.000    -.5036568   -.3052774
+provincedum12 |  -.2696633   .0704034    -3.83   0.000    -.4077607    -.131566
+provincedum13 |  -.2349407   .0661064    -3.55   0.000    -.3646095    -.105272
+provincedum14 |  -.2043342   .0814902    -2.51   0.012    -.3641785     -.04449
+provincedum15 |   -.104534   .0815893    -1.28   0.200    -.2645727    .0555046
+            t |   .0025107   .0015724     1.60   0.111    -.0005737     .005595
+            d |   .0051684   .0474206     0.11   0.913    -.0878478    .0981845
+           td |  -.0018696   .0023178    -0.81   0.420    -.0064161    .0026768
+        _cons |   .5882811   .0567375    10.37   0.000     .4769897    .6995725
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,551
+                                                        F(19, 1531)   =   6.79
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0778
+                                                        Adj R-squared = 0.0663
+                                                        Root MSE      = 0.4772
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0438887   .0074135     5.92   0.000     .0293471    .0584304
+    tenuresqr |   -.001962   .0004027    -4.87   0.000    -.0027519   -.0011721
+ provincedum2 |  -.3293965   .0602928    -5.46   0.000    -.4476617   -.2111313
+ provincedum3 |  -.2065952   .0643912    -3.21   0.001    -.3328995   -.0802908
+ provincedum4 |  -.2398051   .0629398    -3.81   0.000    -.3632623   -.1163478
+ provincedum5 |  -.2906902   .0571321    -5.09   0.000    -.4027557   -.1786248
+ provincedum6 |  -.3569829   .0677911    -5.27   0.000     -.489956   -.2240097
+ provincedum7 |  -.2223405   .0607423    -3.66   0.000    -.3414875   -.1031935
+ provincedum8 |  -.2608768   .0606868    -4.30   0.000    -.3799148   -.1418387
+ provincedum9 |  -.1646393   .0592556    -2.78   0.006      -.28087   -.0484085
+provincedum10 |  -.2714161   .0649208    -4.18   0.000    -.3987592   -.1440729
+provincedum11 |  -.3697676   .0500736    -7.38   0.000    -.4679878   -.2715474
+provincedum12 |  -.2562422   .0697153    -3.68   0.000    -.3929898   -.1194946
+provincedum13 |   -.271845   .0654603    -4.15   0.000    -.4002464   -.1434436
+provincedum14 |  -.1945202   .0806937    -2.41   0.016    -.3528021   -.0362382
+provincedum15 |  -.0947364   .0807919    -1.17   0.241    -.2532108     .063738
+            t |   .0014067    .001557     0.90   0.366    -.0016474    .0044609
+            d |   .0310819   .0469571     0.66   0.508    -.0610251    .1231889
+           td |  -.0008141   .0022952    -0.35   0.723    -.0053161    .0036879
+        _cons |   .4946887   .0561829     8.80   0.000     .3844851    .6048923
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,551
+                                                  Wald chi2(18)   =      48.21
+                                                  Prob > chi2     =     0.0001
+                                                  R-squared       =          .
+                                                  Root MSE        =      1.044
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -3.281268    2.91188    -1.13   0.260    -8.988448    2.425912
+secgenhighedu |   3.549812   3.016248     1.18   0.239    -2.361925    9.461549
+       tenure |   .0018559    .041041     0.05   0.964    -.0785829    .0822947
+    tenuresqr |    .000829   .0022013     0.38   0.706    -.0034855    .0051436
+ provincedum2 |  -.3851817    .311804    -1.24   0.217    -.9963063     .225943
+ provincedum3 |   -.220128   .2120323    -1.04   0.299    -.6357037    .1954477
+ provincedum4 |  -.4523851   .2439565    -1.85   0.064    -.9305309    .0257608
+ provincedum5 |  -.1392334   .2809299    -0.50   0.620    -.6898458     .411379
+ provincedum6 |  -.3057443   .3230584    -0.95   0.344    -.9389271    .3274385
+ provincedum7 |  -.4005161   .2651349    -1.51   0.131     -.920171    .1191387
+ provincedum8 |  -.5042153   .2458562    -2.05   0.040    -.9860847   -.0223459
+ provincedum9 |   -.233613   .2220513    -1.05   0.293    -.6688255    .2015995
+provincedum10 |  -.1780515   .2645566    -0.67   0.501    -.6965729    .3404699
+provincedum11 |  -.2115586   .3245924    -0.65   0.515    -.8477482    .4246309
+provincedum12 |  -.3446316   .2566475    -1.34   0.179    -.8476515    .1583883
+provincedum13 |   .0510989    .281479     0.18   0.856    -.5005897    .6027876
+provincedum14 |  -.2268237   .2313497    -0.98   0.327    -.6802608    .2266134
+provincedum15 |  -.5076242   .1944466    -2.61   0.009    -.8887326   -.1265158
+        _cons |   8.796134   .4582608    19.19   0.000     7.897959    9.694309
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  tenure tenuresqr provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  3.94077  (p = 0.1394)
+  Wu-Hausman F(2,1530)            =  1.94866  (p = 0.1428)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  1.12318  (p = 0.2892)
+  Basmann chi2(1)        =   1.1095  (p = 0.2922)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   4.613  Chi-sq(19) P-value = 0.9997
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,551    8.550134    .6794348   5.521461   10.12663
+      tenure |      1,551    7.742102    5.489276         -1         24
+   tenuresqr |      1,551    90.05287    101.6976          0        576
+        male |      1,551           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Male Province) pvalue
+>  addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogen
+> eity df", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `bas
+> man_p', "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p
+> ', "Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr (higheredu secgenhighedu = t d td ) if i
+> nrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 25000) & male == 0 & educat
+>  != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,379
+                                                        F(5, 1373)    =  28.77
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0948
+                                                        Adj R-squared = 0.0915
+                                                        Root MSE      = 0.4765
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0538377     .00746     7.22   0.000     .0392036    .0684719
+   tenuresqr |  -.0017561   .0004228    -4.15   0.000    -.0025856   -.0009267
+           t |   .0010901   .0017035     0.64   0.522    -.0022517    .0044319
+           d |   .1112109   .0500529     2.22   0.026     .0130226    .2093993
+          td |  -.0020103   .0024791    -0.81   0.418    -.0068735    .0028529
+       _cons |   .2114856   .0408187     5.18   0.000     .1314118    .2915594
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,379
+                                                        F(5, 1373)    =  21.82
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0736
+                                                        Adj R-squared = 0.0702
+                                                        Root MSE      = 0.4732
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0582341   .0074074     7.86   0.000     .0437031    .0727652
+   tenuresqr |  -.0025022   .0004199    -5.96   0.000    -.0033259   -.0016786
+           t |  -.0001277   .0016915    -0.08   0.940    -.0034459    .0031906
+           d |   .1078072   .0497002     2.17   0.030     .0103107    .2053037
+          td |   .0009734   .0024616     0.40   0.693    -.0038556    .0058023
+       _cons |   .1355113   .0405311     3.34   0.001     .0560017    .2150209
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,379
+                                                  Wald chi2(4)    =      87.60
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .81886
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   2.269629   1.456001     1.56   0.119    -.5840804    5.123339
+secgenhighedu |  -1.167774    1.38018    -0.85   0.397    -3.872878    1.537329
+       tenure |   .0109617   .0264708     0.41   0.679    -.0409202    .0628436
+    tenuresqr |  -.0007696   .0014614    -0.53   0.598    -.0036339    .0020946
+        _cons |   7.611731    .131076    58.07   0.000     7.354826    7.868635
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  tenure tenuresqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  7.46378  (p = 0.0239)
+  Wu-Hausman F(2,1372)            =  3.73315  (p = 0.0242)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =   2.0472  (p = 0.1525)
+  Basmann chi2(1)        =  2.04132  (p = 0.1531)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   2.283  Chi-sq(5) P-value = 0.8087
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,379    8.256232    .6598452   5.521461   10.12663
+      tenure |      1,379    7.065265    5.674666         -1         25
+   tenuresqr |      1,379    82.09645    101.2692          0        625
+        male |      1,379           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Female) pvalue addsta
+> t("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df
+> ", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p',
+>  "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Het
+> eroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr provincedum2-provincedum15 (higheredu se
+> cgenhighedu = t d td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 
+> 25000) & male == 0 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,379
+                                                        F(19, 1359)   =  11.32
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.1366
+                                                        Adj R-squared = 0.1245
+                                                        Root MSE      = 0.4678
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0522473   .0073655     7.09   0.000     .0377983    .0666963
+    tenuresqr |  -.0017087   .0004169    -4.10   0.000    -.0025264   -.0008909
+ provincedum2 |  -.1892151   .0668306    -2.83   0.005    -.3203175   -.0581127
+ provincedum3 |  -.1399429   .0733201    -1.91   0.057    -.2837758    .0038899
+ provincedum4 |  -.1102372   .0663329    -1.66   0.097    -.2403632    .0198888
+ provincedum5 |  -.2459963   .0604686    -4.07   0.000    -.3646183   -.1273743
+ provincedum6 |   -.221305     .07314    -3.03   0.003    -.3647845   -.0778255
+ provincedum7 |  -.1485792   .0641954    -2.31   0.021     -.274512   -.0226463
+ provincedum8 |   -.271816   .0654088    -4.16   0.000    -.4001292   -.1435029
+ provincedum9 |  -.3060331   .0633544    -4.83   0.000    -.4303162     -.18175
+provincedum10 |   -.315058   .0658664    -4.78   0.000    -.4442688   -.1858471
+provincedum11 |  -.3568113    .054414    -6.56   0.000    -.4635559   -.2500667
+provincedum12 |  -.2254654   .0705813    -3.19   0.001    -.3639255   -.0870053
+provincedum13 |  -.3188982   .0644133    -4.95   0.000    -.4452584    -.192538
+provincedum14 |  -.2943231   .0795233    -3.70   0.000    -.4503248   -.1383214
+provincedum15 |   -.260221   .0773298    -3.37   0.001    -.4119198   -.1085221
+            t |   .0009645   .0016859     0.57   0.567    -.0023427    .0042717
+            d |   .1181074   .0494898     2.39   0.017     .0210227    .2151921
+           td |  -.0020139   .0024514    -0.82   0.411    -.0068229    .0027951
+        _cons |   .4482207   .0576895     7.77   0.000     .3350505    .5613908
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  1,379
+                                                        F(19, 1359)   =   8.89
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.1105
+                                                        Adj R-squared = 0.0981
+                                                        Root MSE      = 0.4660
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0572798   .0073377     7.81   0.000     .0428853    .0716742
+    tenuresqr |  -.0024759   .0004153    -5.96   0.000    -.0032905   -.0016612
+ provincedum2 |  -.1461357   .0665784    -2.19   0.028    -.2767432   -.0155281
+ provincedum3 |   -.109435   .0730434    -1.50   0.134     -.252725     .033855
+ provincedum4 |  -.0725975   .0660825    -1.10   0.272    -.2022323    .0570374
+ provincedum5 |  -.1960099   .0602404    -3.25   0.001    -.3141841   -.0778356
+ provincedum6 |   -.195799   .0728639    -2.69   0.007     -.338737   -.0528611
+ provincedum7 |  -.0547146   .0639531    -0.86   0.392    -.1801722    .0707429
+ provincedum8 |  -.2525425   .0651619    -3.88   0.000    -.3803714   -.1247137
+ provincedum9 |   -.190349   .0631153    -3.02   0.003     -.314163   -.0665349
+provincedum10 |   -.295402   .0656178    -4.50   0.000    -.4241252   -.1666788
+provincedum11 |  -.2706048   .0542086    -4.99   0.000    -.3769465   -.1642631
+provincedum12 |  -.1444188   .0703149    -2.05   0.040    -.2823563   -.0064813
+provincedum13 |   -.274326   .0641701    -4.27   0.000    -.4002092   -.1484427
+provincedum14 |   -.336839   .0792231    -4.25   0.000    -.4922519    -.181426
+provincedum15 |  -.1734677    .077038    -2.25   0.024    -.3245939   -.0223414
+            t |  -.0002842   .0016795    -0.17   0.866     -.003579    .0030105
+            d |   .1169819    .049303     2.37   0.018     .0202637    .2137002
+           td |   .0010016   .0024422     0.41   0.682    -.0037892    .0057925
+        _cons |   .3171055   .0574718     5.52   0.000     .2043625    .4298485
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,379
+                                                  Wald chi2(18)   =     213.45
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .69525
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   1.585634    1.23835     1.28   0.200    -.8414868    4.012755
+secgenhighedu |  -.5747169   1.157644    -0.50   0.620    -2.843658    1.694224
+       tenure |   .0137772   .0217681     0.63   0.527    -.0288874    .0564419
+    tenuresqr |  -.0004502   .0012164    -0.37   0.711    -.0028343    .0019339
+ provincedum2 |    -.49283   .1337741    -3.68   0.000    -.7550225   -.2306376
+ provincedum3 |  -.4554186   .1241391    -3.67   0.000    -.6987268   -.2121104
+ provincedum4 |  -.3837545   .1158627    -3.31   0.001    -.6108412   -.1566677
+ provincedum5 |   .0202012   .1390212     0.15   0.884    -.2522754    .2926778
+ provincedum6 |  -.1937302   .1353225    -1.43   0.152    -.4589575    .0714971
+ provincedum7 |   -.256037   .1600853    -1.60   0.110    -.5697984    .0577245
+ provincedum8 |   -.306541   .1385494    -2.21   0.027    -.5780929   -.0349892
+ provincedum9 |  -.0382482   .1981141    -0.19   0.847    -.4265447    .3500484
+provincedum10 |  -.0424674   .1487734    -0.29   0.775    -.3340579    .2491232
+provincedum11 |   .1267346   .1824445     0.69   0.487    -.2308501    .4843193
+provincedum12 |  -.1552024   .1651428    -0.94   0.347    -.4788763    .1684715
+provincedum13 |   .0699153   .1548888     0.45   0.652    -.2336612    .3734918
+provincedum14 |  -.1807613   .1548617    -1.17   0.243    -.4842847    .1227621
+provincedum15 |  -.3176937   .1824391    -1.74   0.082    -.6752678    .0398804
+        _cons |   7.787214   .2256901    34.50   0.000     7.344869    8.229558
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  tenure tenuresqr provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  5.47267  (p = 0.0648)
+  Wu-Hausman F(2,1358)            =   2.7054  (p = 0.0672)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  2.15404  (p = 0.1422)
+  Basmann chi2(1)        =  2.12612  (p = 0.1448)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  18.277  Chi-sq(19) P-value = 0.5040
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,379    8.256232    .6598452   5.521461   10.12663
+      tenure |      1,379    7.065265    5.674666         -1         25
+   tenuresqr |      1,379    82.09645    101.2692          0        625
+        male |      1,379           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Female Province) pval
+> ue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endog
+> eneity df", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `b
+> asman_p', "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall
+> _p', "Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. *3)
+. ivregress 2sls log_monthlyearning tenure tenuresqr male (higheredu = t d td ) if inrange(t,
+>  -`months', `months'-1) & inrange(monthlyearning, 250, 25000) & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,930
+                                                        F(6, 2923)    =  30.20
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0584
+                                                        Adj R-squared = 0.0564
+                                                        Root MSE      = 0.4855
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0492173   .0053136     9.26   0.000     .0387985    .0596361
+   tenuresqr |  -.0018026   .0002949    -6.11   0.000    -.0023809   -.0012244
+        male |  -.0225871   .0180402    -1.25   0.211      -.05796    .0127858
+           t |   .0017703    .001167     1.52   0.129    -.0005179    .0040586
+           d |   .0573271   .0347879     1.65   0.099    -.0108841    .1255383
+          td |  -.0018678   .0017104    -1.09   0.275    -.0052215    .0014859
+       _cons |   .2731336   .0301687     9.05   0.000     .2139795    .3322876
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,930
+                                                  Wald chi2(4)    =     255.61
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0709
+                                                  Root MSE        =     .66118
+
+------------------------------------------------------------------------------
+log_monthl~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   higheredu |   .7018893   .2788525     2.52   0.012     .1553485     1.24843
+      tenure |   .0133733   .0162778     0.82   0.411    -.0185306    .0452773
+   tenuresqr |  -.0002717   .0006981    -0.39   0.697    -.0016399    .0010965
+        male |   .2899277    .025398    11.42   0.000     .2401486    .3397069
+       _cons |   7.843538   .0842927    93.05   0.000     7.678327    8.008748
+------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  tenure tenuresqr male t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  1.83448  (p = 0.1756)
+  Wu-Hausman F(1,2924)            =  1.83187  (p = 0.1760)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  12.1667  (p = 0.0023)
+  Basmann chi2(2)        =  12.1883  (p = 0.0023)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  12.594  Chi-sq(6) P-value = 0.0500
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,930    8.411809    .6860455   5.521461   10.12663
+      tenure |      2,930    7.423549    5.586569         -1         25
+   tenuresqr |      2,930    86.30819    101.5566          0        625
+        male |      2,930    .5293515    .4992229          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Pooled) pvalue addstat("Engod: Durb
+> in p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", `endog_df',
+>  "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "Overidentifi
+> cation df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroskedasticit
+> y df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr male provincedum2-provincedum15 (highere
+> du  = t d td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 25000) &
+>  educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,930
+                                                        F(20, 2909)   =  15.56
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0966
+                                                        Adj R-squared = 0.0904
+                                                        Root MSE      = 0.4767
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0466524   .0052447     8.90   0.000     .0363687    .0569361
+    tenuresqr |  -.0016891   .0002905    -5.81   0.000    -.0022588   -.0011195
+         male |  -.0234135   .0177485    -1.32   0.187    -.0582145    .0113874
+ provincedum2 |  -.2446216   .0450332    -5.43   0.000    -.3329218   -.1563214
+ provincedum3 |   -.186881   .0487048    -3.84   0.000    -.2823804   -.0913816
+ provincedum4 |  -.1916978   .0459749    -4.17   0.000    -.2818444   -.1015511
+ provincedum5 |  -.2882192   .0418298    -6.89   0.000    -.3702382   -.2062002
+ provincedum6 |  -.3092788    .050092    -6.17   0.000    -.4074981   -.2110594
+ provincedum7 |  -.2155827   .0444048    -4.85   0.000    -.3026507   -.1285147
+ provincedum8 |  -.2762636   .0447876    -6.17   0.000    -.3640822    -.188445
+ provincedum9 |  -.2504076   .0435903    -5.74   0.000    -.3358786   -.1649366
+provincedum10 |  -.3031761   .0465448    -6.51   0.000    -.3944402   -.2119121
+provincedum11 |   -.385257    .037117   -10.38   0.000    -.4580352   -.3124788
+provincedum12 |  -.2496685   .0499408    -5.00   0.000    -.3475914   -.1517455
+provincedum13 |  -.2802146   .0461442    -6.07   0.000    -.3706932    -.189736
+provincedum14 |  -.2523337   .0570215    -4.43   0.000    -.3641402   -.1405272
+provincedum15 |  -.1929562   .0561932    -3.43   0.001    -.3031387   -.0827737
+            t |   .0015837   .0011482     1.38   0.168    -.0006676     .003835
+            d |   .0605335   .0342312     1.77   0.077    -.0065865    .1276534
+           td |  -.0016675   .0016831    -0.99   0.322    -.0049676    .0016326
+        _cons |    .528433   .0411907    12.83   0.000      .447667    .6091989
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,930
+                                                  Wald chi2(18)   =     482.20
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.1261
+                                                  Root MSE        =     .64121
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   .7182377   .2733001     2.63   0.009     .1825793    1.253896
+       tenure |   .0130971   .0152836     0.86   0.391    -.0168581    .0430523
+    tenuresqr |  -.0002314   .0006555    -0.35   0.724    -.0015161    .0010534
+         male |   .2920117   .0247607    11.79   0.000     .2434816    .3405418
+ provincedum2 |  -.4779735   .0904717    -5.28   0.000    -.6552947   -.3006522
+ provincedum3 |  -.2773848   .0817427    -3.39   0.001    -.4375975   -.1171721
+ provincedum4 |  -.3412971   .0813866    -4.19   0.000    -.5008118   -.1817823
+ provincedum5 |   .0282991   .0978131     0.29   0.772     -.163411    .2200091
+ provincedum6 |  -.1511201   .1077981    -1.40   0.161    -.3624005    .0601602
+ provincedum7 |  -.2242186   .0854863    -2.62   0.009    -.3917686   -.0566686
+ provincedum8 |  -.3740105   .0969765    -3.86   0.000    -.5640809   -.1839401
+ provincedum9 |  -.0772249   .0903943    -0.85   0.393    -.2543945    .0999448
+provincedum10 |  -.0515171   .1050704    -0.49   0.624    -.2574514    .1544171
+provincedum11 |   .0341254   .1162886     0.29   0.769     -.193796    .2620468
+provincedum12 |  -.2106586   .0970257    -2.17   0.030    -.4008255   -.0204918
+provincedum13 |  -.0016785   .0989274    -0.02   0.986    -.1955726    .1922156
+provincedum14 |  -.1664484   .1015719    -1.64   0.101    -.3655258    .0326289
+provincedum15 |  -.4241432   .0924407    -4.59   0.000    -.6053236   -.2429627
+        _cons |   7.979227    .156264    51.06   0.000     7.672955    8.285499
+-------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  tenure tenuresqr male provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  2.13837  (p = 0.1437)
+  Wu-Hausman F(1,2910)            =  2.12533  (p = 0.1450)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  10.7242  (p = 0.0047)
+  Basmann chi2(2)        =  10.6864  (p = 0.0048)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  29.539  Chi-sq(20) P-value = 0.0777
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,930    8.411809    .6860455   5.521461   10.12663
+      tenure |      2,930    7.423549    5.586569         -1         25
+   tenuresqr |      2,930    86.30819    101.5566          0        625
+        male |      2,930    .5293515    .4992229          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Pooled Province) pvalue addstat("En
+> god: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", `e
+> ndog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "Ove
+> ridentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heterosk
+> edasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr (higheredu  = t d td ) if inrange(t, -`m
+> onths', `months'-1) & inrange(monthlyearning, 250, 25000) & male == 1 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,551
+                                                        F(5, 1545)    =  10.77
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0337
+                                                        Adj R-squared = 0.0306
+                                                        Root MSE      = 0.4921
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0431211    .007569     5.70   0.000     .0282744    .0579677
+   tenuresqr |  -.0017514   .0004121    -4.25   0.000    -.0025598    -.000943
+           t |   .0023733   .0015998     1.48   0.138    -.0007647    .0055112
+           d |   .0094336   .0482769     0.20   0.845    -.0852615    .1041287
+          td |  -.0017944   .0023574    -0.76   0.447    -.0064185    .0028297
+       _cons |      .3163   .0418423     7.56   0.000     .2342264    .3983736
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,551
+                                                  Wald chi2(3)    =      11.19
+                                                  Prob > chi2     =     0.0108
+                                                  R-squared       =          .
+                                                  Root MSE        =     .68489
+
+------------------------------------------------------------------------------
+log_monthl~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   higheredu |  -.0674762   .4973053    -0.14   0.892    -1.042177    .9072243
+      tenure |   .0304812   .0248265     1.23   0.220    -.0181779    .0791402
+   tenuresqr |  -.0011871   .0011196    -1.06   0.289    -.0033815    .0010072
+       _cons |   8.453504   .1571228    53.80   0.000      8.14555    8.761459
+------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  tenure tenuresqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  .611822  (p = 0.4341)
+  Wu-Hausman F(1,1546)            =   .61009  (p = 0.4349)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  5.99136  (p = 0.0500)
+  Basmann chi2(2)        =  5.99132  (p = 0.0500)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   6.202  Chi-sq(5) P-value = 0.2871
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,551    8.550134    .6794348   5.521461   10.12663
+      tenure |      1,551    7.742102    5.489276         -1         24
+   tenuresqr |      1,551    90.05287    101.6976          0        576
+        male |      1,551           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Male) pvalue addstat("Engod: Durbin
+>  p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", `endog_df', "
+> Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "Overidentifica
+> tion df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroskedasticity 
+> df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. ivregress 2sls log_monthlyearning tenure tenuresqr provincedum2-provincedum15 (higheredu  =
+>  t d td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 25000) & male
+>  == 1 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,551
+                                                        F(19, 1531)   =   7.16
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0816
+                                                        Adj R-squared = 0.0702
+                                                        Root MSE      = 0.4819
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0399166   .0074867     5.33   0.000     .0252314    .0546018
+    tenuresqr |  -.0015688   .0004067    -3.86   0.000    -.0023665   -.0007711
+ provincedum2 |  -.2907819   .0608879    -4.78   0.000    -.4102144   -.1713494
+ provincedum3 |  -.2159326   .0650268    -3.32   0.001    -.3434837   -.0883816
+ provincedum4 |  -.2614233    .063561    -4.11   0.000    -.3860992   -.1367475
+ provincedum5 |  -.3237151    .057696    -5.61   0.000    -.4368866   -.2105435
+ provincedum6 |  -.3810663   .0684602    -5.57   0.000     -.515352   -.2467806
+ provincedum7 |  -.2725815   .0613419    -4.44   0.000    -.3929045   -.1522584
+ provincedum8 |  -.2712651   .0612858    -4.43   0.000    -.3914781   -.1510521
+ provincedum9 |  -.2067464   .0598405    -3.45   0.001    -.3241244   -.0893683
+provincedum10 |  -.2902008   .0655616    -4.43   0.000     -.418801   -.1616007
+provincedum11 |  -.4044671   .0505679    -8.00   0.000    -.5036568   -.3052774
+provincedum12 |  -.2696633   .0704034    -3.83   0.000    -.4077607    -.131566
+provincedum13 |  -.2349407   .0661064    -3.55   0.000    -.3646095    -.105272
+provincedum14 |  -.2043342   .0814902    -2.51   0.012    -.3641785     -.04449
+provincedum15 |   -.104534   .0815893    -1.28   0.200    -.2645727    .0555046
+            t |   .0025107   .0015724     1.60   0.111    -.0005737     .005595
+            d |   .0051684   .0474206     0.11   0.913    -.0878478    .0981845
+           td |  -.0018696   .0023178    -0.81   0.420    -.0064161    .0026768
+        _cons |   .5882811   .0567375    10.37   0.000     .4769897    .6995725
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,551
+                                                  Wald chi2(17)   =     120.15
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0793
+                                                  Root MSE        =     .65172
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   .0279814   .4723816     0.06   0.953    -.8978695    .9538323
+       tenure |   .0257861   .0222552     1.16   0.247    -.0178333    .0694056
+    tenuresqr |  -.0009631   .0009924    -0.97   0.332    -.0029082     .000982
+ provincedum2 |  -.5992222   .1581092    -3.79   0.000    -.9091106   -.2893339
+ provincedum3 |  -.2390069   .1319865    -1.81   0.070    -.4976956    .0196818
+ provincedum4 |  -.4406776   .1521685    -2.90   0.004    -.7389224   -.1424328
+ provincedum5 |  -.1015453   .1742335    -0.58   0.560    -.4430367     .239946
+ provincedum6 |  -.3089623    .201669    -1.53   0.126    -.7042264    .0863017
+ provincedum7 |  -.2927228   .1553266    -1.88   0.059    -.5971573    .0117116
+ provincedum8 |  -.5322501    .152759    -3.48   0.000    -.8316523   -.2328479
+ provincedum9 |  -.1362733   .1286455    -1.06   0.289    -.3884139    .1158673
+provincedum10 |  -.1818655   .1651429    -1.10   0.271    -.5055395    .1418086
+provincedum11 |  -.1866345   .2022022    -0.92   0.356    -.5829436    .2096745
+provincedum12 |  -.3605433   .1599954    -2.25   0.024    -.6741285   -.0469582
+provincedum13 |  -.1401586   .1434751    -0.98   0.329    -.4213647    .1410475
+provincedum14 |  -.2404016   .1442454    -1.67   0.096    -.5231174    .0423143
+provincedum15 |  -.4942844   .1211812    -4.08   0.000    -.7317951   -.2567737
+        _cons |   8.682072   .2796083    31.05   0.000     8.134049    9.230094
+-------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  tenure tenuresqr provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  .349355  (p = 0.5545)
+  Wu-Hausman F(1,1532)            =  .345153  (p = 0.5570)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  6.43616  (p = 0.0400)
+  Basmann chi2(2)        =  6.37964  (p = 0.0412)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  17.826  Chi-sq(19) P-value = 0.5341
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,551    8.550134    .6794348   5.521461   10.12663
+      tenure |      1,551    7.742102    5.489276         -1         24
+   tenuresqr |      1,551    90.05287    101.6976          0        576
+        male |      1,551           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Male Province) pvalue addstat("Engo
+> d: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", `end
+> og_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "Overi
+> dentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heterosked
+> asticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr (higheredu  = t d td ) if inrange(t, -`m
+> onths', `months'-1) & inrange(monthlyearning, 250, 25000) & male == 0 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,379
+                                                        F(5, 1373)    =  28.77
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.0948
+                                                        Adj R-squared = 0.0915
+                                                        Root MSE      = 0.4765
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      tenure |   .0538377     .00746     7.22   0.000     .0392036    .0684719
+   tenuresqr |  -.0017561   .0004228    -4.15   0.000    -.0025856   -.0009267
+           t |   .0010901   .0017035     0.64   0.522    -.0022517    .0044319
+           d |   .1112109   .0500529     2.22   0.026     .0130226    .2093993
+          td |  -.0020103   .0024791    -0.81   0.418    -.0068735    .0028529
+       _cons |   .2114856   .0408187     5.18   0.000     .1314118    .2915594
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,379
+                                                  Wald chi2(3)    =     120.22
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .69614
+
+------------------------------------------------------------------------------
+log_monthl~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   higheredu |   1.083458   .3342116     3.24   0.001     .4284156    1.738501
+      tenure |   .0070136   .0221512     0.32   0.752     -.036402    .0504291
+   tenuresqr |   .0000599   .0009212     0.07   0.948    -.0017457    .0018655
+       _cons |   7.676136   .0907155    84.62   0.000     7.498337    7.853936
+------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  tenure tenuresqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  6.21288  (p = 0.0127)
+  Wu-Hausman F(1,1374)            =  6.21837  (p = 0.0128)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  3.82318  (p = 0.1478)
+  Basmann chi2(2)        =  3.81713  (p = 0.1483)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   3.976  Chi-sq(5) P-value = 0.5529
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,379    8.256232    .6598452   5.521461   10.12663
+      tenure |      1,379    7.065265    5.674666         -1         25
+   tenuresqr |      1,379    82.09645    101.2692          0        625
+        male |      1,379           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Female) pvalue addstat("Engod: Durb
+> in p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", `endog_df',
+>  "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "Overidentifi
+> cation df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroskedasticit
+> y df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning tenure tenuresqr provincedum2-provincedum15 (higheredu = 
+> t d td ) if inrange(t, -`months', `months'-1) & inrange(monthlyearning, 250, 25000) & male 
+> == 0 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  1,379
+                                                        F(19, 1359)   =  11.32
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.1366
+                                                        Adj R-squared = 0.1245
+                                                        Root MSE      = 0.4678
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+       tenure |   .0522473   .0073655     7.09   0.000     .0377983    .0666963
+    tenuresqr |  -.0017087   .0004169    -4.10   0.000    -.0025264   -.0008909
+ provincedum2 |  -.1892151   .0668306    -2.83   0.005    -.3203175   -.0581127
+ provincedum3 |  -.1399429   .0733201    -1.91   0.057    -.2837758    .0038899
+ provincedum4 |  -.1102372   .0663329    -1.66   0.097    -.2403632    .0198888
+ provincedum5 |  -.2459963   .0604686    -4.07   0.000    -.3646183   -.1273743
+ provincedum6 |   -.221305     .07314    -3.03   0.003    -.3647845   -.0778255
+ provincedum7 |  -.1485792   .0641954    -2.31   0.021     -.274512   -.0226463
+ provincedum8 |   -.271816   .0654088    -4.16   0.000    -.4001292   -.1435029
+ provincedum9 |  -.3060331   .0633544    -4.83   0.000    -.4303162     -.18175
+provincedum10 |   -.315058   .0658664    -4.78   0.000    -.4442688   -.1858471
+provincedum11 |  -.3568113    .054414    -6.56   0.000    -.4635559   -.2500667
+provincedum12 |  -.2254654   .0705813    -3.19   0.001    -.3639255   -.0870053
+provincedum13 |  -.3188982   .0644133    -4.95   0.000    -.4452584    -.192538
+provincedum14 |  -.2943231   .0795233    -3.70   0.000    -.4503248   -.1383214
+provincedum15 |   -.260221   .0773298    -3.37   0.001    -.4119198   -.1085221
+            t |   .0009645   .0016859     0.57   0.567    -.0023427    .0042717
+            d |   .1181074   .0494898     2.39   0.017     .0210227    .2151921
+           td |  -.0020139   .0024514    -0.82   0.411    -.0068229    .0027951
+        _cons |   .4482207   .0576895     7.77   0.000     .3350505    .5613908
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      1,379
+                                                  Wald chi2(17)   =     245.61
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0356
+                                                  Root MSE        =     .64777
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   .9929002   .3062289     3.24   0.001     .3927025    1.593098
+       tenure |   .0119217   .0199802     0.60   0.551    -.0272389    .0510823
+    tenuresqr |   -.000045   .0008404    -0.05   0.957    -.0016922    .0016022
+ provincedum2 |  -.5236127    .110441    -4.74   0.000     -.740073   -.3071523
+ provincedum3 |  -.4756079   .1092788    -4.35   0.000    -.6897903   -.2614254
+ provincedum4 |  -.4081783   .0977353    -4.18   0.000    -.5997359   -.2166206
+ provincedum5 |  -.0137416   .1127801    -0.12   0.903    -.2347865    .2073034
+ provincedum6 |  -.2120184   .1213192    -1.75   0.081    -.4497997    .0257629
+ provincedum7 |  -.3145632   .1009068    -3.12   0.002    -.5123369   -.1167895
+ provincedum8 |  -.3254762   .1240995    -2.62   0.009    -.5687068   -.0822456
+ provincedum9 |  -.1094215   .1273955    -0.86   0.390    -.3591121    .1402691
+provincedum10 |   -.059821   .1347327    -0.44   0.657    -.3238921    .2042502
+provincedum11 |   .0698516   .1322816     0.53   0.597    -.1894156    .3291187
+provincedum12 |  -.2049112   .1223573    -1.67   0.094    -.4447271    .0349047
+provincedum13 |   .0382701   .1315238     0.29   0.771    -.2195118     .296052
+provincedum14 |  -.1617384    .139799    -1.16   0.247    -.4357393    .1122625
+provincedum15 |  -.3732129   .1343005    -2.78   0.005     -.636437   -.1099888
+        _cons |   7.857098    .164362    47.80   0.000     7.534955    8.179242
+-------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  tenure tenuresqr provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  5.31905  (p = 0.0211)
+  Wu-Hausman F(1,1360)            =  5.26607  (p = 0.0219)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  2.76532  (p = 0.2509)
+  Basmann chi2(2)        =  2.73069  (p = 0.2553)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  20.644  Chi-sq(19) P-value = 0.3568
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning tenure tenuresqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      1,379    8.256232    .6598452   5.521461   10.12663
+      tenure |      1,379    7.065265    5.674666         -1         25
+   tenuresqr |      1,379    82.09645    101.2692          0        625
+        male |      1,379           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Female Province) pvalue addstat("En
+> god: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", `e
+> ndog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "Ove
+> ridentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heterosk
+> edasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Frame/Tenure/IV 
+> Urban ATF Tenure 1982 3years.xls
+dir : seeout
+
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Wyatt/Ivregress/1982/Adjusted Time Fra
+> me/Tenure/IV Urban ATF Tenure 1982 3years.log
+  log type:  text
+ closed on:   6 Aug 2024, 17:44:12
+---------------------------------------------------------------------------------------------

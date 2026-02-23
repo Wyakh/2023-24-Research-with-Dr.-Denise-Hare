@@ -1,0 +1,3561 @@
+----------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.log
+  log type:  text
+ opened on:  14 Aug 2024, 12:57:25
+
+. use "`datapath'", clear
+
+. 
+. *Step One: Variables and Data Processing
+. 
+. *1) Monthly earning & it's ln value
+. 
+. gen annualearning = C05_1 if C05_1!=-99 & C05_1!=-88
+(17,426 missing values generated)
+
+. gen workmonths=C01_1 if C01_1!=-99
+(79 missing values generated)
+
+. gen monthlyearning = annualearning/workmonths
+(17,471 missing values generated)
+
+. gen log_monthlyearning = ln(monthlyearning)
+(17,516 missing values generated)
+
+. 
+. *2) Sex (Male)
+. 
+. gen male=1 if A03==1
+(18,084 missing values generated)
+
+. replace male=0 if A03==2
+(18,084 real changes made)
+
+. 
+. *3) Age & Exp
+. 
+. gen birthyear = A04_1 if A04_1!=-88 & A04_1!=-99
+
+. gen age = 2018-birthyear
+
+. gen agesqr = age*age
+
+. 
+. gen exp = age-A13_3-6 if A13_3>=0
+(3,412 missing values generated)
+
+. replace exp=0 if exp<0
+(3,271 real changes made)
+
+. gen expsqr = exp*exp
+(3,412 missing values generated)
+
+. 
+. *4) Secondary education (Sec Voc; Sec Gen; Sec Jun)
+. 
+. *Sec Voc
+. *filter by secondary school types.
+. gen secvocedu=1 if A14==5
+(33,350 missing values generated)
+
+. replace secvocedu =0 if A14!=5
+(33,350 real changes made)
+
+. *include who reported vocational secondary degrees
+. replace secvocedu=1 if inrange(A13_1, 5, 6) & A13_2==1
+(902 real changes made)
+
+. *remove who had not finished secondary vocational education.
+. replace secvocedu=0 if (inrange(A13_1,4,6) & A13_2>1) | A13_1<4
+(188 real changes made)
+
+. tab secvocedu
+
+  secvocedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     32,636       90.01       90.01
+          1 |      3,623        9.99      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec voc
+. gen voc_log_monthlyearning = log_monthlyearning if secvocedu==1
+(33,450 missing values generated)
+
+. 
+. *Sec Gen
+. *filter by secondary school types.
+. gen secgenedu = 1 if A14!=-99 & A14!=-88 & A14!=5
+(22,075 missing values generated)
+
+. replace secgenedu =0 if A14==-99 | A14==-88 | A14==5
+(22,075 real changes made)
+
+. *remove who had/have not finished secondary general schools.
+. replace secgenedu =0 if (A13_1==4 & A13_2>1) | inrange(A13_1, 5, 6) | A13_1<4
+(2,765 real changes made)
+
+. tab secgenedu
+
+  secgenedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     24,840       68.51       68.51
+          1 |     11,419       31.49      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. *income for sec gen
+. gen gen_log_monthlyearning = log_monthlyearning if secgenedu==1
+(28,201 missing values generated)
+
+. 
+. *Only Sec Junior
+. *filter by A13_1
+. gen secjun = 1 if (A13_1 ==3 & A13_2 ==1) | (inrange(A13_1, 4, 6) & A13_2>1) 
+(26,513 missing values generated)
+
+. replace secjun = 0 if secjun!=1
+(26,513 real changes made)
+
+. tab secjun
+
+     secjun |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     26,513       73.12       73.12
+          1 |      9,746       26.88      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *Categotical variable of education
+. gen educat=1 if secvocedu==1
+(32,636 missing values generated)
+
+. replace educat=2 if secgenedu==1
+(11,419 real changes made)
+
+. replace educat=3 if secjun==1
+(9,746 real changes made)
+
+. tab educat
+
+     educat |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |      3,623       14.62       14.62
+          2 |     11,419       46.07       60.68
+          3 |      9,746       39.32      100.00
+------------+-----------------------------------
+      Total |     24,788      100.00
+
+. 
+. *5) Higher education (High Voc; High Gen; Adult Edu; Higher Edu)
+. 
+. *Higher vocational education (full-time)
+. gen highvocedu =1 if A13_1==7 & A13_2==1
+(32,394 missing values generated)
+
+. replace highvocedu=0 if highvocedu!=1
+(32,394 real changes made)
+
+. replace highvocedu=0 if A15_7==6
+(959 real changes made)
+
+. 
+. *Higher general education (full-time)
+. gen highgenedu =1 if (A13_1==8 & A13_2==1) | A13_1==9
+(32,336 missing values generated)
+
+. replace highgenedu =0 if highgenedu!=1
+(32,336 real changes made)
+
+. replace highgenedu=0 if A15_7==6
+(567 real changes made)
+
+. 
+. *Adult continuing education
+. gen adultedu = 1 if A15_7 == 6
+(34,552 missing values generated)
+
+. replace adultedu = 0 if A15_7!=6
+(34,552 real changes made)
+
+. replace adultedu = 0 if ((A13_1==7 | A13_1==8) & A13_2!=1) | A13_1<=6
+(181 real changes made)
+
+. tab adultedu
+
+   adultedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     34,733       95.79       95.79
+          1 |      1,526        4.21      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *higheredu (dummy variable of higher education)
+. gen higheredu=1 if highvocedu==1 | highgenedu==1 | adultedu==1
+(28,471 missing values generated)
+
+. replace higheredu=0 if higheredu!=1
+(28,471 real changes made)
+
+. 
+. *higheredu interactions
+. gen bornafter79=1 if birthyear>=1980 & birthyear<=2018
+(18,574 missing values generated)
+
+. replace bornafter79=0 if birthyear<1980 & birthyear>0
+(18,574 real changes made)
+
+. 
+. gen highvocafter79=highvocedu*bornafter79
+
+. gen highgenafter79=highgenedu*bornafter79
+
+. gen adulteduafter79=adultedu*bornafter79
+
+. gen highereduafter79=higheredu*bornafter79
+
+. 
+. *6) Instrument
+. 
+. gen yearat15 = birthyear+15
+
+. local obsnum = _N
+
+. 
+. forval i =  1/`obsnum' {
+  2.         
+.         *extract the observation's year at age 15
+.         qui sum yearat15  in `i'
+  3.         local yearvalue = round(mod(r(mean),100))
+  4.         
+.         *get the variables' names for this observation
+.         *graduates of mid and sec schools
+.         if inrange(`yearvalue', 0, 9) {
+  5.                 local czgrad_year = "czgrad0`yearvalue'"
+  6.                 local gzgrad_year = "gzgrad0`yearvalue'"
+  7.         }
+  8.         else {
+  9.                 local czgrad_year = "czgrad`yearvalue'"
+ 10.                 local gzgrad_year = "gzgrad`yearvalue'"
+ 11.         }
+ 12.         *entrants of sec and universities
+.         if inrange(`yearvalue'+1, 0, 9) {
+ 13.                 local gzentrant_year = "gzentrant0`=`yearvalue'+1'"
+ 14.                 local gxentrant_year = "gxentrant0`=`yearvalue'+1'"
+ 15.                 local vsentrant_year = "vsentrant0`=`yearvalue'+1'"
+ 16.                 local tsentrant_year = "tsentrant0`=`yearvalue'+1'"
+ 17.         }
+ 18.         else{
+ 19.                 if `yearvalue' == 99 {
+ 20.                 local gzentrant_year = "gzentrant00"
+ 21.                 local gxentrant_year = "gxentrant00"
+ 22.                 local vsentrant_year = "vsentrant00"
+ 23.                 local tsentrant_year = "tsentrant00"
+ 24.                 }
+ 25.         else {
+ 26.                 local gzentrant_year = "gzentrant`=`yearvalue'+1'"
+ 27.                 local gxentrant_year = "gxentrant`=`yearvalue'+1'"
+ 28.                 local vsentrant_year = "vsentrant`=`yearvalue'+1'"
+ 29.                 local tsentrant_year = "tsentrant`=`yearvalue'+1'"
+ 30.         }
+ 31.         }
+ 32.         
+.         
+.         *For Ins 1 & 2: check whether the variable names exist (whether we have those years' or not)
+.         capture ds `czgrad_year' `gzgrad_year' `gzentrant_year' `gxentrant_year'
+ 33.         if _rc == 0 {
+ 34.                 *generate/replace the instrument
+.                 capture ds ins1_secgen_entrant_relative ins2_highedu_entrant_relative
+ 35.                 if _rc!=0 {
+ 36.                         qui gen ins1_secgen_entrant_relative = `gzentrant_year'/`czgrad_year' if _n == `i'
+ 37.                         qui gen ins2_highedu_entrant_relative = `gxentrant_year'/`gzgrad_year' if _n == `i'
+ 38.                 
+.                 }
+ 39.                 else {
+ 40.                         qui replace ins1_secgen_entrant_relative = `gzentrant_year'/`czgrad_year' if _n == 
+> `i'
+ 41.                         qui replace ins2_highedu_entrant_relative = `gxentrant_year'/`gzgrad_year' if _n ==
+>  `i'
+ 42.                 }
+ 43.         }
+ 44.         
+.         *For Ins 3
+.         capture ds `czgrad_year' `vsentrant_year'
+ 45.         if _rc == 0 {
+ 46.                 *generate/replace the instrument
+.                 capture ds ins3_vs_entrant_relative
+ 47.                 if _rc!=0 {
+ 48.                         qui gen ins3_vs_entrant_relative = `vsentrant_year'/`czgrad_year' if _n == `i'
+ 49.                 }
+ 50.                 else {
+ 51.                         qui replace ins3_vs_entrant_relative = `vsentrant_year'/`czgrad_year' if _n == `i'
+ 52.                 }
+ 53.         }
+ 54. }
+
+. 
+. 
+. sum ins1_secgen_entrant_relative, d
+
+                ins1_secgen_entrant_relative
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     .1551793       .0699308
+ 5%     .1673149       .0699308
+10%      .186534       .0699308       Obs              14,600
+25%      .212766       .0699308       Sum of wgt.      14,600
+
+50%     .2705238                      Mean           .3109947
+                        Largest       Std. dev.      .1165706
+75%     .4141782       .6448125
+90%     .4786784       .6448125       Variance       .0135887
+95%     .5186297       .6448125       Skewness       .6285488
+99%     .5868049       .6448125       Kurtosis       2.318413
+
+. sum ins2_highedu_entrant_relative, d
+
+                ins2_highedu_entrant_relative
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%      .152784       .0821429
+ 5%     .1734805       .0886667
+10%     .2178154       .0925698       Obs              14,600
+25%     .2949015       .1380375       Sum of wgt.      14,600
+
+50%      .563901                      Mean           .6110964
+                        Largest       Std. dev.      .4193773
+75%     .8148931       2.985416
+90%     1.023507       2.985416       Variance       .1758773
+95%     1.167059       2.985416       Skewness       2.172976
+99%     2.425508       2.985416       Kurtosis       10.34083
+
+. sum ins3_vs_entrant_relative, d
+
+                  ins3_vs_entrant_relative
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     .1185751       .0849628
+ 5%     .1372715       .0849628
+10%     .1456793       .0852398       Obs              14,942
+25%      .184019       .0852398       Sum of wgt.      14,942
+
+50%     .2320418                      Mean            .249079
+                        Largest       Std. dev.      .0890765
+75%     .3028006       .6566039
+90%     .3705537       .6566039       Variance       .0079346
+95%     .4302979       .6566039       Skewness       .9809564
+99%     .5072184       .6566039       Kurtosis       4.050356
+
+. 
+. *7) Province fixed effect (Method: By the first two digits of household code)
+. 
+. destring hhcode, generate(province_code) force float
+hhcode: contains nonnumeric characters; province_code generated as float
+(2 missing values generated)
+
+. replace province_code = floor(province_code/1000000000000) if province_code<100000000000000
+(35,938 real changes made)
+
+. replace province_code = floor(province_code/10000000000000) if province_code>=100000000000000 & province_code<
+> 1000000000000000
+(319 real changes made)
+
+. replace province_code = floor(province_code/1000000000000000) if province_code>=10000000000000000
+(0 real changes made)
+
+. *The specific two; Do that for rural after special care.
+. replace province_code = 51 if province_code==.
+(2 real changes made)
+
+. tab province_code, gen(provincedum)
+
+     hhcode |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         11 |      2,836        7.82        7.82
+         14 |      2,555        7.05       14.87
+         15 |      1,760        4.85       19.72
+         21 |      2,218        6.12       25.84
+         32 |      2,943        8.12       33.96
+         34 |      2,254        6.22       40.17
+         37 |      2,396        6.61       46.78
+         41 |      2,959        8.16       54.94
+         42 |      2,447        6.75       61.69
+         43 |      2,289        6.31       68.00
+         44 |      4,331       11.94       79.95
+         50 |      2,115        5.83       85.78
+         51 |      2,798        7.72       93.50
+         53 |      1,226        3.38       96.88
+         62 |      1,132        3.12      100.00
+------------+-----------------------------------
+      Total |     36,259      100.00
+
+. 
+. *Step Two: Regressions
+. 
+. *1) Exp & Specified higher education, Sec Voc + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 ad
+> ulteduafter79 highvocafter79 highgenafter79 adulteduafter79 if inrange(birthyear, 1971, 1992) & inrange(monthl
+> yearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative i
+> ns3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,063
+-------------+----------------------------------   F(12, 2050)     =     18.69
+       Model |  84.5061245        12  7.04217704   Prob > F        =    0.0000
+    Residual |  772.562496     2,050  .376859754   R-squared       =    0.0986
+-------------+----------------------------------   Adj R-squared   =    0.0933
+       Total |   857.06862     2,062  .415649185   Root MSE        =    .61389
+
+---------------------------------------------------------------------------------
+voc_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+           male |   .2132619   .0349257     6.11   0.000     .1447684    .2817554
+            exp |   .0320178   .0277315     1.15   0.248    -.0223671    .0864027
+         expsqr |  -.0012787   .0008289    -1.54   0.123    -.0029044     .000347
+     highvocedu |   .2286009   .0800665     2.86   0.004     .0715808    .3856211
+     highgenedu |   .7148127   .1199556     5.96   0.000     .4795651    .9500603
+       adultedu |   .3885975   .0507794     7.65   0.000     .2890129    .4881821
+ highvocafter79 |  -.0340249   .0950964    -0.36   0.721    -.2205205    .1524708
+ highgenafter79 |  -.2799549   .1631649    -1.72   0.086    -.5999412    .0400313
+adulteduafter79 |  -.0522168   .0711665    -0.73   0.463    -.1917829    .0873493
+ highvocafter79 |          0  (omitted)
+ highgenafter79 |          0  (omitted)
+adulteduafter79 |          0  (omitted)
+            _m1 |   .3387926   .2153861     1.57   0.116    -.0836057    .7611909
+            _m2 |  -1.212939   .6207693    -1.95   0.051    -2.430343    .0044652
+            _m3 |  -1.417673   .5532039    -2.56   0.010    -2.502573   -.3327727
+          _cons |   6.495851   .8162459     7.96   0.000     4.895093    8.096609
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   1.074495          .        .       .            .           .
+        rho1 |   .3268373          .        .       .            .           .
+        rho2 |  -1.170137          .        .       .            .           .
+        rho3 |  -1.367646          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter7
+> 9 adulteduafter79 m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.08
+Prob > chi2 = 0.7759
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulte
+> duafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      2,063     8.31855    .6447086   5.521461   10.12663
+        male |      2,063    .5094523    .5000319          0          1
+         exp |      2,063    17.87349    6.449986          1         32
+      expsqr |      2,063    361.0436    235.3402          1       1024
+  highvocedu |      2,063    .1158507    .3201234          0          1
+-------------+---------------------------------------------------------
+  highgenedu |      2,063    .0290839    .1680824          0          1
+    adultedu |      2,063    .1594765    .3662086          0          1
+highvocaf~79 |      2,063    .0853127    .2794141          0          1
+highgenaf~79 |      2,063    .0159961    .1254906          0          1
+adultedua~79 |      2,063    .0761028    .2652268          0          1
+-------------+---------------------------------------------------------
+          m1 |      2,063    1.125546    .1784658   .8143778    1.98121
+          m2 |      2,063   -.5321525    .1428741   -.726001  -.0397592
+          m3 |      2,063   -.3377138    .1875969  -.7252195  -.0051956
+
+. outreg2 using "`xlspath'", replace ctitle(Sec Voc, All Gender, Specified Higheredu,) pvalue addstat("Hettest: 
+> p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *2) Exp & Specified higher education & province fixed, Sec Voc + inrange(birthyear, 1971, 1992) + no outliers
+. 
+. selmlog voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 ad
+> ulteduafter79 provincedum2-provincedum15 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 2500
+> 0), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_rela
+> tive) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,063
+-------------+----------------------------------   F(26, 2036)     =     13.54
+       Model |  126.329257        26  4.85881758   Prob > F        =    0.0000
+    Residual |  730.739363     2,036  .358909314   R-squared       =    0.1474
+-------------+----------------------------------   Adj R-squared   =    0.1365
+       Total |   857.06862     2,062  .415649185   Root MSE        =    .59909
+
+---------------------------------------------------------------------------------
+voc_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+           male |   .2133906   .0355745     6.00   0.000     .1436244    .2831568
+            exp |   .0442712   .0295541     1.50   0.134    -.0136882    .1022306
+         expsqr |  -.0012998   .0008722    -1.49   0.136    -.0030103    .0004108
+     highvocedu |   .2396997   .0785169     3.05   0.002     .0857178    .3936816
+     highgenedu |    .703679   .1176695     5.98   0.000     .4729137    .9344442
+       adultedu |   .3956349   .0500171     7.91   0.000      .297545    .4937249
+ highvocafter79 |  -.0335038   .0933133    -0.36   0.720    -.2165032    .1494957
+ highgenafter79 |  -.2611447    .159945    -1.63   0.103    -.5748177    .0525283
+adulteduafter79 |  -.0511944   .0699932    -0.73   0.465    -.1884601    .0860713
+   provincedum2 |  -.3899635   .0782435    -4.98   0.000    -.5434091   -.2365179
+   provincedum3 |  -.3272555     .08281    -3.95   0.000    -.4896565   -.1648544
+   provincedum4 |  -.3504462   .0756585    -4.63   0.000    -.4988223   -.2020701
+   provincedum5 |   .0502304    .070227     0.72   0.475    -.0874939    .1879547
+   provincedum6 |  -.1203128   .0861859    -1.40   0.163    -.2893344    .0487089
+   provincedum7 |  -.1449485    .075496    -1.92   0.055     -.293006    .0031091
+   provincedum8 |  -.2833933   .0783305    -3.62   0.000    -.4370096   -.1297771
+   provincedum9 |  -.0640223   .0737642    -0.87   0.386    -.2086835    .0806388
+  provincedum10 |  -.1343562   .0731788    -1.84   0.067    -.2778692    .0091569
+  provincedum11 |   .0546148    .070031     0.78   0.436    -.0827252    .1919547
+  provincedum12 |   -.222193   .0792108    -2.81   0.005    -.3775357   -.0668503
+  provincedum13 |  -.0231069   .0774355    -0.30   0.765     -.174968    .1287542
+  provincedum14 |  -.2895026   .0852487    -3.40   0.001    -.4566863   -.1223188
+  provincedum15 |  -.1573027   .0944562    -1.67   0.096    -.3425435    .0279381
+            _m1 |    .367973   .2306676     1.60   0.111    -.0843962    .8203421
+            _m2 |  -1.317907   .6754498    -1.95   0.051    -2.642552    .0067374
+            _m3 |  -1.118058   .5738289    -1.95   0.052    -2.243411    .0072945
+          _cons |   6.432908   .8736313     7.36   0.000     4.719603    8.146212
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .9508909          .        .       .            .           .
+        rho1 |   .3773554          .        .       .            .           .
+        rho2 |  -1.351511          .        .       .            .           .
+        rho3 |  -1.146566          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter7
+> 9 adulteduafter79 provincedum2-provincedum15 m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearni
+> ng, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   2.49
+Prob > chi2 = 0.1149
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulte
+> duafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      2,063     8.31855    .6447086   5.521461   10.12663
+        male |      2,063    .5094523    .5000319          0          1
+         exp |      2,063    17.87349    6.449986          1         32
+      expsqr |      2,063    361.0436    235.3402          1       1024
+  highvocedu |      2,063    .1158507    .3201234          0          1
+-------------+---------------------------------------------------------
+  highgenedu |      2,063    .0290839    .1680824          0          1
+    adultedu |      2,063    .1594765    .3662086          0          1
+highvocaf~79 |      2,063    .0853127    .2794141          0          1
+highgenaf~79 |      2,063    .0159961    .1254906          0          1
+adultedua~79 |      2,063    .0761028    .2652268          0          1
+-------------+---------------------------------------------------------
+          m1 |      2,063    1.125546    .1784658   .8143778    1.98121
+          m2 |      2,063   -.5321525    .1428741   -.726001  -.0397592
+          m3 |      2,063   -.3377138    .1875969  -.7252195  -.0051956
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, All Gender, Specified Higheredu, Province Dum) pvalue addsta
+> t("Hettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *3) Exp & Non-specified higher education, Sec Voc + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog voc_log_monthlyearning male exp expsqr higheredu highereduafter79 highereduafter79 if inrange(birthyea
+> r, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative 
+> ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,063
+-------------+----------------------------------   F(8, 2054)      =     25.52
+       Model |  77.4973331         8  9.68716664   Prob > F        =    0.0000
+    Residual |  779.571287     2,054  .379538115   R-squared       =    0.0904
+-------------+----------------------------------   Adj R-squared   =    0.0869
+       Total |   857.06862     2,062  .415649185   Root MSE        =    .61607
+
+----------------------------------------------------------------------------------
+voc_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+            male |   .2133526   .0350357     6.09   0.000     .1446434    .2820617
+             exp |    .034039   .0277458     1.23   0.220    -.0203739    .0884519
+          expsqr |  -.0013075   .0008299    -1.58   0.115    -.0029351      .00032
+       higheredu |   .3812938   .0429288     8.88   0.000     .2971054    .4654822
+highereduafter79 |  -.1026131   .0562787    -1.82   0.068    -.2129823    .0077561
+highereduafter79 |          0  (omitted)
+             _m1 |   .3250522   .2159237     1.51   0.132    -.0983999    .7485043
+             _m2 |  -1.148817    .620084    -1.85   0.064    -2.364876    .0672418
+             _m3 |  -1.347923   .5521191    -2.44   0.015    -2.430695   -.2651514
+           _cons |   6.543256   .8166169     8.01   0.000     4.941773    8.144739
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |    1.01028          .        .       .            .           .
+        rho1 |   .3233942          .        .       .            .           .
+        rho2 |  -1.142957          .        .       .            .           .
+        rho3 |  -1.341048          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if inrange(birthyear, 1
+> 971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.35
+Prob > chi2 = 0.5528
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      2,063     8.31855    .6447086   5.521461   10.12663
+        male |      2,063    .5094523    .5000319          0          1
+         exp |      2,063    17.87349    6.449986          1         32
+      expsqr |      2,063    361.0436    235.3402          1       1024
+   higheredu |      2,063    .3044111    .4602691          0          1
+-------------+---------------------------------------------------------
+higheredu~79 |      2,063    .1774115    .3821092          0          1
+          m1 |      2,063    1.125546    .1784658   .8143778    1.98121
+          m2 |      2,063   -.5321525    .1428741   -.726001  -.0397592
+          m3 |      2,063   -.3377138    .1875969  -.7252195  -.0051956
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, All Gender, Non-specified Higheredu,) pvalue addstat("Hettes
+> t: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *4) Exp & Non-specified higher education & province fixed, Sec Voc + inrange(birthyear, 1971, 1992) + no outli
+> ers
+. selmlog voc_log_monthlyearning male exp expsqr higheredu highereduafter79 provincedum2-provincedum15 if inrang
+> e(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_entrant
+> _relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,063
+-------------+----------------------------------   F(22, 2040)     =     15.08
+       Model |   119.88126        22  5.44914817   Prob > F        =    0.0000
+    Residual |  737.187361     2,040  .361366353   R-squared       =    0.1399
+-------------+----------------------------------   Adj R-squared   =    0.1306
+       Total |   857.06862     2,062  .415649185   Root MSE        =    .60114
+
+----------------------------------------------------------------------------------
+voc_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+            male |   .2135199   .0356883     5.98   0.000     .1435306    .2835091
+             exp |   .0458333   .0295816     1.55   0.121    -.0121801    .1038466
+          expsqr |   -.001304   .0008737    -1.49   0.136    -.0030174    .0004095
+       higheredu |   .3869929   .0422919     9.15   0.000     .3040531    .4699327
+highereduafter79 |  -.1002832    .055428    -1.81   0.071    -.2089845     .008418
+    provincedum2 |  -.4096892     .07827    -5.23   0.000    -.5631867   -.2561918
+    provincedum3 |  -.3403599   .0828566    -4.11   0.000    -.5028523   -.1778676
+    provincedum4 |   -.367798   .0756615    -4.86   0.000    -.5161799   -.2194161
+    provincedum5 |   .0300732   .0700935     0.43   0.668    -.1073891    .1675355
+    provincedum6 |   -.137113   .0863544    -1.59   0.112    -.3064649     .032239
+    provincedum7 |  -.1534525    .075369    -2.04   0.042    -.3012608   -.0056442
+    provincedum8 |  -.3009786   .0782515    -3.85   0.000    -.4544398   -.1475175
+    provincedum9 |  -.0803738   .0738542    -1.09   0.277    -.2252114    .0644638
+   provincedum10 |  -.1519111   .0731967    -2.08   0.038    -.2954592    -.008363
+   provincedum11 |   .0393081   .0699407     0.56   0.574    -.0978546    .1764707
+   provincedum12 |   -.234204   .0792559    -2.96   0.003    -.3896348   -.0787731
+   provincedum13 |  -.0362066   .0774133    -0.47   0.640    -.1880239    .1156107
+   provincedum14 |  -.3030147    .085394    -3.55   0.000    -.4704831   -.1355462
+   provincedum15 |  -.1554612   .0946471    -1.64   0.101    -.3410763    .0301538
+             _m1 |   .3525705   .2313412     1.52   0.128     -.101119      .80626
+             _m2 |  -1.280327   .6764114    -1.89   0.059    -2.606856    .0462015
+             _m3 |  -1.047256   .5738539    -1.82   0.068    -2.172657    .0781444
+           _cons |   6.481837   .8749647     7.41   0.000     4.765919    8.197754
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .9014365          .        .       .            .           .
+        rho1 |   .3713456          .        .       .            .           .
+        rho2 |  -1.348508          .        .       .            .           .
+        rho3 |  -1.103025          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning male exp expsqr higheredu highereduafter79 provincedum2-provincedum15 m1 m2
+>  m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.78
+Prob > chi2 = 0.3781
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      2,063     8.31855    .6447086   5.521461   10.12663
+        male |      2,063    .5094523    .5000319          0          1
+         exp |      2,063    17.87349    6.449986          1         32
+      expsqr |      2,063    361.0436    235.3402          1       1024
+   higheredu |      2,063    .3044111    .4602691          0          1
+-------------+---------------------------------------------------------
+higheredu~79 |      2,063    .1774115    .3821092          0          1
+          m1 |      2,063    1.125546    .1784658   .8143778    1.98121
+          m2 |      2,063   -.5321525    .1428741   -.726001  -.0397592
+          m3 |      2,063   -.3377138    .1875969  -.7252195  -.0051956
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, All Gender, Non-specified Higheredu, Province Dum) pvalue ad
+> dstat("Hettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. 
+. *5) Exp & Specified higher education, Sec Gen + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog gen_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 ad
+> ulteduafter79 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp exp
+> sqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen
+> (m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     5,294
+-------------+----------------------------------   F(12, 5281)     =     56.61
+       Model |  307.543929        12  25.6286607   Prob > F        =    0.0000
+    Residual |  2390.98233     5,281  .452751813   R-squared       =    0.1140
+-------------+----------------------------------   Adj R-squared   =    0.1120
+       Total |  2698.52625     5,293  .509829256   Root MSE        =    .67287
+
+---------------------------------------------------------------------------------
+gen_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+           male |    .229109   .0212211    10.80   0.000     .1875068    .2707112
+            exp |   .0463623    .016204     2.86   0.004     .0145959    .0781288
+         expsqr |  -.0017606   .0005196    -3.39   0.001    -.0027792    -.000742
+     highvocedu |   .1228058   .0414014     2.97   0.003     .0416418    .2039697
+     highgenedu |   .5941584   .0362194    16.40   0.000     .5231534    .6651634
+       adultedu |   .3116365   .0442719     7.04   0.000     .2248453    .3984276
+ highvocafter79 |   .0665672   .0492664     1.35   0.177    -.0300152    .1631496
+ highgenafter79 |  -.0996502   .0425846    -2.34   0.019    -.1831335   -.0161668
+adulteduafter79 |   -.072661    .061172    -1.19   0.235    -.1925834    .0472614
+            _m1 |   .3680289   .3518183     1.05   0.296    -.3216804    1.057738
+            _m2 |   .0720674   .1179455     0.61   0.541    -.1591545    .3032893
+            _m3 |  -.4810938   .2690146    -1.79   0.074    -1.008474    .0462861
+          _cons |   7.806819    .065134   119.86   0.000     7.679129    7.934508
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .5282614          .        .       .            .           .
+        rho1 |   .5063578          .        .       .            .           .
+        rho2 |    .099155          .        .       .            .           .
+        rho3 |  -.6619197          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter7
+> 9 adulteduafter79 m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.82
+Prob > chi2 = 0.3638
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulte
+> duafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      5,294    8.479013    .7140233   5.521461   10.12663
+        male |      5,294    .5379675    .4986035          0          1
+         exp |      5,294    15.03589     6.94652          0         33
+      expsqr |      5,294     274.323    231.9129          0       1089
+  highvocedu |      5,294    .2529278     .434731          0          1
+-------------+---------------------------------------------------------
+  highgenedu |      5,294    .4036645    .4906781          0          1
+    adultedu |      5,294    .1099358    .3128392          0          1
+highvocaf~79 |      5,294    .1873819    .3902547          0          1
+highgenaf~79 |      5,294    .3086513    .4619805          0          1
+adultedua~79 |      5,294    .0542123    .2264576          0          1
+-------------+---------------------------------------------------------
+          m1 |      5,294   -.2756862    .0701061  -.4284056  -.0389473
+          m2 |      5,294    .4519296    .3422949   .0001547   2.301244
+          m3 |      5,294   -.2510442     .196665   -.726001  -.0012229
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, All Gender, Specified Higheredu,) pvalue addstat("Hettest: p
+> -value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *6) Exp & Specified higher education & province fixed, Sec Gen + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog gen_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 ad
+> ulteduafter79 provincedum2-provincedum15 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 2500
+> 0), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_rela
+> tive) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     5,294
+-------------+----------------------------------   F(26, 5267)     =     45.08
+       Model |   491.18694        26  18.8918054   Prob > F        =    0.0000
+    Residual |  2207.33931     5,267  .419088535   R-squared       =    0.1820
+-------------+----------------------------------   Adj R-squared   =    0.1780
+       Total |  2698.52625     5,293  .509829256   Root MSE        =    .64737
+
+---------------------------------------------------------------------------------
+gen_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+           male |   .2061141   .0207505     9.93   0.000     .1654344    .2467937
+            exp |   .0813162   .0165305     4.92   0.000     .0489095    .1137229
+         expsqr |  -.0022454   .0005225    -4.30   0.000    -.0032696   -.0012211
+     highvocedu |   .1113158   .0399564     2.79   0.005     .0329847     .189647
+     highgenedu |   .5723072    .035246    16.24   0.000     .5032105    .6414038
+       adultedu |   .3161917   .0428465     7.38   0.000     .2321948    .4001886
+ highvocafter79 |   .0674505   .0474669     1.42   0.155    -.0256043    .1605054
+ highgenafter79 |  -.1295254   .0412286    -3.14   0.002    -.2103506   -.0487002
+adulteduafter79 |  -.1270221   .0590333    -2.15   0.031    -.2427518   -.0112924
+   provincedum2 |  -.6511104   .0482378   -13.50   0.000    -.7456764   -.5565443
+   provincedum3 |  -.2977229   .0457106    -6.51   0.000    -.3873346   -.2081111
+   provincedum4 |  -.4715638   .0487221    -9.68   0.000    -.5670793   -.3760483
+   provincedum5 |  -.0807115   .0431391    -1.87   0.061    -.1652821     .003859
+   provincedum6 |  -.4150307   .0511105    -8.12   0.000    -.5152285   -.3148328
+   provincedum7 |   -.377407   .0485255    -7.78   0.000    -.4725371   -.2822768
+   provincedum8 |  -.6461447   .0472797   -13.67   0.000    -.7388324   -.5534569
+   provincedum9 |  -.1791967   .0447009    -4.01   0.000    -.2668289   -.0915644
+  provincedum10 |  -.2401695   .0473659    -5.07   0.000    -.3330263   -.1473126
+  provincedum11 |  -.1223389   .0405819    -3.01   0.003    -.2018963   -.0427815
+  provincedum12 |  -.3014711    .050245    -6.00   0.000    -.3999721   -.2029701
+  provincedum13 |  -.2381434   .0466637    -5.10   0.000    -.3296235   -.1466632
+  provincedum14 |  -.3274111   .0628142    -5.21   0.000    -.4505528   -.2042693
+  provincedum15 |   -.462019   .0559932    -8.25   0.000    -.5717888   -.3522491
+            _m1 |   1.198088   .3646196     3.29   0.001     .4832823    1.912893
+            _m2 |  -.0740242   .1184385    -0.63   0.532    -.3062128    .1581644
+            _m3 |    -.09848   .2646622    -0.37   0.710    -.6173276    .4203676
+          _cons |    8.12805   .0728694   111.54   0.000     7.985196    8.270904
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .7828309          .        .       .            .           .
+        rho1 |   1.354112          .        .       .            .           .
+        rho2 |  -.0836642          .        .       .            .           .
+        rho3 |  -.1113048          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter7
+> 9 adulteduafter79 provincedum2-provincedum15 m1 m2 m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearni
+> ng, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   3.86
+Prob > chi2 = 0.0493
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning male exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulte
+> duafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      5,294    8.479013    .7140233   5.521461   10.12663
+        male |      5,294    .5379675    .4986035          0          1
+         exp |      5,294    15.03589     6.94652          0         33
+      expsqr |      5,294     274.323    231.9129          0       1089
+  highvocedu |      5,294    .2529278     .434731          0          1
+-------------+---------------------------------------------------------
+  highgenedu |      5,294    .4036645    .4906781          0          1
+    adultedu |      5,294    .1099358    .3128392          0          1
+highvocaf~79 |      5,294    .1873819    .3902547          0          1
+highgenaf~79 |      5,294    .3086513    .4619805          0          1
+adultedua~79 |      5,294    .0542123    .2264576          0          1
+-------------+---------------------------------------------------------
+          m1 |      5,294   -.2756862    .0701061  -.4284056  -.0389473
+          m2 |      5,294    .4519296    .3422949   .0001547   2.301244
+          m3 |      5,294   -.2510442     .196665   -.726001  -.0012229
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, All Gender, Specified Higheredu, Province Dum) pvalue addsta
+> t("Hettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *7) Exp & Non-specified higher education, Sec Gen + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog gen_log_monthlyearning male exp expsqr higheredu highereduafter79 if inrange(birthyear, 1971, 1992) & 
+> inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entr
+> ant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     5,294
+-------------+----------------------------------   F(8, 5285)      =     52.96
+       Model |  200.289095         8  25.0361369   Prob > F        =    0.0000
+    Residual |  2498.23716     5,285  .472703341   R-squared       =    0.0742
+-------------+----------------------------------   Adj R-squared   =    0.0728
+       Total |  2698.52625     5,293  .509829256   Root MSE        =    .68753
+
+----------------------------------------------------------------------------------
+gen_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+            male |   .2289234   .0216467    10.58   0.000     .1864869    .2713598
+             exp |   .0491588   .0165526     2.97   0.003     .0167089    .0816086
+          expsqr |  -.0018541   .0005307    -3.49   0.000    -.0028945   -.0008136
+       higheredu |   .3835519   .0288905    13.28   0.000     .3269145    .4401893
+highereduafter79 |  -.0669987   .0353532    -1.90   0.058    -.1363057    .0023083
+             _m1 |   .5769438   .3586421     1.61   0.108    -.1261429    1.280031
+             _m2 |   .0936694   .1204612     0.78   0.437    -.1424843    .3298231
+             _m3 |  -.3111932   .2743223    -1.13   0.257    -.8489781    .2265918
+           _cons |   7.906785   .0657723   120.21   0.000     7.777844    8.035726
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .5757792          .        .       .            .           .
+        rho1 |    .760336          .        .       .            .           .
+        rho2 |   .1234439          .        .       .            .           .
+        rho3 |  -.4101116          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if inrange(birthyear, 1
+> 971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   1.05
+Prob > chi2 = 0.3059
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      5,294    8.479013    .7140233   5.521461   10.12663
+        male |      5,294    .5379675    .4986035          0          1
+         exp |      5,294    15.03589     6.94652          0         33
+      expsqr |      5,294     274.323    231.9129          0       1089
+   higheredu |      5,294    .7665281    .4230798          0          1
+-------------+---------------------------------------------------------
+higheredu~79 |      5,294    .5502456     .497516          0          1
+          m1 |      5,294   -.2756862    .0701061  -.4284056  -.0389473
+          m2 |      5,294    .4519296    .3422949   .0001547   2.301244
+          m3 |      5,294   -.2510442     .196665   -.726001  -.0012229
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, All Gender, Non-specified Higheredu,) pvalue addstat("Hettes
+> t: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *8) Exp & Non-specified higher education & province fixed, Sec Gen + inrange(birthyear, 1971, 1992) + no outli
+> ers
+. selmlog gen_log_monthlyearning male exp expsqr higheredu highereduafter79 provincedum2-provincedum15 if inrang
+> e(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_entrant
+> _relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+Iteration 0:  Log likelihood = -10787.817
+Iteration 1:  Log likelihood = -9174.0216
+Iteration 2:  Log likelihood = -9050.2211
+Iteration 3:  Log likelihood = -9038.1636
+Iteration 4:  Log likelihood = -9037.9626
+Iteration 5:  Log likelihood = -9037.9626
+
+Multinomial logistic regression                   Number of obs   =      10512
+                                                  LR chi2(12)     =    3499.71
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -9037.9626                       Pseudo R2       =     0.1622
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+        male |  -.1493043   .0533636    -2.80   0.005    -.2538949   -.0447136
+         exp |   .3399476    .024009    14.16   0.000     .2928907    .3870044
+      expsqr |  -.0066188   .0006107   -10.84   0.000    -.0078158   -.0054218
+ins1_secge~e |   3.292254   .4116129     8.00   0.000     2.485508    4.099001
+ins2_highe~e |   .1431575   .0857449     1.67   0.095    -.0248994    .3112143
+ins3_vs_en~e |   .8447551   .3934985     2.15   0.032     .0735121    1.615998
+       _cons |  -5.661162   .3030003   -18.68   0.000    -6.255032   -5.067293
+-------------+----------------------------------------------------------------
+3            |
+        male |  -.0269526   .0534543    -0.50   0.614    -.1317211    .0778158
+         exp |   .5995568    .030202    19.85   0.000      .540362    .6587517
+      expsqr |  -.0081319   .0006839   -11.89   0.000    -.0094723   -.0067914
+ins1_secge~e |   8.926683    .445754    20.03   0.000     8.053021    9.800345
+ins2_highe~e |   .4876176   .0907134     5.38   0.000     .3098227    .6654126
+ins3_vs_en~e |  -.7294748   .4327347    -1.69   0.092    -1.577619    .1186697
+       _cons |  -11.36596   .4004018   -28.39   0.000    -12.15073   -10.58119
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     5,294
+-------------+----------------------------------   F(22, 5271)     =     41.91
+       Model |  401.784531        22  18.2629332   Prob > F        =    0.0000
+    Residual |  2296.74172     5,271  .435731687   R-squared       =    0.1489
+-------------+----------------------------------   Adj R-squared   =    0.1453
+       Total |  2698.52625     5,293  .509829256   Root MSE        =     .6601
+
+----------------------------------------------------------------------------------
+gen_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+            male |   .2023583   .0211152     9.58   0.000     .1609638    .2437528
+             exp |   .0903951   .0168383     5.37   0.000      .057385    .1234052
+          expsqr |  -.0024634   .0005324    -4.63   0.000    -.0035071   -.0014196
+       higheredu |   .3636208   .0280639    12.96   0.000      .308604    .4186376
+highereduafter79 |   -.093508   .0340917    -2.74   0.006    -.1603418   -.0266742
+    provincedum2 |  -.7162741   .0488474   -14.66   0.000    -.8120353   -.6205129
+    provincedum3 |  -.3245774   .0465367    -6.97   0.000    -.4158087   -.2333461
+    provincedum4 |  -.4947098   .0496242    -9.97   0.000    -.5919938   -.3974259
+    provincedum5 |  -.1020195   .0438811    -2.32   0.020    -.1880447   -.0159943
+    provincedum6 |  -.4714696   .0518704    -9.09   0.000    -.5731571   -.3697821
+    provincedum7 |  -.4281139   .0492316    -8.70   0.000    -.5246282   -.3315996
+    provincedum8 |  -.7130814   .0478207   -14.91   0.000    -.8068298    -.619333
+    provincedum9 |  -.2212063   .0454094    -4.87   0.000    -.3102275   -.1321851
+   provincedum10 |  -.3007276   .0479377    -6.27   0.000    -.3947054   -.2067499
+   provincedum11 |  -.1847346   .0410901    -4.50   0.000    -.2652881    -.104181
+   provincedum12 |  -.3548834    .051076    -6.95   0.000    -.4550136   -.2547533
+   provincedum13 |  -.3009708   .0473319    -6.36   0.000    -.3937609   -.2081807
+   provincedum14 |  -.3717443   .0639038    -5.82   0.000    -.4970223   -.2464663
+   provincedum15 |  -.4721801   .0570679    -8.27   0.000    -.5840568   -.3603035
+             _m1 |   1.558288   .3700005     4.21   0.000     .8329341    2.283643
+             _m2 |  -.0968335   .1206712    -0.80   0.422     -.333399    .1397321
+             _m3 |   .0631636   .2693112     0.23   0.815    -.4647979     .591125
+           _cons |   8.279473   .0730762   113.30   0.000     8.136214    8.422733
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   1.050636          .        .       .            .           .
+        rho1 |   1.520273          .        .       .            .           .
+        rho2 |  -.0944712          .        .       .            .           .
+        rho3 |   .0616227          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning male exp expsqr higheredu highereduafter79 provincedum2-provincedum15 m1 m2
+>  m3 if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.79
+Prob > chi2 = 0.3754
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      5,294    8.479013    .7140233   5.521461   10.12663
+        male |      5,294    .5379675    .4986035          0          1
+         exp |      5,294    15.03589     6.94652          0         33
+      expsqr |      5,294     274.323    231.9129          0       1089
+   higheredu |      5,294    .7665281    .4230798          0          1
+-------------+---------------------------------------------------------
+higheredu~79 |      5,294    .5502456     .497516          0          1
+          m1 |      5,294   -.2756862    .0701061  -.4284056  -.0389473
+          m2 |      5,294    .4519296    .3422949   .0001547   2.301244
+          m3 |      5,294   -.2510442     .196665   -.726001  -.0012229
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, All Gender, Non-specified Higheredu, Province Dum) pvalue ad
+> dstat("Hettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *9) Exp & Specified higher education, Sec Voc + Male + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulted
+> uafter79 if male==1 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male ex
+> p expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogi
+> t gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5728.6772
+Iteration 1:  Log likelihood = -4866.6828
+Iteration 2:  Log likelihood = -4802.6497
+Iteration 3:  Log likelihood =  -4796.833
+Iteration 4:  Log likelihood = -4796.7459
+Iteration 5:  Log likelihood = -4796.7459
+
+Multinomial logistic regression                   Number of obs   =       5615
+                                                  LR chi2(10)     =    1863.86
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4796.7459                       Pseudo R2       =     0.1627
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3346149    .033643     9.95   0.000     .2686759    .4005539
+      expsqr |  -.0064558   .0008564    -7.54   0.000    -.0081343   -.0047773
+ins1_secge~e |    3.54565   .5799686     6.11   0.000     2.408932    4.682368
+ins2_highe~e |   .2686378   .1189817     2.26   0.024     .0354379    .5018377
+ins3_vs_en~e |   .4630486   .5493956     0.84   0.399     -.613747    1.539844
+       _cons |  -5.833726   .4271537   -13.66   0.000    -6.670932   -4.996521
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .5674049    .041221    13.76   0.000     .4866133    .6481965
+      expsqr |  -.0071321   .0009344    -7.63   0.000    -.0089634   -.0053007
+ins1_secge~e |   9.676755   .6198538    15.61   0.000     8.461864    10.89165
+ins2_highe~e |   .3983786   .1227425     3.25   0.001     .1578077    .6389495
+ins3_vs_en~e |   .4109329   .5833055     0.70   0.481    -.7323247    1.554191
+       _cons |  -11.61776   .5542328   -20.96   0.000    -12.70403   -10.53148
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     1,051
+-------------+----------------------------------   F(11, 1039)     =      4.50
+       Model |  19.3536586        11  1.75942351   Prob > F        =    0.0000
+    Residual |  406.479216     1,039  .391221575   R-squared       =    0.0454
+-------------+----------------------------------   Adj R-squared   =    0.0353
+       Total |  425.832875     1,050  .405555119   Root MSE        =    .62548
+
+---------------------------------------------------------------------------------
+voc_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+            exp |  -.0063532   .0464313    -0.14   0.891    -.0974631    .0847566
+         expsqr |   .0000514   .0014996     0.03   0.973    -.0028911     .002994
+     highvocedu |   .2113577   .1146464     1.84   0.066    -.0136072    .4363225
+     highgenedu |   .5960008   .1698596     3.51   0.000      .262694    .9293077
+       adultedu |   .2598329   .0769442     3.38   0.001     .1088491    .4108167
+ highvocafter79 |  -.0781458   .1360273    -0.57   0.566    -.3450653    .1887737
+ highgenafter79 |   .0080043    .250958     0.03   0.975     -.484438    .5004465
+adulteduafter79 |   .0239775    .106199     0.23   0.821    -.1844115    .2323665
+            _m1 |   .0273557   .4165677     0.07   0.948    -.7900542    .8447655
+            _m2 |  -1.170443   1.142667    -1.02   0.306     -3.41264    1.071754
+            _m3 |  -1.241846    1.08173    -1.15   0.251     -3.36447    .8807779
+          _cons |   7.378013   1.630223     4.53   0.000     4.179108    10.57692
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .9007246          .        .       .            .           .
+        rho1 |   .0288238          .        .       .            .           .
+        rho2 |  -1.233259          .        .       .            .           .
+        rho3 |  -1.308494          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adu
+> lteduafter79 m1 m2 m3 if male==1 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.44
+Prob > chi2 = 0.5056
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulteduaft
+> er79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      1,051    8.437622    .6368321   5.521461   10.12663
+         exp |      1,051    17.81446    6.410023          4         32
+      expsqr |      1,051    358.4044    232.9682         16       1024
+  highvocedu |      1,051    .1151284    .3193288          0          1
+  highgenedu |      1,051    .0247383    .1554006          0          1
+-------------+---------------------------------------------------------
+    adultedu |      1,051    .1427212    .3499549          0          1
+highvocaf~79 |      1,051    .0846813    .2785393          0          1
+highgenaf~79 |      1,051    .0114177    .1062924          0          1
+adultedua~79 |      1,051    .0704091    .2559571          0          1
+          m1 |      1,051    1.153466     .172252   .8625615   2.047997
+-------------+---------------------------------------------------------
+          m2 |      1,051   -.5389283    .1420744   -.726002  -.0366317
+          m3 |      1,051   -.3387716    .1864332  -.7256799  -.0092626
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Male, Specified Higheredu,) pvalue addstat("Hettest: p-value
+> ", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *10) Exp & Specified higher education & province fixed, Sec Voc + Male + inrange(birthyear, 1971, 1992) + no o
+> utliers
+. selmlog voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulted
+> uafter79 provincedum2-provincedum15 if male==1 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250,
+>  25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant
+> _relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5728.6772
+Iteration 1:  Log likelihood = -4866.6828
+Iteration 2:  Log likelihood = -4802.6497
+Iteration 3:  Log likelihood =  -4796.833
+Iteration 4:  Log likelihood = -4796.7459
+Iteration 5:  Log likelihood = -4796.7459
+
+Multinomial logistic regression                   Number of obs   =       5615
+                                                  LR chi2(10)     =    1863.86
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4796.7459                       Pseudo R2       =     0.1627
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3346149    .033643     9.95   0.000     .2686759    .4005539
+      expsqr |  -.0064558   .0008564    -7.54   0.000    -.0081343   -.0047773
+ins1_secge~e |    3.54565   .5799686     6.11   0.000     2.408932    4.682368
+ins2_highe~e |   .2686378   .1189817     2.26   0.024     .0354379    .5018377
+ins3_vs_en~e |   .4630486   .5493956     0.84   0.399     -.613747    1.539844
+       _cons |  -5.833726   .4271537   -13.66   0.000    -6.670932   -4.996521
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .5674049    .041221    13.76   0.000     .4866133    .6481965
+      expsqr |  -.0071321   .0009344    -7.63   0.000    -.0089634   -.0053007
+ins1_secge~e |   9.676755   .6198538    15.61   0.000     8.461864    10.89165
+ins2_highe~e |   .3983786   .1227425     3.25   0.001     .1578077    .6389495
+ins3_vs_en~e |   .4109329   .5833055     0.70   0.481    -.7323247    1.554191
+       _cons |  -11.61776   .5542328   -20.96   0.000    -12.70403   -10.53148
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     1,051
+-------------+----------------------------------   F(25, 1025)     =      4.42
+       Model |  41.4300828        25  1.65720331   Prob > F        =    0.0000
+    Residual |  384.402792     1,025  .375027114   R-squared       =    0.0973
+-------------+----------------------------------   Adj R-squared   =    0.0753
+       Total |  425.832875     1,050  .405555119   Root MSE        =    .61239
+
+---------------------------------------------------------------------------------
+voc_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+            exp |   .0293145   .0520292     0.56   0.573    -.0727814    .1314104
+         expsqr |  -.0008193   .0016719    -0.49   0.624    -.0041001    .0024614
+     highvocedu |   .2246435   .1134778     1.98   0.048     .0019683    .4473188
+     highgenedu |   .5745886   .1673077     3.43   0.001      .246284    .9028933
+       adultedu |   .2658353   .0766176     3.47   0.001       .11549    .4161806
+ highvocafter79 |  -.0956965   .1348444    -0.71   0.478    -.3602992    .1689061
+ highgenafter79 |   .0198751   .2470278     0.08   0.936     -.464863    .5046131
+adulteduafter79 |   .0392667   .1046877     0.38   0.708    -.1661601    .2446935
+   provincedum2 |  -.2566369   .1211609    -2.12   0.034    -.4943886   -.0188852
+   provincedum3 |  -.1672707   .1291978    -1.29   0.196    -.4207931    .0862516
+   provincedum4 |  -.1847959   .1131349    -1.63   0.103    -.4067984    .0372066
+   provincedum5 |   .1843036   .1078161     1.71   0.088    -.0272619    .3958692
+   provincedum6 |   .0915198   .1334327     0.69   0.493    -.1703127    .3533522
+   provincedum7 |  -.0723046   .1192599    -0.61   0.544    -.3063261    .1617169
+   provincedum8 |  -.1782859   .1254578    -1.42   0.156    -.4244695    .0678976
+   provincedum9 |   .0632965    .114307     0.55   0.580     -.161006     .287599
+  provincedum10 |  -.1288099   .1205449    -1.07   0.286     -.365353    .1077331
+  provincedum11 |   .1684428   .1103991     1.53   0.127    -.0481914    .3850769
+  provincedum12 |  -.1100046   .1202273    -0.91   0.360    -.3459244    .1259152
+  provincedum13 |  -.0281117   .1224824    -0.23   0.819    -.2684565    .2122332
+  provincedum14 |  -.3265379    .135126    -2.42   0.016     -.591693   -.0613828
+  provincedum15 |  -.0739628   .1468346    -0.50   0.615    -.3620935    .2141679
+            _m1 |    .278733   .4794498     0.58   0.561    -.6620824    1.219548
+            _m2 |   -1.37069   1.370407    -1.00   0.317    -4.059813    1.318434
+            _m3 |  -1.206675   1.240812    -0.97   0.331    -3.641496    1.228146
+          _cons |   6.712122   1.883542     3.56   0.000     3.016082    10.40816
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .9820368          .        .       .            .           .
+        rho1 |   .2812707          .        .       .            .           .
+        rho2 |  -1.383169          .        .       .            .           .
+        rho3 |  -1.217661          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adu
+> lteduafter79 provincedum2-provincedum15 m1 m2 m3 if male==1 & inrange(birthyear, 1971, 1992) & inrange(monthly
+> earning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   1.16
+Prob > chi2 = 0.2821
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulteduaft
+> er79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      1,051    8.437622    .6368321   5.521461   10.12663
+         exp |      1,051    17.81446    6.410023          4         32
+      expsqr |      1,051    358.4044    232.9682         16       1024
+  highvocedu |      1,051    .1151284    .3193288          0          1
+  highgenedu |      1,051    .0247383    .1554006          0          1
+-------------+---------------------------------------------------------
+    adultedu |      1,051    .1427212    .3499549          0          1
+highvocaf~79 |      1,051    .0846813    .2785393          0          1
+highgenaf~79 |      1,051    .0114177    .1062924          0          1
+adultedua~79 |      1,051    .0704091    .2559571          0          1
+          m1 |      1,051    1.153466     .172252   .8625615   2.047997
+-------------+---------------------------------------------------------
+          m2 |      1,051   -.5389283    .1420744   -.726002  -.0366317
+          m3 |      1,051   -.3387716    .1864332  -.7256799  -.0092626
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Male, Specified Higheredu, Province Dum) pvalue addstat("Het
+> test: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *11) Exp & Non-specified higher education, Sec Voc + Male + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog voc_log_monthlyearning exp expsqr higheredu highereduafter79 if male==1 & inrange(birthyear, 1971, 199
+> 2) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu
+> _entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5728.6772
+Iteration 1:  Log likelihood = -4866.6828
+Iteration 2:  Log likelihood = -4802.6497
+Iteration 3:  Log likelihood =  -4796.833
+Iteration 4:  Log likelihood = -4796.7459
+Iteration 5:  Log likelihood = -4796.7459
+
+Multinomial logistic regression                   Number of obs   =       5615
+                                                  LR chi2(10)     =    1863.86
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4796.7459                       Pseudo R2       =     0.1627
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3346149    .033643     9.95   0.000     .2686759    .4005539
+      expsqr |  -.0064558   .0008564    -7.54   0.000    -.0081343   -.0047773
+ins1_secge~e |    3.54565   .5799686     6.11   0.000     2.408932    4.682368
+ins2_highe~e |   .2686378   .1189817     2.26   0.024     .0354379    .5018377
+ins3_vs_en~e |   .4630486   .5493956     0.84   0.399     -.613747    1.539844
+       _cons |  -5.833726   .4271537   -13.66   0.000    -6.670932   -4.996521
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .5674049    .041221    13.76   0.000     .4866133    .6481965
+      expsqr |  -.0071321   .0009344    -7.63   0.000    -.0089634   -.0053007
+ins1_secge~e |   9.676755   .6198538    15.61   0.000     8.461864    10.89165
+ins2_highe~e |   .3983786   .1227425     3.25   0.001     .1578077    .6389495
+ins3_vs_en~e |   .4109329   .5833055     0.70   0.481    -.7323247    1.554191
+       _cons |  -11.61776   .5542328   -20.96   0.000    -12.70403   -10.53148
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     1,051
+-------------+----------------------------------   F(7, 1043)      =      5.47
+       Model |   15.076983         7  2.15385471   Prob > F        =    0.0000
+    Residual |  410.755892     1,043  .393821565   R-squared       =    0.0354
+-------------+----------------------------------   Adj R-squared   =    0.0289
+       Total |  425.832875     1,050  .405555119   Root MSE        =    .62755
+
+----------------------------------------------------------------------------------
+voc_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+             exp |   .0025937   .0464661     0.06   0.955    -.0885839    .0937713
+          expsqr |  -.0002043   .0015016    -0.14   0.892    -.0031508    .0027422
+       higheredu |   .2826616   .0633549     4.46   0.000      .158344    .4069792
+highereduafter79 |  -.0526491   .0824426    -0.64   0.523    -.2144214    .1091232
+             _m1 |   .0978925   .4169014     0.23   0.814    -.7201686    .9159536
+             _m2 |   -1.27181   1.144676    -1.11   0.267     -3.51794    .9743206
+             _m3 |  -1.322165   1.083835    -1.22   0.223    -3.448911    .8045801
+           _cons |   7.147298   1.633055     4.38   0.000     3.942851    10.35174
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .9880332          .        .       .            .           .
+        rho1 |   .0984835          .        .       .            .           .
+        rho2 |  -1.279488          .        .       .            .           .
+        rho3 |  -1.330148          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning exp expsqr higheredu highereduafter79 m1 m2 m3 if male==1 & inrange(birthye
+> ar, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   6.13
+Prob > chi2 = 0.0133
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      1,051    8.437622    .6368321   5.521461   10.12663
+         exp |      1,051    17.81446    6.410023          4         32
+      expsqr |      1,051    358.4044    232.9682         16       1024
+   higheredu |      1,051     .282588    .4504721          0          1
+higheredu~79 |      1,051    .1665081    .3727135          0          1
+-------------+---------------------------------------------------------
+          m1 |      1,051    1.153466     .172252   .8625615   2.047997
+          m2 |      1,051   -.5389283    .1420744   -.726002  -.0366317
+          m3 |      1,051   -.3387716    .1864332  -.7256799  -.0092626
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Male, Non-specified Higheredu,) pvalue addstat("Hettest: p-v
+> alue", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *12) Exp & Non-specified higher education & province fixed, Sec Voc + Male + inrange(birthyear, 1971, 1992) + 
+> no outliers
+. selmlog voc_log_monthlyearning exp expsqr higheredu highereduafter79 provincedum2-provincedum15 if male==1 & i
+> nrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_en
+> trant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5728.6772
+Iteration 1:  Log likelihood = -4866.6828
+Iteration 2:  Log likelihood = -4802.6497
+Iteration 3:  Log likelihood =  -4796.833
+Iteration 4:  Log likelihood = -4796.7459
+Iteration 5:  Log likelihood = -4796.7459
+
+Multinomial logistic regression                   Number of obs   =       5615
+                                                  LR chi2(10)     =    1863.86
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4796.7459                       Pseudo R2       =     0.1627
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3346149    .033643     9.95   0.000     .2686759    .4005539
+      expsqr |  -.0064558   .0008564    -7.54   0.000    -.0081343   -.0047773
+ins1_secge~e |    3.54565   .5799686     6.11   0.000     2.408932    4.682368
+ins2_highe~e |   .2686378   .1189817     2.26   0.024     .0354379    .5018377
+ins3_vs_en~e |   .4630486   .5493956     0.84   0.399     -.613747    1.539844
+       _cons |  -5.833726   .4271537   -13.66   0.000    -6.670932   -4.996521
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .5674049    .041221    13.76   0.000     .4866133    .6481965
+      expsqr |  -.0071321   .0009344    -7.63   0.000    -.0089634   -.0053007
+ins1_secge~e |   9.676755   .6198538    15.61   0.000     8.461864    10.89165
+ins2_highe~e |   .3983786   .1227425     3.25   0.001     .1578077    .6389495
+ins3_vs_en~e |   .4109329   .5833055     0.70   0.481    -.7323247    1.554191
+       _cons |  -11.61776   .5542328   -20.96   0.000    -12.70403   -10.53148
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     1,051
+-------------+----------------------------------   F(21, 1029)     =      4.70
+       Model |   37.263608        21  1.77445753   Prob > F        =    0.0000
+    Residual |  388.569267     1,029  .377618335   R-squared       =    0.0875
+-------------+----------------------------------   Adj R-squared   =    0.0689
+       Total |  425.832875     1,050  .405555119   Root MSE        =    .61451
+
+----------------------------------------------------------------------------------
+voc_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+             exp |   .0416784   .0519858     0.80   0.423    -.0603318    .1436887
+          expsqr |  -.0011793   .0016717    -0.71   0.481    -.0044597     .002101
+       higheredu |   .2870418   .0630994     4.55   0.000     .1632236      .41086
+highereduafter79 |  -.0510382   .0817531    -0.62   0.533    -.2114599    .1093835
+    provincedum2 |  -.2729074   .1211365    -2.25   0.024    -.5106101   -.0352047
+    provincedum3 |  -.1750585   .1290303    -1.36   0.175    -.4282511    .0781341
+    provincedum4 |  -.1965624   .1129348    -1.74   0.082    -.4181712    .0250464
+    provincedum5 |   .1662636   .1075973     1.55   0.123    -.0448716    .3773988
+    provincedum6 |   .0800464   .1334555     0.60   0.549    -.1818295    .3419224
+    provincedum7 |  -.0737722   .1189208    -0.62   0.535    -.3071272    .1595828
+    provincedum8 |  -.1913194   .1253192    -1.53   0.127    -.4372299     .054591
+    provincedum9 |   .0482714   .1144981     0.42   0.673     -.176405    .2729479
+   provincedum10 |   -.151891   .1205103    -1.26   0.208    -.3883649     .084583
+   provincedum11 |   .1552658   .1100391     1.41   0.159    -.0606609    .3711925
+   provincedum12 |  -.1241627   .1202156    -1.03   0.302    -.3600583     .111733
+   provincedum13 |  -.0419143   .1226104    -0.34   0.733    -.2825092    .1986807
+   provincedum14 |  -.3465945   .1353619    -2.56   0.011    -.6122114   -.0809777
+   provincedum15 |   -.083796   .1471537    -0.57   0.569    -.3725516    .2049596
+             _m1 |   .3778696   .4793125     0.79   0.431    -.5626719    1.318411
+             _m2 |   -1.55754   1.371857    -1.14   0.256    -4.249496    1.134416
+             _m3 |  -1.355144   1.243029    -1.09   0.276    -3.794305    1.084017
+           _cons |   6.368232   1.884734     3.38   0.001     2.669872    10.06659
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   1.181902          .        .       .            .           .
+        rho1 |   .3475772          .        .       .            .           .
+        rho2 |  -1.432678          .        .       .            .           .
+        rho3 |  -1.246507          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning exp expsqr higheredu highereduafter79 provincedum2-provincedum15 m1 m2 m3 i
+> f male==1 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.04
+Prob > chi2 = 0.8333
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      1,051    8.437622    .6368321   5.521461   10.12663
+         exp |      1,051    17.81446    6.410023          4         32
+      expsqr |      1,051    358.4044    232.9682         16       1024
+   higheredu |      1,051     .282588    .4504721          0          1
+higheredu~79 |      1,051    .1665081    .3727135          0          1
+-------------+---------------------------------------------------------
+          m1 |      1,051    1.153466     .172252   .8625615   2.047997
+          m2 |      1,051   -.5389283    .1420744   -.726002  -.0366317
+          m3 |      1,051   -.3387716    .1864332  -.7256799  -.0092626
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Male, Non-specified Higheredu, Province Dum) pvalue addstat(
+> "Hettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *13) Exp & Specified higher education, Sec Voc + Female + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulted
+> uafter79 if male==0 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male ex
+> p expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogi
+> t gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5055.8576
+Iteration 1:  Log likelihood = -4297.4227
+Iteration 2:  Log likelihood =  -4235.419
+Iteration 3:  Log likelihood = -4228.8483
+Iteration 4:  Log likelihood = -4228.7204
+Iteration 5:  Log likelihood = -4228.7203
+
+Multinomial logistic regression                   Number of obs   =       4897
+                                                  LR chi2(10)     =    1654.27
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4228.7203                       Pseudo R2       =     0.1636
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3425434   .0343131     9.98   0.000     .2752909    .4097958
+      expsqr |  -.0067418   .0008725    -7.73   0.000    -.0084519   -.0050316
+ins1_secge~e |   2.947418   .5838224     5.05   0.000     1.803147    4.091689
+ins2_highe~e |   .0131145   .1241387     0.11   0.916     -.230193    .2564219
+ins3_vs_en~e |    1.19774   .5660029     2.12   0.034     .0883947    2.307085
+       _cons |  -5.566881   .4279263   -13.01   0.000    -6.405602   -4.728161
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .6415311   .0445191    14.41   0.000     .5542752     .728787
+      expsqr |  -.0093472    .001007    -9.28   0.000    -.0113209   -.0073736
+ins1_secge~e |   8.150034   .6393358    12.75   0.000     6.896959    9.403109
+ins2_highe~e |   .5980405   .1352367     4.42   0.000     .3329815    .8630996
+ins3_vs_en~e |   -2.07414    .645978    -3.21   0.001    -3.340233    -.808046
+       _cons |  -11.20186   .5767557   -19.42   0.000    -12.33228   -10.07144
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     1,012
+-------------+----------------------------------   F(11, 1000)     =     11.36
+       Model |  44.5391062        11  4.04900966   Prob > F        =    0.0000
+    Residual |  356.319867     1,000  .356319867   R-squared       =    0.1111
+-------------+----------------------------------   Adj R-squared   =    0.1013
+       Total |  400.858973     1,011    .3964975   Root MSE        =    .59693
+
+---------------------------------------------------------------------------------
+voc_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+            exp |   .0814819   .0350842     2.32   0.020     .0126348     .150329
+         expsqr |   -.002815    .000961    -2.93   0.003    -.0047008   -.0009292
+     highvocedu |   .2389683   .1111322     2.15   0.032     .0208892    .4570475
+     highgenedu |   .8404291   .1681047     5.00   0.000     .5105507    1.170307
+       adultedu |   .4965504   .0670188     7.41   0.000     .3650367     .628064
+ highvocafter79 |   .0076548    .132045     0.06   0.954    -.2514623    .2667719
+ highgenafter79 |  -.5065018   .2162089    -2.34   0.019    -.9307769   -.0822267
+adulteduafter79 |  -.1237518   .0953346    -1.30   0.195    -.3108306     .063327
+            _m1 |   .6801686   .2334481     2.91   0.004     .2220643    1.138273
+            _m2 |  -.5421653    .660165    -0.82   0.412    -1.837633    .7533023
+            _m3 |  -.9470952   .5504971    -1.72   0.086    -2.027357    .1331668
+          _cons |   6.287098   .7661093     8.21   0.000     4.783732    7.790464
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |    .848908          .        .       .            .           .
+        rho1 |   .7382208          .        .       .            .           .
+        rho2 |   -.588439          .        .       .            .           .
+        rho3 |  -1.027929          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adu
+> lteduafter79 m1 m2 m3 if male==0 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =  16.98
+Prob > chi2 = 0.0000
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulteduaft
+> er79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      1,012    8.194889    .6296805   5.521461   10.05764
+         exp |      1,012    17.93478     6.49383          1         32
+      expsqr |      1,012    363.7846    237.8628          1       1024
+  highvocedu |      1,012    .1166008    .3211027          0          1
+  highgenedu |      1,012    .0335968    .1802781          0          1
+-------------+---------------------------------------------------------
+    adultedu |      1,012    .1768775    .3817536          0          1
+highvocaf~79 |      1,012    .0859684     .280456          0          1
+highgenaf~79 |      1,012     .020751    .1426201          0          1
+adultedua~79 |      1,012    .0820158    .2745245          0          1
+          m1 |      1,012    1.094195    .1843831    .716741   1.966683
+-------------+---------------------------------------------------------
+          m2 |      1,012   -.5244179    .1441819  -.7259927  -.0660745
+          m3 |      1,012   -.3357755    .1903012  -.7259893  -.0039632
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Female, Specified Higheredu,) pvalue addstat("Hettest: p-val
+> ue", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *14) Exp & Specified higher education & province fixed, Sec Voc + Female + inrange(birthyear, 1971, 1992) + no
+>  outliers
+. selmlog voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulted
+> uafter79 provincedum2-provincedum15 if male==0 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250,
+>  25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant
+> _relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5055.8576
+Iteration 1:  Log likelihood = -4297.4227
+Iteration 2:  Log likelihood =  -4235.419
+Iteration 3:  Log likelihood = -4228.8483
+Iteration 4:  Log likelihood = -4228.7204
+Iteration 5:  Log likelihood = -4228.7203
+
+Multinomial logistic regression                   Number of obs   =       4897
+                                                  LR chi2(10)     =    1654.27
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4228.7203                       Pseudo R2       =     0.1636
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3425434   .0343131     9.98   0.000     .2752909    .4097958
+      expsqr |  -.0067418   .0008725    -7.73   0.000    -.0084519   -.0050316
+ins1_secge~e |   2.947418   .5838224     5.05   0.000     1.803147    4.091689
+ins2_highe~e |   .0131145   .1241387     0.11   0.916     -.230193    .2564219
+ins3_vs_en~e |    1.19774   .5660029     2.12   0.034     .0883947    2.307085
+       _cons |  -5.566881   .4279263   -13.01   0.000    -6.405602   -4.728161
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .6415311   .0445191    14.41   0.000     .5542752     .728787
+      expsqr |  -.0093472    .001007    -9.28   0.000    -.0113209   -.0073736
+ins1_secge~e |   8.150034   .6393358    12.75   0.000     6.896959    9.403109
+ins2_highe~e |   .5980405   .1352367     4.42   0.000     .3329815    .8630996
+ins3_vs_en~e |   -2.07414    .645978    -3.21   0.001    -3.340233    -.808046
+       _cons |  -11.20186   .5767557   -19.42   0.000    -12.33228   -10.07144
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     1,012
+-------------+----------------------------------   F(25, 986)      =      8.47
+       Model |  70.8685173        25  2.83474069   Prob > F        =    0.0000
+    Residual |  329.990456       986  .334675919   R-squared       =    0.1768
+-------------+----------------------------------   Adj R-squared   =    0.1559
+       Total |  400.858973     1,011    .3964975   Root MSE        =    .57851
+
+---------------------------------------------------------------------------------
+voc_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+            exp |   .0743725   .0375695     1.98   0.048     .0006471     .148098
+         expsqr |  -.0021409   .0010192    -2.10   0.036    -.0041409   -.0001409
+     highvocedu |   .2200246   .1087215     2.02   0.043     .0066725    .4333768
+     highgenedu |   .8045396   .1639976     4.91   0.000     .4827152    1.126364
+       adultedu |   .5078642   .0653585     7.77   0.000     .3796065    .6361219
+ highvocafter79 |   .0579636   .1292596     0.45   0.654     -.195692    .3116191
+ highgenafter79 |  -.4815464   .2111625    -2.28   0.023    -.8959259   -.0671669
+adulteduafter79 |   -.143359   .0936616    -1.53   0.126    -.3271579      .04044
+   provincedum2 |  -.5185349   .1043409    -4.97   0.000    -.7232906   -.3137792
+   provincedum3 |  -.4719581    .115053    -4.10   0.000     -.697735   -.2461811
+   provincedum4 |  -.5244045   .1039225    -5.05   0.000    -.7283391   -.3204698
+   provincedum5 |   -.091724   .0972098    -0.94   0.346    -.2824858    .0990378
+   provincedum6 |  -.3118706   .1136513    -2.74   0.006    -.5348968   -.0888445
+   provincedum7 |   -.221734   .0981472    -2.26   0.024    -.4143353   -.0291327
+   provincedum8 |   -.399123   .1021694    -3.91   0.000    -.5996175   -.1986286
+   provincedum9 |   -.198168   .1002197    -1.98   0.048    -.3948363   -.0014996
+  provincedum10 |  -.1477115   .0950852    -1.55   0.121    -.3343041    .0388811
+  provincedum11 |   -.068167   .0922844    -0.74   0.460    -.2492635    .1129294
+  provincedum12 |  -.3290488   .1059372    -3.11   0.002     -.536937   -.1211606
+  provincedum13 |  -.0183369   .1012289    -0.18   0.856    -.2169857    .1803118
+  provincedum14 |   -.263634    .112115    -2.35   0.019    -.4836454   -.0436227
+  provincedum15 |  -.2339291   .1280032    -1.83   0.068     -.485119    .0172609
+            _m1 |    .560492    .251567     2.23   0.026     .0668237     1.05416
+            _m2 |  -.9827099   .7071045    -1.39   0.165    -2.370313    .4048927
+            _m3 |  -.7470304   .5576633    -1.34   0.181    -1.841374    .3473129
+          _cons |   6.365424   .8357232     7.62   0.000     4.725423    8.005425
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .7721844          .        .       .            .           .
+        rho1 |   .6378358          .        .       .            .           .
+        rho2 |  -1.118317          .        .       .            .           .
+        rho3 |  -.8501152          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adu
+> lteduafter79 provincedum2-provincedum15 m1 m2 m3 if male==0 & inrange(birthyear, 1971, 1992) & inrange(monthly
+> earning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =  30.42
+Prob > chi2 = 0.0000
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulteduaft
+> er79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      1,012    8.194889    .6296805   5.521461   10.05764
+         exp |      1,012    17.93478     6.49383          1         32
+      expsqr |      1,012    363.7846    237.8628          1       1024
+  highvocedu |      1,012    .1166008    .3211027          0          1
+  highgenedu |      1,012    .0335968    .1802781          0          1
+-------------+---------------------------------------------------------
+    adultedu |      1,012    .1768775    .3817536          0          1
+highvocaf~79 |      1,012    .0859684     .280456          0          1
+highgenaf~79 |      1,012     .020751    .1426201          0          1
+adultedua~79 |      1,012    .0820158    .2745245          0          1
+          m1 |      1,012    1.094195    .1843831    .716741   1.966683
+-------------+---------------------------------------------------------
+          m2 |      1,012   -.5244179    .1441819  -.7259927  -.0660745
+          m3 |      1,012   -.3357755    .1903012  -.7259893  -.0039632
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Female, Specified Higheredu, Province Dum) pvalue addstat("H
+> ettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *15) Exp & Non-specified higher education, Sec Voc + Female + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog voc_log_monthlyearning exp expsqr higheredu highereduafter79 if male==0 & inrange(birthyear, 1971, 199
+> 2) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu
+> _entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5055.8576
+Iteration 1:  Log likelihood = -4297.4227
+Iteration 2:  Log likelihood =  -4235.419
+Iteration 3:  Log likelihood = -4228.8483
+Iteration 4:  Log likelihood = -4228.7204
+Iteration 5:  Log likelihood = -4228.7203
+
+Multinomial logistic regression                   Number of obs   =       4897
+                                                  LR chi2(10)     =    1654.27
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4228.7203                       Pseudo R2       =     0.1636
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3425434   .0343131     9.98   0.000     .2752909    .4097958
+      expsqr |  -.0067418   .0008725    -7.73   0.000    -.0084519   -.0050316
+ins1_secge~e |   2.947418   .5838224     5.05   0.000     1.803147    4.091689
+ins2_highe~e |   .0131145   .1241387     0.11   0.916     -.230193    .2564219
+ins3_vs_en~e |    1.19774   .5660029     2.12   0.034     .0883947    2.307085
+       _cons |  -5.566881   .4279263   -13.01   0.000    -6.405602   -4.728161
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .6415311   .0445191    14.41   0.000     .5542752     .728787
+      expsqr |  -.0093472    .001007    -9.28   0.000    -.0113209   -.0073736
+ins1_secge~e |   8.150034   .6393358    12.75   0.000     6.896959    9.403109
+ins2_highe~e |   .5980405   .1352367     4.42   0.000     .3329815    .8630996
+ins3_vs_en~e |   -2.07414    .645978    -3.21   0.001    -3.340233    -.808046
+       _cons |  -11.20186   .5767557   -19.42   0.000    -12.33228   -10.07144
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     1,012
+-------------+----------------------------------   F(7, 1004)      =     16.06
+       Model |  40.3682255         7  5.76688936   Prob > F        =    0.0000
+    Residual |  360.490747     1,004  .359054529   R-squared       =    0.1007
+-------------+----------------------------------   Adj R-squared   =    0.0944
+       Total |  400.858973     1,011    .3964975   Root MSE        =    .59921
+
+----------------------------------------------------------------------------------
+voc_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+             exp |    .083448   .0350315     2.38   0.017     .0147046    .1521914
+          expsqr |  -.0028589   .0009608    -2.98   0.003    -.0047443   -.0009734
+       higheredu |   .4693122   .0579311     8.10   0.000     .3556324    .5829921
+highereduafter79 |  -.1553498   .0765677    -2.03   0.043    -.3056008   -.0050988
+             _m1 |   .6661036   .2340653     2.85   0.005     .2067904    1.125417
+             _m2 |  -.5085821   .6579443    -0.77   0.440    -1.799686    .7825214
+             _m3 |  -.9231978   .5482282    -1.68   0.092    -1.999002    .1526065
+           _cons |   6.308563   .7645299     8.25   0.000     4.808303    7.808822
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .8274423          .        .       .            .           .
+        rho1 |   .7322729          .        .       .            .           .
+        rho2 |  -.5591035          .        .       .            .           .
+        rho3 |  -1.014906          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning exp expsqr higheredu highereduafter79 m1 m2 m3 if male==0 & inrange(birthye
+> ar, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =  15.39
+Prob > chi2 = 0.0001
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      1,012    8.194889    .6296805   5.521461   10.05764
+        male |      1,012           0           0          0          0
+         exp |      1,012    17.93478     6.49383          1         32
+      expsqr |      1,012    363.7846    237.8628          1       1024
+   higheredu |      1,012    .3270751    .4693769          0          1
+-------------+---------------------------------------------------------
+higheredu~79 |      1,012    .1887352    .3914916          0          1
+          m1 |      1,012    1.094195    .1843831    .716741   1.966683
+          m2 |      1,012   -.5244179    .1441819  -.7259927  -.0660745
+          m3 |      1,012   -.3357755    .1903012  -.7259893  -.0039632
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Female, Non-specified Higheredu,) pvalue addstat("Hettest: p
+> -value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *16) Exp & Non-specified higher education & province fixed, Sec Voc + Female + inrange(birthyear, 1971, 1992) 
+> + no outliers
+. selmlog voc_log_monthlyearning exp expsqr higheredu highereduafter79 provincedum2-provincedum15 if male==0 & i
+> nrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_en
+> trant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5055.8576
+Iteration 1:  Log likelihood = -4297.4227
+Iteration 2:  Log likelihood =  -4235.419
+Iteration 3:  Log likelihood = -4228.8483
+Iteration 4:  Log likelihood = -4228.7204
+Iteration 5:  Log likelihood = -4228.7203
+
+Multinomial logistic regression                   Number of obs   =       4897
+                                                  LR chi2(10)     =    1654.27
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4228.7203                       Pseudo R2       =     0.1636
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3425434   .0343131     9.98   0.000     .2752909    .4097958
+      expsqr |  -.0067418   .0008725    -7.73   0.000    -.0084519   -.0050316
+ins1_secge~e |   2.947418   .5838224     5.05   0.000     1.803147    4.091689
+ins2_highe~e |   .0131145   .1241387     0.11   0.916     -.230193    .2564219
+ins3_vs_en~e |    1.19774   .5660029     2.12   0.034     .0883947    2.307085
+       _cons |  -5.566881   .4279263   -13.01   0.000    -6.405602   -4.728161
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .6415311   .0445191    14.41   0.000     .5542752     .728787
+      expsqr |  -.0093472    .001007    -9.28   0.000    -.0113209   -.0073736
+ins1_secge~e |   8.150034   .6393358    12.75   0.000     6.896959    9.403109
+ins2_highe~e |   .5980405   .1352367     4.42   0.000     .3329815    .8630996
+ins3_vs_en~e |   -2.07414    .645978    -3.21   0.001    -3.340233    -.808046
+       _cons |  -11.20186   .5767557   -19.42   0.000    -12.33228   -10.07144
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     1,012
+-------------+----------------------------------   F(21, 990)      =      9.47
+       Model |  67.0730915        21  3.19395674   Prob > F        =    0.0000
+    Residual |  333.785881       990  .337157456   R-squared       =    0.1673
+-------------+----------------------------------   Adj R-squared   =    0.1497
+       Total |  400.858973     1,011    .3964975   Root MSE        =    .58065
+
+----------------------------------------------------------------------------------
+voc_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+             exp |   .0749954   .0375013     2.00   0.046     .0014042    .1485866
+          expsqr |  -.0021536   .0010187    -2.11   0.035    -.0041526   -.0001546
+       higheredu |   .4704762   .0565517     8.32   0.000     .3595012    .5814513
+highereduafter79 |  -.1490519   .0750956    -1.98   0.047    -.2964168   -.0016871
+    provincedum2 |  -.5412365   .1042028    -5.19   0.000    -.7457203   -.3367527
+    provincedum3 |  -.4746301   .1147727    -4.14   0.000    -.6998558   -.2494044
+    provincedum4 |   -.528018   .1036112    -5.10   0.000    -.7313408   -.3246953
+    provincedum5 |   -.106731   .0967136    -1.10   0.270    -.2965181    .0830561
+    provincedum6 |  -.3169907   .1136306    -2.79   0.005    -.5399751   -.0940063
+    provincedum7 |  -.2289162   .0977922    -2.34   0.019    -.4208201   -.0370124
+    provincedum8 |  -.4051616   .1014366    -3.99   0.000    -.6042169   -.2061062
+    provincedum9 |  -.2077551   .1000413    -2.08   0.038    -.4040725   -.0114378
+   provincedum10 |  -.1557806   .0947868    -1.64   0.101    -.3417867    .0302254
+   provincedum11 |  -.0756819   .0919147    -0.82   0.410    -.2560518    .1046881
+   provincedum12 |  -.3329121   .1057803    -3.15   0.002    -.5404915   -.1253328
+   provincedum13 |  -.0252903   .1007744    -0.25   0.802    -.2230463    .1724657
+   provincedum14 |  -.2604662   .1119077    -2.33   0.020    -.4800696   -.0408627
+   provincedum15 |  -.2231533   .1280549    -1.74   0.082    -.4744435     .028137
+             _m1 |   .5448981   .2520746     2.16   0.031     .0502362     1.03956
+             _m2 |  -.9722172   .7072291    -1.37   0.170    -2.360057     .415623
+             _m3 |  -.7387222   .5564351    -1.33   0.185     -1.83065    .3532054
+           _cons |   6.390744   .8341258     7.66   0.000     4.753887    8.027602
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .7602523          .        .       .            .           .
+        rho1 |   .6249373          .        .       .            .           .
+        rho2 |  -1.115025          .        .       .            .           .
+        rho3 |  -.8472319          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress voc_log_monthlyearning exp expsqr higheredu highereduafter79 provincedum2-provincedum15 m1 m2 m3 i
+> f male==0 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of voc_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =  24.92
+Prob > chi2 = 0.0000
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum voc_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+voc_log_mo~g |      1,012    8.194889    .6296805   5.521461   10.05764
+        male |      1,012           0           0          0          0
+         exp |      1,012    17.93478     6.49383          1         32
+      expsqr |      1,012    363.7846    237.8628          1       1024
+   higheredu |      1,012    .3270751    .4693769          0          1
+-------------+---------------------------------------------------------
+higheredu~79 |      1,012    .1887352    .3914916          0          1
+          m1 |      1,012    1.094195    .1843831    .716741   1.966683
+          m2 |      1,012   -.5244179    .1441819  -.7259927  -.0660745
+          m3 |      1,012   -.3357755    .1903012  -.7259893  -.0039632
+
+. outreg2 using "`xlspath'", append ctitle(Sec Voc, Female, Non-specified Higheredu, Province Dum) pvalue addsta
+> t("Hettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *17) Exp & Specified higher education, Sec Gen + Male + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulted
+> uafter79 if male==1 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male ex
+> p expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogi
+> t gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5728.6772
+Iteration 1:  Log likelihood = -4866.6828
+Iteration 2:  Log likelihood = -4802.6497
+Iteration 3:  Log likelihood =  -4796.833
+Iteration 4:  Log likelihood = -4796.7459
+Iteration 5:  Log likelihood = -4796.7459
+
+Multinomial logistic regression                   Number of obs   =       5615
+                                                  LR chi2(10)     =    1863.86
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4796.7459                       Pseudo R2       =     0.1627
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3346149    .033643     9.95   0.000     .2686759    .4005539
+      expsqr |  -.0064558   .0008564    -7.54   0.000    -.0081343   -.0047773
+ins1_secge~e |    3.54565   .5799686     6.11   0.000     2.408932    4.682368
+ins2_highe~e |   .2686378   .1189817     2.26   0.024     .0354379    .5018377
+ins3_vs_en~e |   .4630486   .5493956     0.84   0.399     -.613747    1.539844
+       _cons |  -5.833726   .4271537   -13.66   0.000    -6.670932   -4.996521
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .5674049    .041221    13.76   0.000     .4866133    .6481965
+      expsqr |  -.0071321   .0009344    -7.63   0.000    -.0089634   -.0053007
+ins1_secge~e |   9.676755   .6198538    15.61   0.000     8.461864    10.89165
+ins2_highe~e |   .3983786   .1227425     3.25   0.001     .1578077    .6389495
+ins3_vs_en~e |   .4109329   .5833055     0.70   0.481    -.7323247    1.554191
+       _cons |  -11.61776   .5542328   -20.96   0.000    -12.70403   -10.53148
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,848
+-------------+----------------------------------   F(11, 2836)     =     17.54
+       Model |  92.3620354        11  8.39654867   Prob > F        =    0.0000
+    Residual |  1357.54489     2,836  .478682964   R-squared       =    0.0637
+-------------+----------------------------------   Adj R-squared   =    0.0601
+       Total |  1449.90692     2,847   .50927535   Root MSE        =    .69187
+
+---------------------------------------------------------------------------------
+gen_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+            exp |   .0423051   .0222255     1.90   0.057    -.0012747    .0858848
+         expsqr |  -.0014707   .0007353    -2.00   0.046    -.0029125   -.0000289
+     highvocedu |   .0761431   .0572973     1.33   0.184    -.0362055    .1884918
+     highgenedu |   .4706587    .048635     9.68   0.000     .3752953    .5660222
+       adultedu |   .2103886   .0634878     3.31   0.001     .0859018    .3348755
+ highvocafter79 |   .0790652   .0677583     1.17   0.243    -.0537953    .2119257
+ highgenafter79 |  -.0415651   .0571262    -0.73   0.467    -.1535781     .070448
+adulteduafter79 |  -.0452748   .0897067    -0.50   0.614    -.2211717    .1306222
+            _m1 |    .138262   .5184956     0.27   0.790    -.8784046    1.154929
+            _m2 |   .2194219   .1559218     1.41   0.159    -.0863097    .5251535
+            _m3 |  -.1710614   .3685679    -0.46   0.643    -.8937497    .5516269
+          _cons |   8.020176   .0898073    89.30   0.000     7.844082     8.19627
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .5018136          .        .       .            .           .
+        rho1 |   .1951784          .        .       .            .           .
+        rho2 |   .3097482          .        .       .            .           .
+        rho3 |  -.2414798          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adu
+> lteduafter79 m1 m2 m3 if male==1 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.03
+Prob > chi2 = 0.8556
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulteduaft
+> er79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      2,848    8.587107    .7136353   5.521461   10.12663
+         exp |      2,848    15.29916    6.907363          1         32
+      expsqr |      2,848    281.7591     231.362          1       1024
+  highvocedu |      2,848    .2538624    .4352962          0          1
+  highgenedu |      2,848    .4009831    .4901837          0          1
+-------------+---------------------------------------------------------
+    adultedu |      2,848    .0997191    .2996777          0          1
+highvocaf~79 |      2,848    .1864466    .3895351          0          1
+highgenaf~79 |      2,848    .2942416    .4557811          0          1
+adultedua~79 |      2,848    .0470506    .2117842          0          1
+          m1 |      2,848   -.2692273    .0657111  -.4031221  -.0422804
+-------------+---------------------------------------------------------
+          m2 |      2,848    .4466593    .3325175   .0086655    2.50078
+          m3 |      2,848   -.2565531    .1944388  -.7259604  -.0036679
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Male, Specified Higheredu,) pvalue addstat("Hettest: p-value
+> ", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *18) Exp & Specified higher education & province fixed, Sec Gen + Male + inrange(birthyear, 1971, 1992) + no o
+> utliers
+. selmlog gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulted
+> uafter79 provincedum2-provincedum15 if male==1 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250,
+>  25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant
+> _relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5728.6772
+Iteration 1:  Log likelihood = -4866.6828
+Iteration 2:  Log likelihood = -4802.6497
+Iteration 3:  Log likelihood =  -4796.833
+Iteration 4:  Log likelihood = -4796.7459
+Iteration 5:  Log likelihood = -4796.7459
+
+Multinomial logistic regression                   Number of obs   =       5615
+                                                  LR chi2(10)     =    1863.86
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4796.7459                       Pseudo R2       =     0.1627
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3346149    .033643     9.95   0.000     .2686759    .4005539
+      expsqr |  -.0064558   .0008564    -7.54   0.000    -.0081343   -.0047773
+ins1_secge~e |    3.54565   .5799686     6.11   0.000     2.408932    4.682368
+ins2_highe~e |   .2686378   .1189817     2.26   0.024     .0354379    .5018377
+ins3_vs_en~e |   .4630486   .5493956     0.84   0.399     -.613747    1.539844
+       _cons |  -5.833726   .4271537   -13.66   0.000    -6.670932   -4.996521
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .5674049    .041221    13.76   0.000     .4866133    .6481965
+      expsqr |  -.0071321   .0009344    -7.63   0.000    -.0089634   -.0053007
+ins1_secge~e |   9.676755   .6198538    15.61   0.000     8.461864    10.89165
+ins2_highe~e |   .3983786   .1227425     3.25   0.001     .1578077    .6389495
+ins3_vs_en~e |   .4109329   .5833055     0.70   0.481    -.7323247    1.554191
+       _cons |  -11.61776   .5542328   -20.96   0.000    -12.70403   -10.53148
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,848
+-------------+----------------------------------   F(25, 2822)     =     17.87
+       Model |  198.184792        25  7.92739169   Prob > F        =    0.0000
+    Residual |  1251.72213     2,822  .443558515   R-squared       =    0.1367
+-------------+----------------------------------   Adj R-squared   =    0.1290
+       Total |  1449.90692     2,847   .50927535   Root MSE        =      .666
+
+---------------------------------------------------------------------------------
+gen_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+            exp |   .0918554   .0224448     4.09   0.000     .0478455    .1358652
+         expsqr |  -.0025405   .0007367    -3.45   0.001    -.0039849    -.001096
+     highvocedu |   .0495566   .0554212     0.89   0.371    -.0591136    .1582269
+     highgenedu |   .4538913   .0475545     9.54   0.000     .3606462    .5471365
+       adultedu |   .2226995    .061475     3.62   0.000      .102159      .34324
+ highvocafter79 |   .1053485    .065454     1.61   0.108    -.0229941    .2336911
+ highgenafter79 |  -.0776199   .0553487    -1.40   0.161    -.1861479     .030908
+adulteduafter79 |  -.1064253   .0868679    -1.23   0.221    -.2767562    .0639056
+   provincedum2 |  -.6526411   .0698834    -9.34   0.000    -.7896687   -.5156135
+   provincedum3 |  -.2987847    .066665    -4.48   0.000    -.4295018   -.1680676
+   provincedum4 |  -.4470467   .0708464    -6.31   0.000    -.5859627   -.3081307
+   provincedum5 |  -.0992621   .0616315    -1.61   0.107    -.2201094    .0215852
+   provincedum6 |  -.4227471   .0719952    -5.87   0.000    -.5639157   -.2815784
+   provincedum7 |  -.3516919   .0707164    -4.97   0.000    -.4903531   -.2130307
+   provincedum8 |  -.6906883   .0679275   -10.17   0.000    -.8238808   -.5574957
+   provincedum9 |  -.1418133   .0637533    -2.22   0.026    -.2668211   -.0168055
+  provincedum10 |  -.2173642   .0672975    -3.23   0.001    -.3493216   -.0854069
+  provincedum11 |  -.1257967   .0587305    -2.14   0.032    -.2409557   -.0106376
+  provincedum12 |  -.2925014   .0726229    -4.03   0.000    -.4349008   -.1501021
+  provincedum13 |  -.2507987   .0668078    -3.75   0.000    -.3817957   -.1198017
+  provincedum14 |  -.3709785   .0919773    -4.03   0.000    -.5513279    -.190629
+  provincedum15 |  -.5388483   .0810312    -6.65   0.000    -.6977347   -.3799619
+            _m1 |   1.430177   .5315119     2.69   0.007     .3879855    2.472368
+            _m2 |  -.0377927   .1567045    -0.24   0.809    -.3450596    .2694743
+            _m3 |  -.1562205   .3658365    -0.43   0.669    -.8735545    .5611135
+          _cons |   8.341889   .1027951    81.15   0.000     8.140328     8.54345
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .9584595          .        .       .            .           .
+        rho1 |   1.460841          .        .       .            .           .
+        rho2 |   -.038603          .        .       .            .           .
+        rho3 |    -.15957          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adu
+> lteduafter79 provincedum2-provincedum15 m1 m2 m3 if male==1 & inrange(birthyear, 1971, 1992) & inrange(monthly
+> earning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   8.56
+Prob > chi2 = 0.0034
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulteduaft
+> er79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      2,848    8.587107    .7136353   5.521461   10.12663
+         exp |      2,848    15.29916    6.907363          1         32
+      expsqr |      2,848    281.7591     231.362          1       1024
+  highvocedu |      2,848    .2538624    .4352962          0          1
+  highgenedu |      2,848    .4009831    .4901837          0          1
+-------------+---------------------------------------------------------
+    adultedu |      2,848    .0997191    .2996777          0          1
+highvocaf~79 |      2,848    .1864466    .3895351          0          1
+highgenaf~79 |      2,848    .2942416    .4557811          0          1
+adultedua~79 |      2,848    .0470506    .2117842          0          1
+          m1 |      2,848   -.2692273    .0657111  -.4031221  -.0422804
+-------------+---------------------------------------------------------
+          m2 |      2,848    .4466593    .3325175   .0086655    2.50078
+          m3 |      2,848   -.2565531    .1944388  -.7259604  -.0036679
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Male, Specified Higheredu, Province Dum) pvalue addstat("Het
+> test: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *19) Exp & Non-specified higher education, Sec Gen + Male + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog gen_log_monthlyearning exp expsqr higheredu highereduafter79 if male==1 & inrange(birthyear, 1971, 199
+> 2) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu
+> _entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5728.6772
+Iteration 1:  Log likelihood = -4866.6828
+Iteration 2:  Log likelihood = -4802.6497
+Iteration 3:  Log likelihood =  -4796.833
+Iteration 4:  Log likelihood = -4796.7459
+Iteration 5:  Log likelihood = -4796.7459
+
+Multinomial logistic regression                   Number of obs   =       5615
+                                                  LR chi2(10)     =    1863.86
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4796.7459                       Pseudo R2       =     0.1627
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3346149    .033643     9.95   0.000     .2686759    .4005539
+      expsqr |  -.0064558   .0008564    -7.54   0.000    -.0081343   -.0047773
+ins1_secge~e |    3.54565   .5799686     6.11   0.000     2.408932    4.682368
+ins2_highe~e |   .2686378   .1189817     2.26   0.024     .0354379    .5018377
+ins3_vs_en~e |   .4630486   .5493956     0.84   0.399     -.613747    1.539844
+       _cons |  -5.833726   .4271537   -13.66   0.000    -6.670932   -4.996521
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .5674049    .041221    13.76   0.000     .4866133    .6481965
+      expsqr |  -.0071321   .0009344    -7.63   0.000    -.0089634   -.0053007
+ins1_secge~e |   9.676755   .6198538    15.61   0.000     8.461864    10.89165
+ins2_highe~e |   .3983786   .1227425     3.25   0.001     .1578077    .6389495
+ins3_vs_en~e |   .4109329   .5833055     0.70   0.481    -.7323247    1.554191
+       _cons |  -11.61776   .5542328   -20.96   0.000    -12.70403   -10.53148
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,848
+-------------+----------------------------------   F(7, 2840)      =     13.38
+       Model |  46.2763379         7  6.61090541   Prob > F        =    0.0000
+    Residual |  1403.63058     2,840  .494236121   R-squared       =    0.0319
+-------------+----------------------------------   Adj R-squared   =    0.0295
+       Total |  1449.90692     2,847   .50927535   Root MSE        =    .70302
+
+----------------------------------------------------------------------------------
+gen_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+             exp |   .0514556   .0225612     2.28   0.023     .0072176    .0956936
+          expsqr |  -.0017641   .0007465    -2.36   0.018    -.0032278   -.0003003
+       higheredu |   .2944243   .0396547     7.42   0.000     .2166695    .3721791
+highereduafter79 |  -.0208071   .0480109    -0.43   0.665    -.1149469    .0733327
+             _m1 |   .4354219   .5249454     0.83   0.407    -.5938908    1.464735
+             _m2 |   .2272423   .1582959     1.44   0.151    -.0831443    .5376288
+             _m3 |  -.0859082   .3739806    -0.23   0.818    -.8192093    .6473928
+           _cons |   8.079424   .0907907    88.99   0.000     7.901402    8.257446
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .5580253          .        .       .            .           .
+        rho1 |   .5828856          .        .       .            .           .
+        rho2 |   .3042021          .        .       .            .           .
+        rho3 |  -.1150026          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning exp expsqr higheredu highereduafter79 m1 m2 m3 if male==1 & inrange(birthye
+> ar, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   1.28
+Prob > chi2 = 0.2570
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      2,848    8.587107    .7136353   5.521461   10.12663
+        male |      2,848           1           0          1          1
+         exp |      2,848    15.29916    6.907363          1         32
+      expsqr |      2,848    281.7591     231.362          1       1024
+   higheredu |      2,848    .7545646    .4304206          0          1
+-------------+---------------------------------------------------------
+higheredu~79 |      2,848    .5277388    .4993176          0          1
+          m1 |      2,848   -.2692273    .0657111  -.4031221  -.0422804
+          m2 |      2,848    .4466593    .3325175   .0086655    2.50078
+          m3 |      2,848   -.2565531    .1944388  -.7259604  -.0036679
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Male, Non-specified Higheredu,) pvalue addstat("Hettest: p-v
+> alue", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *20) Exp & Non-specified higher education & province fixed, Sec Gen + Male + inrange(birthyear, 1971, 1992) + 
+> no outliers
+. selmlog gen_log_monthlyearning exp expsqr higheredu highereduafter79 provincedum2-provincedum15 if male==1 & i
+> nrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_en
+> trant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5728.6772
+Iteration 1:  Log likelihood = -4866.6828
+Iteration 2:  Log likelihood = -4802.6497
+Iteration 3:  Log likelihood =  -4796.833
+Iteration 4:  Log likelihood = -4796.7459
+Iteration 5:  Log likelihood = -4796.7459
+
+Multinomial logistic regression                   Number of obs   =       5615
+                                                  LR chi2(10)     =    1863.86
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4796.7459                       Pseudo R2       =     0.1627
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3346149    .033643     9.95   0.000     .2686759    .4005539
+      expsqr |  -.0064558   .0008564    -7.54   0.000    -.0081343   -.0047773
+ins1_secge~e |    3.54565   .5799686     6.11   0.000     2.408932    4.682368
+ins2_highe~e |   .2686378   .1189817     2.26   0.024     .0354379    .5018377
+ins3_vs_en~e |   .4630486   .5493956     0.84   0.399     -.613747    1.539844
+       _cons |  -5.833726   .4271537   -13.66   0.000    -6.670932   -4.996521
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .5674049    .041221    13.76   0.000     .4866133    .6481965
+      expsqr |  -.0071321   .0009344    -7.63   0.000    -.0089634   -.0053007
+ins1_secge~e |   9.676755   .6198538    15.61   0.000     8.461864    10.89165
+ins2_highe~e |   .3983786   .1227425     3.25   0.001     .1578077    .6389495
+ins3_vs_en~e |   .4109329   .5833055     0.70   0.481    -.7323247    1.554191
+       _cons |  -11.61776   .5542328   -20.96   0.000    -12.70403   -10.53148
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,848
+-------------+----------------------------------   F(21, 2826)     =     16.72
+       Model |  160.267464        21  7.63178402   Prob > F        =    0.0000
+    Residual |  1289.63946     2,826  .456348004   R-squared       =    0.1105
+-------------+----------------------------------   Adj R-squared   =    0.1039
+       Total |  1449.90692     2,847   .50927535   Root MSE        =    .67554
+
+----------------------------------------------------------------------------------
+gen_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+             exp |    .104676   .0227036     4.61   0.000     .0601586    .1491934
+          expsqr |  -.0029048   .0007458    -3.89   0.000    -.0043672   -.0014423
+       higheredu |   .2746331   .0386647     7.10   0.000     .1988192    .3504469
+highereduafter79 |  -.0419879   .0463767    -0.91   0.365    -.1329236    .0489478
+    provincedum2 |  -.7106332   .0700824   -10.14   0.000    -.8480511   -.5732154
+    provincedum3 |  -.3372228   .0674243    -5.00   0.000    -.4694286    -.205017
+    provincedum4 |   -.472953   .0717664    -6.59   0.000    -.6136728   -.3322332
+    provincedum5 |  -.1235358   .0622536    -1.98   0.047    -.2456029   -.0014687
+    provincedum6 |  -.4704662   .0725836    -6.48   0.000    -.6127883   -.3281441
+    provincedum7 |   -.393517   .0712567    -5.52   0.000    -.5332374   -.2537965
+    provincedum8 |   -.751201   .0681383   -11.02   0.000    -.8848068   -.6175953
+    provincedum9 |   -.183791   .0642272    -2.86   0.004     -.309728    -.057854
+   provincedum10 |  -.2736491   .0676008    -4.05   0.000     -.406201   -.1410973
+   provincedum11 |  -.1812222   .0590898    -3.07   0.002    -.2970857   -.0653586
+   provincedum12 |  -.3329915   .0734306    -4.53   0.000    -.4769746   -.1890084
+   provincedum13 |  -.3121089   .0672945    -4.64   0.000    -.4440603   -.1801575
+   provincedum14 |  -.4121322   .0930647    -4.43   0.000    -.5946138   -.2296507
+   provincedum15 |  -.5515823    .082146    -6.71   0.000    -.7126546   -.3905101
+             _m1 |   1.832225   .5357988     3.42   0.001     .7816291    2.882822
+             _m2 |  -.0662839   .1587451    -0.42   0.676    -.3775519    .2449841
+             _m3 |  -.0914394   .3705939    -0.25   0.805    -.8181012    .6352225
+           _cons |   8.450669    .103278    81.82   0.000     8.248162    8.653177
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   1.299527          .        .       .            .           .
+        rho1 |    1.60726          .        .       .            .           .
+        rho2 |  -.0581454          .        .       .            .           .
+        rho3 |  -.0802122          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning exp expsqr higheredu highereduafter79 provincedum2-provincedum15 m1 m2 m3 i
+> f male==1 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   5.32
+Prob > chi2 = 0.0211
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning male exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      2,848    8.587107    .7136353   5.521461   10.12663
+        male |      2,848           1           0          1          1
+         exp |      2,848    15.29916    6.907363          1         32
+      expsqr |      2,848    281.7591     231.362          1       1024
+   higheredu |      2,848    .7545646    .4304206          0          1
+-------------+---------------------------------------------------------
+higheredu~79 |      2,848    .5277388    .4993176          0          1
+          m1 |      2,848   -.2692273    .0657111  -.4031221  -.0422804
+          m2 |      2,848    .4466593    .3325175   .0086655    2.50078
+          m3 |      2,848   -.2565531    .1944388  -.7259604  -.0036679
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Male, Non-specified Higheredu, Province Dum) pvalue addstat(
+> "Hettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *21) Exp & Specified higher education, Sec Gen + Female + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulted
+> uafter79 if male==0 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male ex
+> p expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogi
+> t gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5055.8576
+Iteration 1:  Log likelihood = -4297.4227
+Iteration 2:  Log likelihood =  -4235.419
+Iteration 3:  Log likelihood = -4228.8483
+Iteration 4:  Log likelihood = -4228.7204
+Iteration 5:  Log likelihood = -4228.7203
+
+Multinomial logistic regression                   Number of obs   =       4897
+                                                  LR chi2(10)     =    1654.27
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4228.7203                       Pseudo R2       =     0.1636
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3425434   .0343131     9.98   0.000     .2752909    .4097958
+      expsqr |  -.0067418   .0008725    -7.73   0.000    -.0084519   -.0050316
+ins1_secge~e |   2.947418   .5838224     5.05   0.000     1.803147    4.091689
+ins2_highe~e |   .0131145   .1241387     0.11   0.916     -.230193    .2564219
+ins3_vs_en~e |    1.19774   .5660029     2.12   0.034     .0883947    2.307085
+       _cons |  -5.566881   .4279263   -13.01   0.000    -6.405602   -4.728161
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .6415311   .0445191    14.41   0.000     .5542752     .728787
+      expsqr |  -.0093472    .001007    -9.28   0.000    -.0113209   -.0073736
+ins1_secge~e |   8.150034   .6393358    12.75   0.000     6.896959    9.403109
+ins2_highe~e |   .5980405   .1352367     4.42   0.000     .3329815    .8630996
+ins3_vs_en~e |   -2.07414    .645978    -3.21   0.001    -3.340233    -.808046
+       _cons |  -11.20186   .5767557   -19.42   0.000    -12.33228   -10.07144
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,446
+-------------+----------------------------------   F(11, 2434)     =     34.67
+       Model |  159.394844        11  14.4904403   Prob > F        =    0.0000
+    Residual |  1017.20096     2,434  .417913294   R-squared       =    0.1355
+-------------+----------------------------------   Adj R-squared   =    0.1316
+       Total |   1176.5958     2,445  .481225276   Root MSE        =    .64646
+
+---------------------------------------------------------------------------------
+gen_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+            exp |   .0412819   .0208843     1.98   0.048     .0003292    .0822347
+         expsqr |   -.001742   .0006331    -2.75   0.006    -.0029834   -.0005005
+     highvocedu |    .189723   .0595514     3.19   0.001     .0729463    .3064996
+     highgenedu |   .7686668    .054355    14.14   0.000       .66208    .8752535
+       adultedu |   .4393338   .0611034     7.19   0.000     .3195139    .5591538
+ highvocafter79 |   .0488909    .071442     0.68   0.494    -.0912025    .1889843
+ highgenafter79 |  -.1945505   .0638365    -3.05   0.002    -.3197299   -.0693711
+adulteduafter79 |  -.1162165   .0825847    -1.41   0.159    -.2781602    .0457271
+            _m1 |   .3496066   .4133031     0.85   0.398    -.4608556    1.160069
+            _m2 |   .0449982   .1702535     0.26   0.792    -.2888585     .378855
+            _m3 |  -.5132004   .3390427    -1.51   0.130    -1.178043    .1516418
+          _cons |   7.808771   .0931388    83.84   0.000     7.626132    7.991411
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .4929932          .        .       .            .           .
+        rho1 |   .4979194          .        .       .            .           .
+        rho2 |   .0640877          .        .       .            .           .
+        rho3 |  -.7309144          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adu
+> lteduafter79 m1 m2 m3 if male==0 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.82
+Prob > chi2 = 0.3642
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulteduaft
+> er79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      2,446    8.353153     .693704   5.521461   10.12663
+         exp |      2,446    14.72935    6.980746          0         33
+      expsqr |      2,446    265.6648    232.3001          0       1089
+  highvocedu |      2,446    .2518397    .4341584          0          1
+  highgenedu |      2,446    .4067866    .4913349          0          1
+-------------+---------------------------------------------------------
+    adultedu |      2,446    .1218316    .3271581          0          1
+highvocaf~79 |      2,446     .188471    .3911678          0          1
+highgenaf~79 |      2,446    .3254293    .4686308          0          1
+adultedua~79 |      2,446    .0625511    .2422033          0          1
+          m1 |      2,446   -.2831295    .0748304  -.4688301  -.0388292
+-------------+---------------------------------------------------------
+          m2 |      2,446    .4563298    .3507745   -.000019   2.060829
+          m3 |      2,446   -.2434341    .1999238  -.7259893  -.0007886
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Female, Specified Higheredu,) pvalue addstat("Hettest: p-val
+> ue", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *22) Exp & Specified higher education & province fixed, Sec Gen + Female + inrange(birthyear, 1971, 1992) + no
+>  outliers
+. selmlog gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulted
+> uafter79 provincedum2-provincedum15 if male==0 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250,
+>  25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu_entrant_relative ins3_vs_entrant
+> _relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5055.8576
+Iteration 1:  Log likelihood = -4297.4227
+Iteration 2:  Log likelihood =  -4235.419
+Iteration 3:  Log likelihood = -4228.8483
+Iteration 4:  Log likelihood = -4228.7204
+Iteration 5:  Log likelihood = -4228.7203
+
+Multinomial logistic regression                   Number of obs   =       4897
+                                                  LR chi2(10)     =    1654.27
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4228.7203                       Pseudo R2       =     0.1636
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3425434   .0343131     9.98   0.000     .2752909    .4097958
+      expsqr |  -.0067418   .0008725    -7.73   0.000    -.0084519   -.0050316
+ins1_secge~e |   2.947418   .5838224     5.05   0.000     1.803147    4.091689
+ins2_highe~e |   .0131145   .1241387     0.11   0.916     -.230193    .2564219
+ins3_vs_en~e |    1.19774   .5660029     2.12   0.034     .0883947    2.307085
+       _cons |  -5.566881   .4279263   -13.01   0.000    -6.405602   -4.728161
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .6415311   .0445191    14.41   0.000     .5542752     .728787
+      expsqr |  -.0093472    .001007    -9.28   0.000    -.0113209   -.0073736
+ins1_secge~e |   8.150034   .6393358    12.75   0.000     6.896959    9.403109
+ins2_highe~e |   .5980405   .1352367     4.42   0.000     .3329815    .8630996
+ins3_vs_en~e |   -2.07414    .645978    -3.21   0.001    -3.340233    -.808046
+       _cons |  -11.20186   .5767557   -19.42   0.000    -12.33228   -10.07144
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,446
+-------------+----------------------------------   F(25, 2420)     =     24.64
+       Model |  238.742396        25  9.54969585   Prob > F        =    0.0000
+    Residual |  937.853404     2,420  .387542729   R-squared       =    0.2029
+-------------+----------------------------------   Adj R-squared   =    0.1947
+       Total |   1176.5958     2,445  .481225276   Root MSE        =    .62253
+
+---------------------------------------------------------------------------------
+gen_log_month~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+            exp |    .057492   .0221641     2.59   0.010     .0140295    .1009546
+         expsqr |  -.0015699   .0006609    -2.38   0.018    -.0028658    -.000274
+     highvocedu |   .1934728    .057549     3.36   0.001     .0806224    .3063232
+     highgenedu |   .7379243   .0528506    13.96   0.000     .6342872    .8415614
+       adultedu |   .4336698   .0592769     7.32   0.000     .3174312    .5499085
+ highvocafter79 |    .025638     .06901     0.37   0.710    -.1096867    .1609627
+ highgenafter79 |  -.2129966   .0620753    -3.43   0.001    -.3347228   -.0912704
+adulteduafter79 |  -.1574175   .0798573    -1.97   0.049    -.3140132   -.0008218
+   provincedum2 |  -.6492504   .0662996    -9.79   0.000    -.7792602   -.5192406
+   provincedum3 |  -.3272774   .0655652    -4.99   0.000    -.4558471   -.1987078
+   provincedum4 |   -.496049   .0663455    -7.48   0.000    -.6261488   -.3659491
+   provincedum5 |  -.0736655   .0606767    -1.21   0.225    -.1926491     .045318
+   provincedum6 |  -.4104803   .0732658    -5.60   0.000    -.5541504   -.2668102
+   provincedum7 |  -.4034677   .0659946    -6.11   0.000    -.5328794   -.2740559
+   provincedum8 |    -.58527   .0654234    -8.95   0.000    -.7135617   -.4569783
+   provincedum9 |  -.2290006   .0628034    -3.65   0.000    -.3521546   -.1058466
+  provincedum10 |  -.2782537   .0670877    -4.15   0.000    -.4098091   -.1466983
+  provincedum11 |  -.1185753   .0555772    -2.13   0.033     -.227559   -.0095916
+  provincedum12 |    -.29431   .0689642    -4.27   0.000    -.4295449   -.1590751
+  provincedum13 |  -.2308534   .0647498    -3.57   0.000    -.3578242   -.1038826
+  provincedum14 |  -.2804851   .0855462    -3.28   0.001    -.4482364   -.1127338
+  provincedum15 |  -.3647588   .0769041    -4.74   0.000    -.5155634   -.2139542
+            _m1 |    .682761   .4494446     1.52   0.129    -.1985751    1.564097
+            _m2 |   .0059052   .1718791     0.03   0.973    -.3311402    .3429505
+            _m3 |   .1836717   .3401453     0.54   0.589    -.4833345    .8506778
+          _cons |   8.117133   .1022151    79.41   0.000     7.916695    8.317571
+---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .5075259          .        .       .            .           .
+        rho1 |   .9583841          .        .       .            .           .
+        rho2 |    .008289          .        .       .            .           .
+        rho3 |   .2578179          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adu
+> lteduafter79 provincedum2-provincedum15 m1 m2 m3 if male==0 & inrange(birthyear, 1971, 1992) & inrange(monthly
+> earning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   4.69
+Prob > chi2 = 0.0303
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning exp expsqr highvocedu highgenedu adultedu highvocafter79 highgenafter79 adulteduaft
+> er79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      2,446    8.353153     .693704   5.521461   10.12663
+         exp |      2,446    14.72935    6.980746          0         33
+      expsqr |      2,446    265.6648    232.3001          0       1089
+  highvocedu |      2,446    .2518397    .4341584          0          1
+  highgenedu |      2,446    .4067866    .4913349          0          1
+-------------+---------------------------------------------------------
+    adultedu |      2,446    .1218316    .3271581          0          1
+highvocaf~79 |      2,446     .188471    .3911678          0          1
+highgenaf~79 |      2,446    .3254293    .4686308          0          1
+adultedua~79 |      2,446    .0625511    .2422033          0          1
+          m1 |      2,446   -.2831295    .0748304  -.4688301  -.0388292
+-------------+---------------------------------------------------------
+          m2 |      2,446    .4563298    .3507745   -.000019   2.060829
+          m3 |      2,446   -.2434341    .1999238  -.7259893  -.0007886
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Female, Specified Higheredu, Province Dum) pvalue addstat("H
+> ettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *23) Exp & Non-specified higher education, Sec Gen + Female + inrange(birthyear, 1971, 1992) + no outliers
+. selmlog gen_log_monthlyearning exp expsqr higheredu highereduafter79 if male==0 & inrange(birthyear, 1971, 199
+> 2) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_entrant_relative ins2_highedu
+> _entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5055.8576
+Iteration 1:  Log likelihood = -4297.4227
+Iteration 2:  Log likelihood =  -4235.419
+Iteration 3:  Log likelihood = -4228.8483
+Iteration 4:  Log likelihood = -4228.7204
+Iteration 5:  Log likelihood = -4228.7203
+
+Multinomial logistic regression                   Number of obs   =       4897
+                                                  LR chi2(10)     =    1654.27
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4228.7203                       Pseudo R2       =     0.1636
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3425434   .0343131     9.98   0.000     .2752909    .4097958
+      expsqr |  -.0067418   .0008725    -7.73   0.000    -.0084519   -.0050316
+ins1_secge~e |   2.947418   .5838224     5.05   0.000     1.803147    4.091689
+ins2_highe~e |   .0131145   .1241387     0.11   0.916     -.230193    .2564219
+ins3_vs_en~e |    1.19774   .5660029     2.12   0.034     .0883947    2.307085
+       _cons |  -5.566881   .4279263   -13.01   0.000    -6.405602   -4.728161
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .6415311   .0445191    14.41   0.000     .5542752     .728787
+      expsqr |  -.0093472    .001007    -9.28   0.000    -.0113209   -.0073736
+ins1_secge~e |   8.150034   .6393358    12.75   0.000     6.896959    9.403109
+ins2_highe~e |   .5980405   .1352367     4.42   0.000     .3329815    .8630996
+ins3_vs_en~e |   -2.07414    .645978    -3.21   0.001    -3.340233    -.808046
+       _cons |  -11.20186   .5767557   -19.42   0.000    -12.33228   -10.07144
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,446
+-------------+----------------------------------   F(7, 2438)      =     31.18
+       Model |  96.6780029         7  13.8111433   Prob > F        =    0.0000
+    Residual |   1079.9178     2,438  .442952337   R-squared       =    0.0822
+-------------+----------------------------------   Adj R-squared   =    0.0795
+       Total |   1176.5958     2,445  .481225276   Root MSE        =    .66555
+
+----------------------------------------------------------------------------------
+gen_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+             exp |   .0394899    .021464     1.84   0.066    -.0025998    .0815795
+          expsqr |  -.0017014   .0006505    -2.62   0.009    -.0029769   -.0004258
+       higheredu |   .5022846   .0420615    11.94   0.000     .4198046    .5847647
+highereduafter79 |  -.1366476    .051992    -2.63   0.009    -.2386007   -.0346946
+             _m1 |   .5282694   .4248449     1.24   0.214     -.304825    1.361364
+             _m2 |   .0911641   .1751966     0.52   0.603    -.2523855    .4347138
+             _m3 |  -.2383832    .347648    -0.69   0.493    -.9200991    .4433327
+           _cons |   7.960182   .0937104    84.94   0.000     7.776422    8.143943
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |    .524748          .        .       .            .           .
+        rho1 |   .7292561          .        .       .            .           .
+        rho2 |   .1258487          .        .       .            .           .
+        rho3 |   -.329079          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning exp expsqr higheredu highereduafter79 m1 m2 m3 if male==0 & inrange(birthye
+> ar, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.20
+Prob > chi2 = 0.6515
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      2,446    8.353153     .693704   5.521461   10.12663
+         exp |      2,446    14.72935    6.980746          0         33
+      expsqr |      2,446    265.6648    232.3001          0       1089
+   higheredu |      2,446    .7804579    .4140211          0          1
+higheredu~79 |      2,446    .5764513    .4942217          0          1
+-------------+---------------------------------------------------------
+          m1 |      2,446   -.2831295    .0748304  -.4688301  -.0388292
+          m2 |      2,446    .4563298    .3507745   -.000019   2.060829
+          m3 |      2,446   -.2434341    .1999238  -.7259893  -.0007886
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Female, Non-specified Higheredu,) pvalue addstat("Hettest: p
+> -value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. *24) Exp & Non-specified higher education & province fixed, Sec Gen + Female + inrange(birthyear, 1971, 1992) 
+> + no outliers
+. selmlog gen_log_monthlyearning exp expsqr higheredu highereduafter79 provincedum2-provincedum15 if male==0 & i
+> nrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000), sel(educat=male exp expsqr ins1_secgen_en
+> trant_relative ins2_highedu_entrant_relative ins3_vs_entrant_relative) dmf(2) showmlogit gen(m)
+Beware: the mlogit step uses observations that have missing values in the main equation
+
+note: male omitted because of collinearity.
+Iteration 0:  Log likelihood = -5055.8576
+Iteration 1:  Log likelihood = -4297.4227
+Iteration 2:  Log likelihood =  -4235.419
+Iteration 3:  Log likelihood = -4228.8483
+Iteration 4:  Log likelihood = -4228.7204
+Iteration 5:  Log likelihood = -4228.7203
+
+Multinomial logistic regression                   Number of obs   =       4897
+                                                  LR chi2(10)     =    1654.27
+                                                  Prob > chi2     =     0.0000
+Log likelihood = -4228.7203                       Pseudo R2       =     0.1636
+
+------------------------------------------------------------------------------
+      educat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1            |
+         exp |   .3425434   .0343131     9.98   0.000     .2752909    .4097958
+      expsqr |  -.0067418   .0008725    -7.73   0.000    -.0084519   -.0050316
+ins1_secge~e |   2.947418   .5838224     5.05   0.000     1.803147    4.091689
+ins2_highe~e |   .0131145   .1241387     0.11   0.916     -.230193    .2564219
+ins3_vs_en~e |    1.19774   .5660029     2.12   0.034     .0883947    2.307085
+       _cons |  -5.566881   .4279263   -13.01   0.000    -6.405602   -4.728161
+-------------+----------------------------------------------------------------
+3            |
+         exp |   .6415311   .0445191    14.41   0.000     .5542752     .728787
+      expsqr |  -.0093472    .001007    -9.28   0.000    -.0113209   -.0073736
+ins1_secge~e |   8.150034   .6393358    12.75   0.000     6.896959    9.403109
+ins2_highe~e |   .5980405   .1352367     4.42   0.000     .3329815    .8630996
+ins3_vs_en~e |   -2.07414    .645978    -3.21   0.001    -3.340233    -.808046
+       _cons |  -11.20186   .5767557   -19.42   0.000    -12.33228   -10.07144
+------------------------------------------------------------------------------
+(educat==2 is the base outcome)
+
+
+Selectivity correction based on multinomial logit
+Second step regression
+(Beware: standard errors below do not take account of the two-step procedure)
+
+
+
+      Source |       SS           df       MS      Number of obs   =     2,446
+-------------+----------------------------------   F(21, 2424)     =     21.66
+       Model |  185.910642        21  8.85288771   Prob > F        =    0.0000
+    Residual |  990.685158     2,424  .408698498   R-squared       =    0.1580
+-------------+----------------------------------   Adj R-squared   =    0.1507
+       Total |   1176.5958     2,445  .481225276   Root MSE        =     .6393
+
+----------------------------------------------------------------------------------
+gen_log_monthl~g | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+             exp |   .0645291   .0227384     2.84   0.005     .0199404    .1091177
+          expsqr |  -.0016943    .000678    -2.50   0.013    -.0030238   -.0003648
+       higheredu |   .4804633   .0408612    11.76   0.000     .4003367    .5605898
+highereduafter79 |  -.1648448    .050346    -3.27   0.001    -.2635705    -.066119
+    provincedum2 |  -.7170728   .0677842   -10.58   0.000    -.8499938   -.5841519
+    provincedum3 |  -.3445216   .0672641    -5.12   0.000    -.4764226   -.2126205
+    provincedum4 |  -.5159752   .0680515    -7.58   0.000    -.6494204     -.38253
+    provincedum5 |  -.0878046   .0622216    -1.41   0.158    -.2098176    .0342084
+    provincedum6 |  -.4765941   .0749351    -6.36   0.000    -.6235376   -.3296506
+    provincedum7 |  -.4625439   .0674889    -6.85   0.000    -.5948858    -.330202
+    provincedum8 |  -.6575238   .0667677    -9.85   0.000    -.7884515   -.5265961
+    provincedum9 |  -.2659521    .064341    -4.13   0.000    -.3921211    -.139783
+   provincedum10 |  -.3443832   .0684645    -5.03   0.000    -.4786381   -.2101282
+   provincedum11 |   -.187064    .056648    -3.30   0.001    -.2981474   -.0759805
+   provincedum12 |  -.3612775   .0704763    -5.13   0.000    -.4994775   -.2230775
+   provincedum13 |  -.2909873   .0662076    -4.40   0.000    -.4208167    -.161158
+   provincedum14 |  -.3281924   .0875201    -3.75   0.000    -.4998143   -.1565705
+   provincedum15 |  -.3751772   .0789247    -4.75   0.000    -.5299439   -.2204104
+             _m1 |     1.0497   .4593302     2.29   0.022     .1489795     1.95042
+             _m2 |   .0048484   .1764465     0.03   0.978    -.3411531    .3508499
+             _m3 |   .4831065   .3476847     1.39   0.165    -.1986834    1.164896
+           _cons |   8.315695    .102124    81.43   0.000     8.115436    8.515955
+----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Anciliary    |
+      Sigma2 |   .7248788          .        .       .            .           .
+        rho1 |   1.232913          .        .       .            .           .
+        rho2 |   .0056946          .        .       .            .           .
+        rho3 |   .5674272          .        .       .            .           .
+------------------------------------------------------------------------------
+
+. 
+. qui regress gen_log_monthlyearning exp expsqr higheredu highereduafter79 provincedum2-provincedum15 m1 m2 m3 i
+> f male==0 & inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 250, 25000)
+
+. estat hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of gen_log_monthlyearning
+
+H0: Constant variance
+
+    chi2(1) =   0.58
+Prob > chi2 = 0.4447
+
+. local het_p = r(p)
+
+. local het_df = r(df)
+
+. sum gen_log_monthlyearning exp expsqr higheredu highereduafter79 m1 m2 m3 if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+gen_log_mo~g |      2,446    8.353153     .693704   5.521461   10.12663
+         exp |      2,446    14.72935    6.980746          0         33
+      expsqr |      2,446    265.6648    232.3001          0       1089
+   higheredu |      2,446    .7804579    .4140211          0          1
+higheredu~79 |      2,446    .5764513    .4942217          0          1
+-------------+---------------------------------------------------------
+          m1 |      2,446   -.2831295    .0748304  -.4688301  -.0388292
+          m2 |      2,446    .4563298    .3507745   -.000019   2.060829
+          m3 |      2,446   -.2434341    .1999238  -.7259893  -.0007886
+
+. outreg2 using "`xlspath'", append ctitle(Sec Gen, Female, Non-specified Higheredu, Province Dum) pvalue addsta
+> t("Hettest: p-value", `het_p', "Hettest: df", `het_df')
+/Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.xls
+dir : seeout
+
+. drop m1 m2 m3
+
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/dhare/Desktop/trying do files//Selmlog Urban Basics birthyear interact.log
+  log type:  text
+ closed on:  14 Aug 2024, 12:58:57
+----------------------------------------------------------------------------------------------------------------

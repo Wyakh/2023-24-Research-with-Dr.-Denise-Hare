@@ -1,0 +1,2735 @@
+-------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Ti
+> me Frame/Exp/Rural/IV Rural ATF Exp 1982 1971-1992.log
+  log type:  text
+ opened on:  14 Aug 2024, 05:35:12
+
+. use "`datapath'", clear
+
+. 
+. *Step One: Variables and Data Processing
+. 
+. *1) Monthly earning & it's ln value
+. 
+. gen annualearning = C05_1 if C05_1!=-99 & C05_1!=-88
+(20,128 missing values generated)
+
+. gen workmonths=C01_1 if C01_1!=-99
+(68 missing values generated)
+
+. gen monthlyearning = annualearning/workmonths
+(20,244 missing values generated)
+
+. gen log_monthlyearning = ln(monthlyearning)
+(20,280 missing values generated)
+
+. 
+. *2) Sex (Male)
+. 
+. gen male=1 if A03==1
+(16,738 missing values generated)
+
+. replace male=0 if A03==2
+(16,738 real changes made)
+
+. 
+. *3) Age & Exp
+. 
+. gen birthyear = A04_1 if A04_1!=-88 & A04_1!=-99
+(7 missing values generated)
+
+. gen age = 2018-birthyear
+(7 missing values generated)
+
+. gen agesqr = age*age
+(7 missing values generated)
+
+. 
+. gen exp = age-A13_3-6 if A13_3>=0
+(3,614 missing values generated)
+
+. replace exp=0 if exp<0
+(2,949 real changes made)
+
+. gen expsqr = exp*exp
+(3,614 missing values generated)
+
+. 
+. *4) Secondary education (Sec Voc; Sec Gen; Sec Jun)
+. 
+. *Sec Voc
+. *filter by secondary school types.
+. gen secvocedu=1 if A14==5
+(33,786 missing values generated)
+
+. replace secvocedu =0 if A14!=5
+(33,786 real changes made)
+
+. *include who reported vocational secondary degrees
+. replace secvocedu=1 if inrange(A13_1, 5, 6) & A13_2==1
+(400 real changes made)
+
+. *remove who had not finished secondary vocational education.
+. replace secvocedu=0 if (inrange(A13_1,4,6) & A13_2>1) | A13_1<4
+(254 real changes made)
+
+. tab secvocedu
+
+  secvocedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     33,640       96.10       96.10
+          1 |      1,367        3.90      100.00
+------------+-----------------------------------
+      Total |     35,007      100.00
+
+. *income for sec voc
+. gen voc_log_monthlyearning = log_monthlyearning if secvocedu==1
+(33,968 missing values generated)
+
+. 
+. *Sec Gen
+. *filter by secondary school types.
+. gen secgenedu = 1 if A14!=-99 & A14!=-88 & A14!=5
+(28,942 missing values generated)
+
+. replace secgenedu =0 if A14==-99 | A14==-88 | A14==5
+(28,942 real changes made)
+
+. *remove who had/have not finished secondary general schools.
+. replace secgenedu =0 if (A13_1==4 & A13_2>1) | inrange(A13_1, 5, 6) | A13_1<4
+(2,193 real changes made)
+
+. tab secgenedu
+
+  secgenedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     31,135       88.94       88.94
+          1 |      3,872       11.06      100.00
+------------+-----------------------------------
+      Total |     35,007      100.00
+
+. *income for sec gen
+. gen gen_log_monthlyearning = log_monthlyearning if secgenedu==1
+(32,602 missing values generated)
+
+. 
+. *Only Sec Junior
+. *filter by A13_1
+. gen secjun = 1 if (A13_1 ==3 & A13_2 ==1) | (inrange(A13_1, 4, 6) & A13_2>1) 
+(23,009 missing values generated)
+
+. replace secjun = 0 if secjun!=1
+(23,009 real changes made)
+
+. tab secjun
+
+     secjun |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     23,009       65.73       65.73
+          1 |     11,998       34.27      100.00
+------------+-----------------------------------
+      Total |     35,007      100.00
+
+. 
+. *Categotical variable of education
+. gen educat=1 if secvocedu==1
+(33,640 missing values generated)
+
+. replace educat=2 if secgenedu==1
+(3,872 real changes made)
+
+. replace educat=3 if secjun==1
+(11,998 real changes made)
+
+. tab educat
+
+     educat |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |      1,367        7.93        7.93
+          2 |      3,872       22.46       30.39
+          3 |     11,998       69.61      100.00
+------------+-----------------------------------
+      Total |     17,237      100.00
+
+. 
+. *5) Higher education (High Voc; High Gen; Adult Edu; Higher Edu)
+. 
+. *Higher vocational education (full-time)
+. gen highvocedu =1 if A13_1==7 & A13_2==1
+(34,028 missing values generated)
+
+. replace highvocedu=0 if highvocedu!=1
+(34,028 real changes made)
+
+. replace highvocedu=0 if A15_7==6
+(150 real changes made)
+
+. 
+. *Higher general education (full-time)
+. gen highgenedu =1 if (A13_1==8 & A13_2==1) | A13_1==9
+(34,367 missing values generated)
+
+. replace highgenedu =0 if highgenedu!=1
+(34,367 real changes made)
+
+. replace highgenedu=0 if A15_7==6
+(20 real changes made)
+
+. 
+. *Adult continuing education
+. gen adultedu = 1 if A15_7 == 6
+(34,791 missing values generated)
+
+. replace adultedu = 0 if A15_7!=6
+(34,791 real changes made)
+
+. replace adultedu = 0 if ((A13_1==7 | A13_1==8) & A13_2!=1) | A13_1<=6
+(46 real changes made)
+
+. tab adultedu
+
+   adultedu |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     34,837       99.51       99.51
+          1 |        170        0.49      100.00
+------------+-----------------------------------
+      Total |     35,007      100.00
+
+. 
+. *higheredu (dummy variable of higher education)
+. gen higheredu=1 if highvocedu==1 | highgenedu==1 | adultedu==1
+(33,388 missing values generated)
+
+. replace higheredu=0 if higheredu!=1
+(33,388 real changes made)
+
+. 
+. *7) Province fixed effect (Method: By the first two digits of household code)
+. 
+. destring hhcode, generate(province_code) force float
+hhcode: all characters numeric; province_code generated as float
+
+. replace province_code = floor(province_code/1000000000000) if province_code<1000000000000
+> 00
+(34,491 real changes made)
+
+. replace province_code = floor(province_code/10000000000000) if province_code>=10000000000
+> 0000 & province_code<1000000000000000
+(448 real changes made)
+
+. replace province_code = floor(province_code/1000000000000000) if province_code>=100000000
+> 00000000
+(68 real changes made)
+
+. tab province_code, gen(provincedum)
+
+     hhcode |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         11 |        709        2.03        2.03
+         14 |      1,373        3.92        5.95
+         15 |      1,282        3.66        9.61
+         21 |      1,376        3.93       13.54
+         32 |      2,939        8.40       21.94
+         34 |      2,528        7.22       29.16
+         37 |      2,640        7.54       36.70
+         41 |      4,126       11.79       48.48
+         42 |      2,913        8.32       56.81
+         43 |      2,751        7.86       64.66
+         44 |      2,578        7.36       72.03
+         50 |      1,316        3.76       75.79
+         51 |      2,849        8.14       83.93
+         53 |      2,735        7.81       91.74
+         62 |      2,892        8.26      100.00
+------------+-----------------------------------
+      Total |     35,007      100.00
+
+. 
+. *8) Birth Month cohort
+. 
+. gen birthmonth = A04_2 if A04_2!=-88 & A04_2!=-99
+(3 missing values generated)
+
+. gen t = birthmonth - 9 + 12 * (birthyear - 1982)
+(7 missing values generated)
+
+. gen d = 1 if t >= 0 & t != .
+(19,560 missing values generated)
+
+. replace d = 0 if t < 1
+(19,599 real changes made)
+
+. gen td = t * d
+(7 missing values generated)
+
+. 
+. 
+. *9) Tenure
+. gen yearstart = C02 if C02!=-88 & C02!=-99
+(20,156 missing values generated)
+
+. gen tenure = 2018 - yearstart
+(20,156 missing values generated)
+
+. gen tenuresqr = tenure * tenure
+(20,156 missing values generated)
+
+. 
+. 
+. *Step Two: Regressions
+. 
+. gen secvochighedu = secvocedu * higheredu
+
+. gen secgenhighedu = secgenedu * higheredu
+
+. 
+. *1)
+. ivregress 2sls log_monthlyearning exp expsqr male (higheredu secgenhighedu secgenedu = t 
+> d td) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & educat !=
+>  ., first
+
+First-stage regressions
+-----------------------
+
+                                                       Number of obs =   5,854
+                                                       F(6, 5847)    = 1638.62
+                                                       Prob > F      =  0.0000
+                                                       R-squared     =  0.6271
+                                                       Adj R-squared =  0.6267
+                                                       Root MSE      =  0.2064
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1643388   .0027665   -59.40   0.000    -.1697621   -.1589155
+      expsqr |    .002012    .000084    23.96   0.000     .0018474    .0021766
+        male |  -.0038586    .005573    -0.69   0.489    -.0147837    .0070664
+           t |  -.0048215   .0002196   -21.95   0.000    -.0052521    -.004391
+           d |   .0135882   .0116459     1.17   0.243     -.009242    .0364185
+          td |  -.0042148   .0002414   -17.46   0.000     -.004688   -.0037417
+       _cons |   2.613015   .0307097    85.09   0.000     2.552813    2.673217
+------------------------------------------------------------------------------
+
+                                                       Number of obs =   5,854
+                                                       F(6, 5847)    = 1339.71
+                                                       Prob > F      =  0.0000
+                                                       R-squared     =  0.5789
+                                                       Adj R-squared =  0.5785
+                                                       Root MSE      =  0.2090
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1576525   .0028009   -56.29   0.000    -.1631433   -.1521618
+      expsqr |   .0021432    .000085    25.21   0.000     .0019766    .0023099
+        male |   .0002503   .0056422     0.04   0.965    -.0108106    .0113112
+           t |  -.0037358   .0002224   -16.80   0.000    -.0041717   -.0032999
+           d |   .0229588   .0117907     1.95   0.052    -.0001554    .0460729
+          td |  -.0043634   .0002444   -17.86   0.000    -.0048424   -.0038843
+       _cons |   2.404944   .0310916    77.35   0.000     2.343993    2.465895
+------------------------------------------------------------------------------
+
+                                                       Number of obs =   5,854
+                                                       F(6, 5847)    = 1096.90
+                                                       Prob > F      =  0.0000
+                                                       R-squared     =  0.5295
+                                                       Adj R-squared =  0.5291
+                                                       Root MSE      =  0.2788
+
+------------------------------------------------------------------------------
+   secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1245837   .0037361   -33.35   0.000    -.1319079   -.1172595
+      expsqr |   .0001799   .0001134     1.59   0.113    -.0000424    .0004022
+        male |   .0005646   .0075263     0.08   0.940    -.0141897    .0153189
+           t |  -.0100669   .0002966   -33.94   0.000    -.0106483   -.0094854
+           d |   .0458218   .0157278     2.91   0.004     .0149894    .0766542
+          td |  -.0000157    .000326    -0.05   0.962    -.0006547    .0006233
+       _cons |   2.564832   .0414736    61.84   0.000     2.483528    2.646135
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      5,854
+                                                  Wald chi2(6)    =     499.04
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .68228
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -1.600565   2.669758    -0.60   0.549    -6.833195    3.632064
+secgenhighedu |   2.291453   2.604223     0.88   0.379     -2.81273    7.395636
+    secgenedu |   .0306904   .3537862     0.09   0.931    -.6627179    .7240987
+          exp |   .0468671   .0148067     3.17   0.002     .0178465    .0758876
+       expsqr |  -.0009774   .0003262    -3.00   0.003    -.0016167    -.000338
+         male |    .368347   .0216224    17.04   0.000     .3259679    .4107262
+        _cons |   7.333243   .1603595    45.73   0.000     7.018945    7.647542
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  exp expsqr male t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =   35.955  (p = 0.0000)
+  Wu-Hausman F(3,5844)            =  12.0385  (p = 0.0000)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   7.581  Chi-sq(6) P-value = 0.2705
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      5,854     8.10774     .664202   5.298317   9.721166
+         exp |      5,854    19.00581     7.68698          1         36
+      expsqr |      5,854    420.3003    304.5823          1       1296
+        male |      5,854    .6229928    .4846781          0          1
+
+. outreg2 using "`xlspath'", replace ctitle(IV: higheredu secgenedu & their product, Pooled
+> ) pvalue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p'
+> , "Endogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heterosk
+> edasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr male provincedum2-provincedum15 (higheredu s
+> ecgenhighedu secgenedu = t d td ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearn
+> ing, 200, 16667) & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  5,854
+                                                        F(20, 5833)   = 511.12
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6367
+                                                        Adj R-squared = 0.6355
+                                                        Root MSE      = 0.2040
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1622881   .0027474   -59.07   0.000    -.1676741   -.1569022
+       expsqr |   .0018746    .000084    22.31   0.000     .0017098    .0020393
+         male |    -.00558   .0055235    -1.01   0.312     -.016408    .0052481
+ provincedum2 |   .0713462   .0221062     3.23   0.001     .0280098    .1146825
+ provincedum3 |   .0909803   .0274962     3.31   0.001     .0370776     .144883
+ provincedum4 |   .0245486   .0230337     1.07   0.287    -.0206059    .0697031
+ provincedum5 |   .0353252   .0177268     1.99   0.046     .0005742    .0700763
+ provincedum6 |   .0849456   .0183331     4.63   0.000     .0490058    .1208853
+ provincedum7 |   .0756868   .0183241     4.13   0.000     .0397648    .1116088
+ provincedum8 |   .0785815   .0173392     4.53   0.000     .0445902    .1125727
+ provincedum9 |   .0031019   .0178679     0.17   0.862    -.0319258    .0381296
+provincedum10 |  -.0103576   .0180465    -0.57   0.566    -.0457354    .0250203
+provincedum11 |   .0116321   .0177204     0.66   0.512    -.0231065    .0463707
+provincedum12 |   .0063307   .0207576     0.30   0.760    -.0343619    .0470233
+provincedum13 |   .0258013   .0185508     1.39   0.164    -.0105652    .0621678
+provincedum14 |   .0395247   .0190806     2.07   0.038     .0021196    .0769298
+provincedum15 |    .075839   .0193561     3.92   0.000     .0378939    .1137841
+            t |  -.0052843   .0002222   -23.79   0.000    -.0057198   -.0048488
+            d |   .0179073    .011528     1.55   0.120    -.0046919    .0405064
+           td |   -.003971     .00024   -16.55   0.000    -.0044415   -.0035005
+        _cons |   2.584258   .0329993    78.31   0.000     2.519567    2.648949
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  5,854
+                                                        F(20, 5833)   = 414.57
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5870
+                                                        Adj R-squared = 0.5856
+                                                        Root MSE      = 0.2072
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1559393   .0027909   -55.88   0.000    -.1614104   -.1504682
+       expsqr |   .0020216   .0000854    23.68   0.000     .0018543     .002189
+         male |  -.0016751   .0056109    -0.30   0.765    -.0126745    .0093242
+ provincedum2 |   .0778727   .0224559     3.47   0.001     .0338508    .1218946
+ provincedum3 |   .0915129   .0279312     3.28   0.001     .0367575    .1462684
+ provincedum4 |   .0320681    .023398     1.37   0.171    -.0138008    .0779369
+ provincedum5 |   .0356207   .0180072     1.98   0.048     .0003199    .0709215
+ provincedum6 |   .0878551   .0186232     4.72   0.000     .0513468    .1243634
+ provincedum7 |   .0727056    .018614     3.91   0.000     .0362153    .1091958
+ provincedum8 |   .0798805   .0176135     4.54   0.000     .0453515    .1144094
+ provincedum9 |   .0197286   .0181505     1.09   0.277    -.0158532    .0553105
+provincedum10 |   .0065019    .018332     0.35   0.723    -.0294356    .0424394
+provincedum11 |   .0189473   .0180008     1.05   0.293    -.0163409    .0542355
+provincedum12 |   .0192491    .021086     0.91   0.361    -.0220872    .0605854
+provincedum13 |   .0366408   .0188443     1.94   0.052     -.000301    .0735826
+provincedum14 |   .0434124   .0193825     2.24   0.025     .0054155    .0814092
+provincedum15 |   .0839554   .0196623     4.27   0.000     .0454101    .1225008
+            t |  -.0041559   .0002257   -18.42   0.000    -.0045983   -.0037135
+            d |   .0271882   .0117104     2.32   0.020     .0042315    .0501448
+           td |  -.0041587   .0002438   -17.06   0.000    -.0046366   -.0036807
+        _cons |   2.371061   .0335213    70.73   0.000     2.305346    2.436775
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  5,854
+                                                        F(20, 5833)   = 340.77
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5388
+                                                        Adj R-squared = 0.5373
+                                                        Root MSE      = 0.2763
+
+-------------------------------------------------------------------------------
+    secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1232718   .0037219   -33.12   0.000    -.1305681   -.1159755
+       expsqr |   .0000561   .0001138     0.49   0.622    -.0001671    .0002792
+         male |  -.0021814   .0074827    -0.29   0.771    -.0168502    .0124874
+ provincedum2 |   .1680767   .0299473     5.61   0.000     .1093687    .2267846
+ provincedum3 |   .1524103   .0372492     4.09   0.000     .0793881    .2254325
+ provincedum4 |    .061454   .0312038     1.97   0.049     .0002831     .122625
+ provincedum5 |    .092907   .0240145     3.87   0.000     .0458296    .1399844
+ provincedum6 |   .1517657    .024836     6.11   0.000      .103078    .2004534
+ provincedum7 |   .1180132   .0248237     4.75   0.000     .0693496    .1666768
+ provincedum8 |   .1559963   .0234894     6.64   0.000     .1099483    .2020443
+ provincedum9 |   .1109246   .0242057     4.58   0.000     .0634725    .1583767
+provincedum10 |   .1154978   .0244476     4.72   0.000     .0675713    .1634242
+provincedum11 |   .0757036   .0240059     3.15   0.002     .0286431    .1227641
+provincedum12 |   .0525117   .0281204     1.87   0.062    -.0026147     .107638
+provincedum13 |   .0593184   .0251308     2.36   0.018     .0100527    .1085842
+provincedum14 |   .0724973   .0258486     2.80   0.005     .0218244    .1231701
+provincedum15 |   .1438297   .0262217     5.49   0.000     .0924254     .195234
+            t |  -.0105634    .000301   -35.10   0.000    -.0111534   -.0099735
+            d |   .0523972    .015617     3.36   0.001      .021782    .0830124
+           td |   .0001886   .0003251     0.58   0.562    -.0004488     .000826
+        _cons |   2.478772   .0447042    55.45   0.000     2.391136    2.566409
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      5,854
+                                                  Wald chi2(20)   =     708.80
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0180
+                                                  Root MSE        =     .65815
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -1.256995   2.482999    -0.51   0.613    -6.123583    3.609592
+secgenhighedu |   2.011097   2.412203     0.83   0.404    -2.716735    6.738929
+    secgenedu |  -.0981519    .334759    -0.29   0.769    -.7542674    .5579636
+          exp |   .0422539    .013443     3.14   0.002     .0159061    .0686017
+       expsqr |  -.0008834   .0003001    -2.94   0.003    -.0014717   -.0002952
+         male |   .3760129   .0201302    18.68   0.000     .3365583    .4154674
+ provincedum2 |  -.2953569   .0925702    -3.19   0.001    -.4767911   -.1139227
+ provincedum3 |  -.1663247   .0964026    -1.73   0.084    -.3552703    .0226209
+ provincedum4 |  -.2927418   .0812867    -3.60   0.000    -.4520609   -.1334227
+ provincedum5 |  -.0258032   .0619795    -0.42   0.677    -.1472808    .0956744
+ provincedum6 |  -.0368202   .0737476    -0.50   0.618    -.1813628    .1077223
+ provincedum7 |  -.1268852   .0621048    -2.04   0.041    -.2486084    -.005162
+ provincedum8 |  -.2303872   .0701068    -3.29   0.001    -.3677939   -.0929804
+ provincedum9 |   .0794543   .0924077     0.86   0.390    -.1016615    .2605701
+provincedum10 |  -.0338839   .0955943    -0.35   0.723    -.2212454    .1534775
+provincedum11 |  -.1228788   .0687433    -1.79   0.074    -.2576132    .0118556
+provincedum12 |  -.2095622   .0806468    -2.60   0.009    -.3676271   -.0514973
+provincedum13 |  -.2168406   .0720291    -3.01   0.003    -.3580151    -.075666
+provincedum14 |  -.3161998   .0667029    -4.74   0.000    -.4469351   -.1854645
+provincedum15 |  -.2921836   .0831005    -3.52   0.000    -.4550575   -.1293097
+        _cons |   7.523147    .126929    59.27   0.000     7.274371    7.771924
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  exp expsqr male provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  27.3591  (p = 0.0000)
+  Wu-Hausman F(3,5830)            =  9.12496  (p = 0.0000)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  61.941  Chi-sq(20) P-value = 0.0000
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      5,854     8.10774     .664202   5.298317   9.721166
+         exp |      5,854    19.00581     7.68698          1         36
+      expsqr |      5,854    420.3003    304.5823          1       1296
+        male |      5,854    .6229928    .4846781          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Pooled 
+> Province) pvalue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value"
+> , `wu_p', "Endogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "
+> Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr (higheredu secgenhighedu secgenedu = t d td 
+> ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & male == 1 & e
+> ducat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                       Number of obs =   3,647
+                                                       F(5, 3641)    = 1154.80
+                                                       Prob > F      =  0.0000
+                                                       R-squared     =  0.6133
+                                                       Adj R-squared =  0.6127
+                                                       Root MSE      =  0.2064
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1652997   .0035723   -46.27   0.000    -.1723035   -.1582958
+      expsqr |   .0020164   .0001053    19.15   0.000     .0018099    .0022228
+           t |  -.0048016   .0002702   -17.77   0.000    -.0053313   -.0042719
+           d |   .0052807   .0147764     0.36   0.721    -.0236901    .0342516
+          td |  -.0043413    .000301   -14.42   0.000    -.0049314   -.0037512
+       _cons |   2.635219   .0401994    65.55   0.000     2.556404    2.714035
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  3,647
+                                                        F(5, 3641)    = 951.44
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5665
+                                                        Adj R-squared = 0.5659
+                                                        Root MSE      = 0.2090
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1582514   .0036174   -43.75   0.000    -.1653438    -.151159
+      expsqr |   .0021165   .0001066    19.85   0.000     .0019074    .0023256
+           t |  -.0038374   .0002736   -14.03   0.000    -.0043738    -.003301
+           d |   .0084292   .0149632     0.56   0.573    -.0209078    .0377662
+          td |  -.0043109   .0003048   -14.14   0.000    -.0049085   -.0037133
+       _cons |   2.435024   .0407075    59.82   0.000     2.355212    2.514836
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  3,647
+                                                        F(5, 3641)    = 809.08
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5263
+                                                        Adj R-squared = 0.5257
+                                                        Root MSE      = 0.2787
+
+------------------------------------------------------------------------------
+   secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1280486   .0048224   -26.55   0.000    -.1375035   -.1185937
+      expsqr |   .0002394   .0001422     1.68   0.092    -.0000393    .0005182
+           t |  -.0101135   .0003647   -27.73   0.000    -.0108286   -.0093985
+           d |   .0346132   .0199473     1.74   0.083    -.0044959    .0737223
+          td |  -1.96e-06   .0004063    -0.00   0.996    -.0007986    .0007947
+       _cons |   2.612605   .0542671    48.14   0.000     2.506209    2.719002
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      3,647
+                                                  Wald chi2(5)    =      42.86
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .69766
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   2.081716   7.683435     0.27   0.786    -12.97754    17.14097
+secgenhighedu |  -1.177115   7.769313    -0.15   0.880    -16.40469    14.05046
+    secgenedu |  -.5529903   .7385855    -0.75   0.454    -2.000591    .8946107
+          exp |   .0414881   .0516468     0.80   0.422    -.0597377    .1427139
+       expsqr |   -.000873   .0011248    -0.78   0.438    -.0030775    .0013315
+        _cons |   7.810763   .5725966    13.64   0.000     6.688494    8.933032
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  exp expsqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  24.0564  (p = 0.0000)
+  Wu-Hausman F(3,3638)            =  8.05212  (p = 0.0000)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   5.882  Chi-sq(5) P-value = 0.3179
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      3,647    8.247666    .6410867   5.298317   9.721166
+         exp |      3,647    19.08774    7.666347          2         36
+      expsqr |      3,647    423.0987    306.1865          4       1296
+        male |      3,647           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Male) p
+> value addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "
+> Endogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroskeda
+> sticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr provincedum2-provincedum15 (higheredu secgen
+> highedu secgenedu = t d td ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 
+> 200, 16667) & male == 1 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  3,647
+                                                        F(19, 3627)   = 318.14
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6250
+                                                        Adj R-squared = 0.6230
+                                                        Root MSE      = 0.2037
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |   -.163494   .0035419   -46.16   0.000    -.1704384   -.1565496
+       expsqr |   .0018829   .0001051    17.92   0.000     .0016768    .0020889
+ provincedum2 |   .1134254   .0280823     4.04   0.000     .0583666    .1684841
+ provincedum3 |   .1373948   .0343344     4.00   0.000     .0700782    .2047114
+ provincedum4 |   .0521886   .0291888     1.79   0.074    -.0050395    .1094167
+ provincedum5 |   .0437754    .023461     1.87   0.062    -.0022226    .0897735
+ provincedum6 |   .1098163   .0239958     4.58   0.000     .0627697    .1568629
+ provincedum7 |   .0895415    .023922     3.74   0.000     .0426396    .1364435
+ provincedum8 |   .0984588   .0228165     4.32   0.000     .0537244    .1431932
+ provincedum9 |   .0319484   .0234197     1.36   0.173    -.0139687    .0778654
+provincedum10 |    .006331   .0236697     0.27   0.789    -.0400761    .0527382
+provincedum11 |   .0299392   .0233384     1.28   0.200    -.0158185     .075697
+provincedum12 |   .0200107   .0266808     0.75   0.453    -.0323002    .0723217
+provincedum13 |   .0398377   .0242698     1.64   0.101    -.0077462    .0874215
+provincedum14 |    .064255   .0253178     2.54   0.011     .0146166    .1138935
+provincedum15 |   .0897098   .0246945     3.63   0.000     .0412933    .1381263
+            t |  -.0052567   .0002722   -19.31   0.000    -.0057904   -.0047231
+            d |   .0089549   .0145975     0.61   0.540    -.0196651     .037575
+           td |  -.0041177   .0002987   -13.78   0.000    -.0047034    -.003532
+        _cons |    2.58973   .0433051    59.80   0.000     2.504825    2.674634
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  3,647
+                                                        F(19, 3627)   = 259.02
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5757
+                                                        Adj R-squared = 0.5735
+                                                        Root MSE      = 0.2072
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1568452   .0036032   -43.53   0.000    -.1639096   -.1497807
+       expsqr |   .0020062   .0001069    18.77   0.000     .0017966    .0022158
+ provincedum2 |   .0970901   .0285679     3.40   0.001     .0410794    .1531008
+ provincedum3 |   .1121846    .034928     3.21   0.001     .0437041     .180665
+ provincedum4 |   .0492313   .0296934     1.66   0.097    -.0089862    .1074488
+ provincedum5 |   .0335606   .0238666     1.41   0.160    -.0132328    .0803539
+ provincedum6 |   .0978714   .0244107     4.01   0.000     .0500114    .1457315
+ provincedum7 |   .0673582   .0243356     2.77   0.006     .0196454    .1150711
+ provincedum8 |   .0870425    .023211     3.75   0.000     .0415347    .1325504
+ provincedum9 |   .0333515   .0238246     1.40   0.162    -.0133595    .0800624
+provincedum10 |   .0098359   .0240789     0.41   0.683    -.0373736    .0570455
+provincedum11 |   .0246912   .0237419     1.04   0.298    -.0218577    .0712401
+provincedum12 |   .0159678   .0271421     0.59   0.556    -.0372476    .0691832
+provincedum13 |   .0340997   .0246894     1.38   0.167    -.0143069    .0825062
+provincedum14 |   .0588791   .0257555     2.29   0.022     .0083824    .1093758
+provincedum15 |    .080028   .0251215     3.19   0.001     .0307744    .1292816
+            t |  -.0042217   .0002769   -15.25   0.000    -.0047646   -.0036788
+            d |   .0115225   .0148498     0.78   0.438    -.0175924    .0406374
+           td |  -.0041331   .0003039   -13.60   0.000    -.0047289   -.0035373
+        _cons |   2.396762   .0440538    54.41   0.000     2.310389    2.483134
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  3,647
+                                                        F(19, 3627)   = 223.66
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5395
+                                                        Adj R-squared = 0.5371
+                                                        Root MSE      = 0.2753
+
+-------------------------------------------------------------------------------
+    secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1266762   .0047873   -26.46   0.000    -.1360623   -.1172901
+       expsqr |   .0000979    .000142     0.69   0.491    -.0001806    .0003763
+ provincedum2 |   .1955073   .0379564     5.15   0.000     .1210894    .2699252
+ provincedum3 |   .1751226   .0464067     3.77   0.000     .0841369    .2661083
+ provincedum4 |    .088063   .0394518     2.23   0.026      .010713     .165413
+ provincedum5 |   .1294217   .0317101     4.08   0.000     .0672503    .1915931
+ provincedum6 |   .1843736    .032433     5.68   0.000     .1207849    .2479622
+ provincedum7 |   .1408204   .0323332     4.36   0.000     .0774273    .2042135
+ provincedum8 |   .1920102    .030839     6.23   0.000     .1315467    .2524736
+ provincedum9 |   .1441212   .0316543     4.55   0.000     .0820592    .2061831
+provincedum10 |   .1366967   .0319922     4.27   0.000     .0739723    .1994211
+provincedum11 |   .0845819   .0315444     2.68   0.007     .0227353    .1464285
+provincedum12 |   .0804538   .0360621     2.23   0.026     .0097499    .1511578
+provincedum13 |   .0601474   .0328033     1.83   0.067    -.0041674    .1244622
+provincedum14 |   .0973945   .0342197     2.85   0.004     .0303027    .1644863
+provincedum15 |   .1620171   .0333773     4.85   0.000     .0965769    .2274573
+            t |  -.0106775   .0003679   -29.02   0.000    -.0113988   -.0099562
+            d |   .0401803   .0197301     2.04   0.042     .0014972    .0788634
+           td |   .0002437   .0004038     0.60   0.546     -.000548    .0010353
+        _cons |   2.505373   .0585316    42.80   0.000     2.390615    2.620131
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      3,647
+                                                  Wald chi2(19)   =     158.45
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .66806
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   1.591456   7.310243     0.22   0.828    -12.73636    15.91927
+secgenhighedu |  -.7091923   7.357036    -0.10   0.923    -15.12872    13.71033
+    secgenedu |  -.5286518   .7259766    -0.73   0.466     -1.95154    .8942362
+          exp |   .0400019   .0484943     0.82   0.409    -.0550451    .1350489
+       expsqr |  -.0008427    .001066    -0.79   0.429     -.002932    .0012467
+ provincedum2 |  -.2001401   .0940571    -2.13   0.033    -.3844886   -.0157916
+ provincedum3 |  -.1202287   .1264231    -0.95   0.342    -.3680133     .127556
+ provincedum4 |  -.2020415   .1041444    -1.94   0.052    -.4061607    .0020777
+ provincedum5 |   .0491282   .0786897     0.62   0.532    -.1051007    .2033571
+ provincedum6 |   .0545557   .0899565     0.61   0.544    -.1217557    .2308672
+ provincedum7 |  -.0477207   .0989019    -0.48   0.629    -.2415648    .1461234
+ provincedum8 |  -.1283649   .0918957    -1.40   0.162    -.3084771    .0517474
+ provincedum9 |   .1518293   .1357452     1.12   0.263    -.1142264     .417885
+provincedum10 |    .125856   .1448218     0.87   0.385    -.1579895    .4097014
+provincedum11 |  -.0626627   .0791861    -0.79   0.429    -.2178646    .0925392
+provincedum12 |  -.1536686   .0916938    -1.68   0.094    -.3333851    .0260479
+provincedum13 |  -.2004286   .0792227    -2.53   0.011    -.3557022   -.0451551
+provincedum14 |  -.2995855   .0876914    -3.42   0.001    -.4714574   -.1277136
+provincedum15 |  -.2129186   .0921424    -2.31   0.021    -.3935145   -.0323227
+        _cons |   7.887387   .5046252    15.63   0.000      6.89834    8.876434
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  exp expsqr provincedum2 provincedum3 provincedum4 provincedum5
+            provincedum6 provincedum7 provincedum8 provincedum9 provincedum10
+            provincedum11 provincedum12 provincedum13 provincedum14
+            provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  18.5985  (p = 0.0003)
+  Wu-Hausman F(3,3624)            =  6.19199  (p = 0.0003)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  49.759  Chi-sq(19) P-value = 0.0001
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      3,647    8.247666    .6410867   5.298317   9.721166
+         exp |      3,647    19.08774    7.666347          2         36
+      expsqr |      3,647    423.0987    306.1865          4       1296
+        male |      3,647           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Male Pr
+> ovince) pvalue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", 
+> `wu_p', "Endogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "He
+> teroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr (higheredu secgenhighedu secgenedu = t d td 
+> ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & male == 0 & e
+> ducat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,207
+                                                        F(5, 2201)    = 810.08
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6479
+                                                        Adj R-squared = 0.6471
+                                                        Root MSE      = 0.2065
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1632388    .004423   -36.91   0.000    -.1719124   -.1545651
+      expsqr |   .0020226   .0001409    14.35   0.000     .0017462     .002299
+           t |   -.004811   .0003788   -12.70   0.000    -.0055538   -.0040682
+           d |   .0264941   .0189644     1.40   0.163    -.0106958    .0636841
+          td |  -.0040398   .0004067    -9.93   0.000    -.0048375   -.0032422
+       _cons |    2.57338    .047485    54.19   0.000      2.48026      2.6665
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,207
+                                                        F(5, 2201)    = 656.81
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5987
+                                                        Adj R-squared = 0.5978
+                                                        Root MSE      = 0.2088
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1579885   .0044741   -35.31   0.000    -.1667624   -.1492146
+      expsqr |   .0022331   .0001426    15.66   0.000     .0019535    .0025127
+           t |  -.0034681   .0003831    -9.05   0.000    -.0042194   -.0027167
+           d |   .0470827   .0191837     2.45   0.014     .0094627    .0847028
+          td |  -.0045548   .0004114   -11.07   0.000    -.0053617    -.003748
+       _cons |   2.364847   .0480341    49.23   0.000      2.27065    2.459044
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,207
+                                                        F(5, 2201)    = 507.58
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5355
+                                                        Adj R-squared = 0.5345
+                                                        Root MSE      = 0.2790
+
+------------------------------------------------------------------------------
+   secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1205258   .0059762   -20.17   0.000    -.1322453   -.1088063
+      expsqr |   .0001247   .0001904     0.65   0.513    -.0002487    .0004981
+           t |  -.0099244   .0005118   -19.39   0.000     -.010928   -.0089208
+           d |   .0636333    .025624     2.48   0.013     .0133836     .113883
+          td |  -.0001368   .0005496    -0.25   0.803    -.0012145     .000941
+       _cons |   2.504251     .06416    39.03   0.000      2.37843    2.630071
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,207
+                                                  Wald chi2(5)    =      51.38
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .78204
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |    -2.9725   2.635951    -1.13   0.259     -8.13887     2.19387
+secgenhighedu |   2.975637   2.378659     1.25   0.211     -1.68645    7.637723
+    secgenedu |   .7563298   .5427047     1.39   0.163    -.3073518    1.820011
+          exp |   .0127977   .0191484     0.67   0.504    -.0247323    .0503278
+       expsqr |  -.0001905   .0004535    -0.42   0.674    -.0010793    .0006984
+        _cons |   7.603254   .1841704    41.28   0.000     7.242287    7.964221
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  exp expsqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  16.9495  (p = 0.0007)
+  Wu-Hausman F(3,2198)            =  5.67034  (p = 0.0007)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   1.517  Chi-sq(5) P-value = 0.9110
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,207    7.876517    .6366901   5.298317   9.721166
+         exp |      2,207    18.87041    7.720789          1         34
+      expsqr |      2,207     415.676    301.9249          1       1156
+        male |      2,207           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Female)
+>  pvalue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p',
+>  "Endogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroske
+> dasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr provincedum2-provincedum15 (higheredu secgen
+> highedu secgenedu = t d td ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 
+> 200, 16667) & male == 0 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,207
+                                                        F(19, 2187)   = 220.57
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6571
+                                                        Adj R-squared = 0.6541
+                                                        Root MSE      = 0.2044
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1609149   .0044176   -36.43   0.000     -.169578   -.1522517
+       expsqr |   .0018835   .0001422    13.24   0.000     .0016046    .0021624
+ provincedum2 |   .0003636   .0365521     0.01   0.992    -.0713168    .0720441
+ provincedum3 |   .0072384   .0466436     0.16   0.877    -.0842321    .0987089
+ provincedum4 |   -.016808   .0381739    -0.44   0.660    -.0916688    .0580528
+ provincedum5 |   .0249409   .0270919     0.92   0.357    -.0281876    .0780694
+ provincedum6 |   .0490682   .0285634     1.72   0.086    -.0069461    .1050825
+ provincedum7 |   .0596442   .0286768     2.08   0.038     .0034076    .1158807
+ provincedum8 |     .05214   .0267678     1.95   0.052    -.0003529    .1046329
+ provincedum9 |   -.039266   .0277567    -1.41   0.157    -.0936983    .0151663
+provincedum10 |  -.0308225   .0279904    -1.10   0.271    -.0857131    .0240681
+provincedum11 |  -.0118452    .027293    -0.43   0.664    -.0653682    .0416777
+provincedum12 |  -.0084621   .0334379    -0.25   0.800    -.0740355    .0571113
+provincedum13 |    .008452   .0289037     0.29   0.770    -.0482297    .0651337
+provincedum14 |   .0070987   .0290718     0.24   0.807    -.0499124    .0641099
+provincedum15 |   .0650593   .0321346     2.02   0.043     .0020418    .1280768
+            t |  -.0052601   .0003872   -13.59   0.000    -.0060193   -.0045008
+            d |   .0303544   .0188753     1.61   0.108     -.006661    .0673697
+           td |  -.0037858   .0004071    -9.30   0.000    -.0045842   -.0029875
+        _cons |    2.56508   .0511376    50.16   0.000     2.464796    2.665363
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,207
+                                                        F(19, 2187)   = 178.17
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6075
+                                                        Adj R-squared = 0.6041
+                                                        Root MSE      = 0.2072
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1556688   .0044783   -34.76   0.000     -.164451   -.1468867
+       expsqr |   .0020888   .0001442    14.49   0.000      .001806    .0023715
+ provincedum2 |   .0447932   .0370539     1.21   0.227    -.0278713    .1174578
+ provincedum3 |   .0499286    .047284     1.06   0.291    -.0427976    .1426549
+ provincedum4 |   .0033236   .0386979     0.09   0.932     -.072565    .0792122
+ provincedum5 |   .0391921   .0274638     1.43   0.154    -.0146658    .0930499
+ provincedum6 |   .0728386   .0289556     2.52   0.012     .0160552    .1296219
+ provincedum7 |   .0848349   .0290705     2.92   0.004     .0278263    .1418435
+ provincedum8 |   .0694678   .0271353     2.56   0.011     .0162542    .1226813
+ provincedum9 |  -.0021615   .0281378    -0.08   0.939    -.0573412    .0530181
+provincedum10 |   .0041862   .0283747     0.15   0.883    -.0514579    .0598304
+provincedum11 |    .011251   .0276677     0.41   0.684    -.0430067    .0655088
+provincedum12 |   .0291655    .033897     0.86   0.390    -.0373082    .0956391
+provincedum13 |    .041823   .0293006     1.43   0.154    -.0156368    .0992829
+provincedum14 |    .023079   .0294709     0.78   0.434    -.0347148    .0808729
+provincedum15 |   .1023564   .0325757     3.14   0.002     .0384738    .1662391
+            t |  -.0039495   .0003925   -10.06   0.000    -.0047191   -.0031798
+            d |   .0536541   .0191344     2.80   0.005     .0161306    .0911776
+           td |  -.0043176   .0004127   -10.46   0.000    -.0051269   -.0035083
+        _cons |   2.333187   .0518396    45.01   0.000     2.231527    2.434847
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,207
+                                                        F(19, 2187)   = 136.06
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5417
+                                                        Adj R-squared = 0.5377
+                                                        Root MSE      = 0.2780
+
+-------------------------------------------------------------------------------
+    secgenedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1191146    .006008   -19.83   0.000    -.1308965   -.1073327
+       expsqr |   .0000232   .0001934     0.12   0.905    -.0003561    .0004025
+ provincedum2 |   .1339028   .0497108     2.69   0.007     .0364175     .231388
+ provincedum3 |   .1207567   .0634352     1.90   0.057    -.0036429    .2451564
+ provincedum4 |   .0287693   .0519164     0.55   0.580    -.0730413    .1305798
+ provincedum5 |   .0445623   .0368449     1.21   0.227    -.0276923    .1168169
+ provincedum6 |   .1062401   .0388462     2.73   0.006     .0300607    .1824195
+ provincedum7 |   .0903002   .0390003     2.32   0.021     .0138187    .1667818
+ provincedum8 |   .1052257   .0364041     2.89   0.004     .0338355    .1766159
+ provincedum9 |   .0631422   .0377491     1.67   0.095    -.0108857      .13717
+provincedum10 |   .0901932   .0380669     2.37   0.018     .0155421    .1648443
+provincedum11 |   .0678218   .0371184     1.83   0.068    -.0049693    .1406129
+provincedum12 |   .0154232   .0454755     0.34   0.735    -.0737565    .1046029
+provincedum13 |   .0648368    .039309     1.65   0.099    -.0122502    .1419237
+provincedum14 |   .0400927   .0395375     1.01   0.311    -.0374423    .1176277
+provincedum15 |   .1303282    .043703     2.98   0.003     .0446246    .2160319
+            t |  -.0103192   .0005265   -19.60   0.000    -.0113517   -.0092867
+            d |   .0724678   .0256703     2.82   0.005     .0221271    .1228086
+           td |   .0000173   .0005537     0.03   0.975    -.0010685     .001103
+        _cons |   2.438077    .069547    35.06   0.000     2.301692    2.574462
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,207
+                                                  Wald chi2(19)   =     136.31
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .67816
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -1.822619   2.048112    -0.89   0.374    -5.836845    2.191608
+secgenhighedu |   2.110512   1.850778     1.14   0.254    -1.516947    5.737971
+    secgenedu |   .3874452   .4336462     0.89   0.372    -.4624857    1.237376
+          exp |   .0131717   .0167388     0.79   0.431    -.0196357    .0459791
+       expsqr |  -.0002074   .0003963    -0.52   0.601    -.0009841    .0005693
+ provincedum2 |  -.4650545   .1708256    -2.72   0.006    -.7998665   -.1302426
+ provincedum3 |  -.2825785   .1922443    -1.47   0.142    -.6593705    .0942134
+ provincedum4 |  -.4246395   .1343424    -3.16   0.002    -.6879458   -.1613332
+ provincedum5 |  -.1003358   .0952575    -1.05   0.292    -.2870371    .0863656
+ provincedum6 |  -.1410231   .1148651    -1.23   0.220    -.3661546    .0841085
+ provincedum7 |  -.2745598   .1123339    -2.44   0.015    -.4947303   -.0543893
+ provincedum8 |  -.3314561   .1031766    -3.21   0.001    -.5336784   -.1292337
+ provincedum9 |   .0375544    .133214     0.28   0.778    -.2235403     .298649
+provincedum10 |  -.2289542   .1365579    -1.68   0.094    -.4966027    .0386944
+provincedum11 |  -.2023857   .1117805    -1.81   0.070    -.4214715    .0167001
+provincedum12 |  -.2543442   .1318969    -1.93   0.054    -.5128574     .004169
+provincedum13 |  -.2366563   .1234425    -1.92   0.055    -.4785991    .0052865
+provincedum14 |   -.324303   .1033161    -3.14   0.002    -.5267989   -.1218071
+provincedum15 |  -.3862252   .1418389    -2.72   0.006    -.6642244    -.108226
+        _cons |   7.841737   .1923138    40.78   0.000     7.464809    8.218665
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu secgenedu
+Exogenous:  exp expsqr provincedum2 provincedum3 provincedum4 provincedum5
+            provincedum6 provincedum7 provincedum8 provincedum9 provincedum10
+            provincedum11 provincedum12 provincedum13 provincedum14
+            provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(3)          =  11.0113  (p = 0.0117)
+  Wu-Hausman F(3,2184)            =  3.65038  (p = 0.0121)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  22.355  Chi-sq(19) P-value = 0.2669
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,207    7.876517    .6366901   5.298317   9.721166
+         exp |      2,207    18.87041    7.720789          1         34
+      expsqr |      2,207     415.676    301.9249          1       1156
+        male |      2,207           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu secgenedu & their product, Female 
+> Province) pvalue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value"
+> , `wu_p', "Endogeneity df", `endog_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "
+> Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. *2)
+. ivregress 2sls log_monthlyearning exp expsqr male (higheredu secgenhighedu = t d td ) if 
+> inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                       Number of obs =   5,854
+                                                       F(6, 5847)    = 1638.62
+                                                       Prob > F      =  0.0000
+                                                       R-squared     =  0.6271
+                                                       Adj R-squared =  0.6267
+                                                       Root MSE      =  0.2064
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1643388   .0027665   -59.40   0.000    -.1697621   -.1589155
+      expsqr |    .002012    .000084    23.96   0.000     .0018474    .0021766
+        male |  -.0038586    .005573    -0.69   0.489    -.0147837    .0070664
+           t |  -.0048215   .0002196   -21.95   0.000    -.0052521    -.004391
+           d |   .0135882   .0116459     1.17   0.243     -.009242    .0364185
+          td |  -.0042148   .0002414   -17.46   0.000     -.004688   -.0037417
+       _cons |   2.613015   .0307097    85.09   0.000     2.552813    2.673217
+------------------------------------------------------------------------------
+
+                                                       Number of obs =   5,854
+                                                       F(6, 5847)    = 1339.71
+                                                       Prob > F      =  0.0000
+                                                       R-squared     =  0.5789
+                                                       Adj R-squared =  0.5785
+                                                       Root MSE      =  0.2090
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1576525   .0028009   -56.29   0.000    -.1631433   -.1521618
+      expsqr |   .0021432    .000085    25.21   0.000     .0019766    .0023099
+        male |   .0002503   .0056422     0.04   0.965    -.0108106    .0113112
+           t |  -.0037358   .0002224   -16.80   0.000    -.0041717   -.0032999
+           d |   .0229588   .0117907     1.95   0.052    -.0001554    .0460729
+          td |  -.0043634   .0002444   -17.86   0.000    -.0048424   -.0038843
+       _cons |   2.404944   .0310916    77.35   0.000     2.343993    2.465895
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      5,854
+                                                  Wald chi2(5)    =     511.55
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .67388
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -1.385546   .9796948    -1.41   0.157    -3.305712    .5346207
+secgenhighedu |   2.087788   1.113068     1.88   0.061    -.0937845    4.269361
+          exp |   .0461229   .0119201     3.87   0.000     .0227599    .0694859
+       expsqr |  -.0009623   .0002731    -3.52   0.000    -.0014976   -.0004271
+         male |   .3692848   .0184954    19.97   0.000     .3330344    .4055352
+        _cons |   7.342542   .1177995    62.33   0.000      7.11166    7.573425
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  exp expsqr male t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  38.1294  (p = 0.0000)
+  Wu-Hausman F(2,5846)            =  19.1634  (p = 0.0000)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  .007714  (p = 0.9300)
+  Basmann chi2(1)        =  .007705  (p = 0.9301)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   8.371  Chi-sq(6) P-value = 0.2122
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      5,854     8.10774     .664202   5.298317   9.721166
+         exp |      5,854    19.00581     7.68698          1         36
+      expsqr |      5,854    420.3003    304.5823          1       1296
+        male |      5,854    .6229928    .4846781          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Pooled) pvalue adds
+> tat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneit
+> y df", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basm
+> an_p', "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_
+> p', "Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr male provincedum2-provincedum15 (higheredu s
+> ecgenhighedu = t d td ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 
+> 16667) & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  5,854
+                                                        F(20, 5833)   = 511.12
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6367
+                                                        Adj R-squared = 0.6355
+                                                        Root MSE      = 0.2040
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1622881   .0027474   -59.07   0.000    -.1676741   -.1569022
+       expsqr |   .0018746    .000084    22.31   0.000     .0017098    .0020393
+         male |    -.00558   .0055235    -1.01   0.312     -.016408    .0052481
+ provincedum2 |   .0713462   .0221062     3.23   0.001     .0280098    .1146825
+ provincedum3 |   .0909803   .0274962     3.31   0.001     .0370776     .144883
+ provincedum4 |   .0245486   .0230337     1.07   0.287    -.0206059    .0697031
+ provincedum5 |   .0353252   .0177268     1.99   0.046     .0005742    .0700763
+ provincedum6 |   .0849456   .0183331     4.63   0.000     .0490058    .1208853
+ provincedum7 |   .0756868   .0183241     4.13   0.000     .0397648    .1116088
+ provincedum8 |   .0785815   .0173392     4.53   0.000     .0445902    .1125727
+ provincedum9 |   .0031019   .0178679     0.17   0.862    -.0319258    .0381296
+provincedum10 |  -.0103576   .0180465    -0.57   0.566    -.0457354    .0250203
+provincedum11 |   .0116321   .0177204     0.66   0.512    -.0231065    .0463707
+provincedum12 |   .0063307   .0207576     0.30   0.760    -.0343619    .0470233
+provincedum13 |   .0258013   .0185508     1.39   0.164    -.0105652    .0621678
+provincedum14 |   .0395247   .0190806     2.07   0.038     .0021196    .0769298
+provincedum15 |    .075839   .0193561     3.92   0.000     .0378939    .1137841
+            t |  -.0052843   .0002222   -23.79   0.000    -.0057198   -.0048488
+            d |   .0179073    .011528     1.55   0.120    -.0046919    .0405064
+           td |   -.003971     .00024   -16.55   0.000    -.0044415   -.0035005
+        _cons |   2.584258   .0329993    78.31   0.000     2.519567    2.648949
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  5,854
+                                                        F(20, 5833)   = 414.57
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5870
+                                                        Adj R-squared = 0.5856
+                                                        Root MSE      = 0.2072
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1559393   .0027909   -55.88   0.000    -.1614104   -.1504682
+       expsqr |   .0020216   .0000854    23.68   0.000     .0018543     .002189
+         male |  -.0016751   .0056109    -0.30   0.765    -.0126745    .0093242
+ provincedum2 |   .0778727   .0224559     3.47   0.001     .0338508    .1218946
+ provincedum3 |   .0915129   .0279312     3.28   0.001     .0367575    .1462684
+ provincedum4 |   .0320681    .023398     1.37   0.171    -.0138008    .0779369
+ provincedum5 |   .0356207   .0180072     1.98   0.048     .0003199    .0709215
+ provincedum6 |   .0878551   .0186232     4.72   0.000     .0513468    .1243634
+ provincedum7 |   .0727056    .018614     3.91   0.000     .0362153    .1091958
+ provincedum8 |   .0798805   .0176135     4.54   0.000     .0453515    .1144094
+ provincedum9 |   .0197286   .0181505     1.09   0.277    -.0158532    .0553105
+provincedum10 |   .0065019    .018332     0.35   0.723    -.0294356    .0424394
+provincedum11 |   .0189473   .0180008     1.05   0.293    -.0163409    .0542355
+provincedum12 |   .0192491    .021086     0.91   0.361    -.0220872    .0605854
+provincedum13 |   .0366408   .0188443     1.94   0.052     -.000301    .0735826
+provincedum14 |   .0434124   .0193825     2.24   0.025     .0054155    .0814092
+provincedum15 |   .0839554   .0196623     4.27   0.000     .0454101    .1225008
+            t |  -.0041559   .0002257   -18.42   0.000    -.0045983   -.0037135
+            d |   .0271882   .0117104     2.32   0.020     .0042315    .0501448
+           td |  -.0041587   .0002438   -17.06   0.000    -.0046366   -.0036807
+        _cons |   2.371061   .0335213    70.73   0.000     2.305346    2.436775
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      5,854
+                                                  Wald chi2(19)   =     654.09
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .68508
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -1.927892   1.003577    -1.92   0.055    -3.894867     .039084
+secgenhighedu |   2.641646   1.137315     2.32   0.020     .4125508    4.870742
+          exp |   .0443245   .0119065     3.72   0.000     .0209882    .0676609
+       expsqr |  -.0009259   .0002737    -3.38   0.001    -.0014623   -.0003894
+         male |    .373391    .018773    19.89   0.000     .3365966    .4101854
+ provincedum2 |  -.3118983    .076395    -4.08   0.000    -.4616298   -.1621668
+ provincedum3 |  -.1767446   .0932796    -1.89   0.058    -.3595692      .00608
+ provincedum4 |  -.3016836   .0784319    -3.85   0.000    -.4554073     -.14796
+ provincedum5 |  -.0327182   .0596621    -0.55   0.583    -.1496537    .0842174
+ provincedum6 |  -.0490003   .0634276    -0.77   0.440    -.1733161    .0753155
+ provincedum7 |  -.1321901   .0618417    -2.14   0.033    -.2533976   -.0109825
+ provincedum8 |  -.2422245     .05966    -4.06   0.000    -.3591559   -.1252932
+ provincedum9 |   .0591995   .0638865     0.93   0.354    -.0660158    .1844147
+provincedum10 |  -.0554968   .0633558    -0.88   0.381     -.179672    .0686783
+provincedum11 |  -.1335878   .0606203    -2.20   0.028    -.2524015   -.0147741
+provincedum12 |  -.2218094    .071809    -3.09   0.002    -.3625525   -.0810663
+provincedum13 |   -.227593   .0645311    -3.53   0.000    -.3540716   -.1011145
+provincedum14 |  -.3231203   .0649398    -4.98   0.000       -.4504   -.1958406
+provincedum15 |  -.3071352   .0682992    -4.50   0.000    -.4409993   -.1732712
+        _cons |    7.50879   .1218951    61.60   0.000      7.26988    7.747701
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  exp expsqr male provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  27.3072  (p = 0.0000)
+  Wu-Hausman F(2,5832)            =   13.666  (p = 0.0000)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  .079342  (p = 0.7782)
+  Basmann chi2(1)        =  .079058  (p = 0.7786)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  47.727  Chi-sq(20) P-value = 0.0005
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      5,854     8.10774     .664202   5.298317   9.721166
+         exp |      5,854    19.00581     7.68698          1         36
+      expsqr |      5,854    420.3003    304.5823          1       1296
+        male |      5,854    .6229928    .4846781          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Pooled Province) pv
+> alue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "E
+> ndogeneity df", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-valu
+> e", `basman_p', "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pa
+> gan_hall_p', "Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr (higheredu secgenhighedu = t d td ) if inran
+> ge(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & male == 1 & educat != .
+> , first
+
+First-stage regressions
+-----------------------
+
+                                                       Number of obs =   3,647
+                                                       F(5, 3641)    = 1154.80
+                                                       Prob > F      =  0.0000
+                                                       R-squared     =  0.6133
+                                                       Adj R-squared =  0.6127
+                                                       Root MSE      =  0.2064
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1652997   .0035723   -46.27   0.000    -.1723035   -.1582958
+      expsqr |   .0020164   .0001053    19.15   0.000     .0018099    .0022228
+           t |  -.0048016   .0002702   -17.77   0.000    -.0053313   -.0042719
+           d |   .0052807   .0147764     0.36   0.721    -.0236901    .0342516
+          td |  -.0043413    .000301   -14.42   0.000    -.0049314   -.0037512
+       _cons |   2.635219   .0401994    65.55   0.000     2.556404    2.714035
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  3,647
+                                                        F(5, 3641)    = 951.44
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5665
+                                                        Adj R-squared = 0.5659
+                                                        Root MSE      = 0.2090
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1582514   .0036174   -43.75   0.000    -.1653438    -.151159
+      expsqr |   .0021165   .0001066    19.85   0.000     .0019074    .0023256
+           t |  -.0038374   .0002736   -14.03   0.000    -.0043738    -.003301
+           d |   .0084292   .0149632     0.56   0.573    -.0209078    .0377662
+          td |  -.0043109   .0003048   -14.14   0.000    -.0049085   -.0037133
+       _cons |   2.435024   .0407075    59.82   0.000     2.355212    2.514836
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      3,647
+                                                  Wald chi2(4)    =      33.10
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .78865
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -3.519563   1.979709    -1.78   0.075    -7.399722    .3605965
+secgenhighedu |   4.446236   2.247278     1.98   0.048     .0416527    8.850819
+          exp |   .0770852   .0228037     3.38   0.001     .0323907    .1217797
+       expsqr |  -.0016423   .0005173    -3.17   0.001    -.0026561   -.0006285
+        _cons |   7.409365   .2273435    32.59   0.000      6.96378     7.85495
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  exp expsqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  24.5151  (p = 0.0000)
+  Wu-Hausman F(2,3640)            =  12.3168  (p = 0.0000)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  .438682  (p = 0.5078)
+  Basmann chi2(1)        =  .438013  (p = 0.5081)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   2.580  Chi-sq(5) P-value = 0.7644
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      3,647    8.247666    .6410867   5.298317   9.721166
+         exp |      3,647    19.08774    7.666347          2         36
+      expsqr |      3,647    423.0987    306.1865          4       1296
+        male |      3,647           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Male) pvalue addsta
+> t("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity 
+> df", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman
+> _p', "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p'
+> , "Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr provincedum2-provincedum15 (higheredu secgen
+> highedu = t d td ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667
+> ) & male == 1 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  3,647
+                                                        F(19, 3627)   = 318.14
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6250
+                                                        Adj R-squared = 0.6230
+                                                        Root MSE      = 0.2037
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |   -.163494   .0035419   -46.16   0.000    -.1704384   -.1565496
+       expsqr |   .0018829   .0001051    17.92   0.000     .0016768    .0020889
+ provincedum2 |   .1134254   .0280823     4.04   0.000     .0583666    .1684841
+ provincedum3 |   .1373948   .0343344     4.00   0.000     .0700782    .2047114
+ provincedum4 |   .0521886   .0291888     1.79   0.074    -.0050395    .1094167
+ provincedum5 |   .0437754    .023461     1.87   0.062    -.0022226    .0897735
+ provincedum6 |   .1098163   .0239958     4.58   0.000     .0627697    .1568629
+ provincedum7 |   .0895415    .023922     3.74   0.000     .0426396    .1364435
+ provincedum8 |   .0984588   .0228165     4.32   0.000     .0537244    .1431932
+ provincedum9 |   .0319484   .0234197     1.36   0.173    -.0139687    .0778654
+provincedum10 |    .006331   .0236697     0.27   0.789    -.0400761    .0527382
+provincedum11 |   .0299392   .0233384     1.28   0.200    -.0158185     .075697
+provincedum12 |   .0200107   .0266808     0.75   0.453    -.0323002    .0723217
+provincedum13 |   .0398377   .0242698     1.64   0.101    -.0077462    .0874215
+provincedum14 |    .064255   .0253178     2.54   0.011     .0146166    .1138935
+provincedum15 |   .0897098   .0246945     3.63   0.000     .0412933    .1381263
+            t |  -.0052567   .0002722   -19.31   0.000    -.0057904   -.0047231
+            d |   .0089549   .0145975     0.61   0.540    -.0196651     .037575
+           td |  -.0041177   .0002987   -13.78   0.000    -.0047034    -.003532
+        _cons |    2.58973   .0433051    59.80   0.000     2.504825    2.674634
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  3,647
+                                                        F(19, 3627)   = 259.02
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5757
+                                                        Adj R-squared = 0.5735
+                                                        Root MSE      = 0.2072
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1568452   .0036032   -43.53   0.000    -.1639096   -.1497807
+       expsqr |   .0020062   .0001069    18.77   0.000     .0017966    .0022158
+ provincedum2 |   .0970901   .0285679     3.40   0.001     .0410794    .1531008
+ provincedum3 |   .1121846    .034928     3.21   0.001     .0437041     .180665
+ provincedum4 |   .0492313   .0296934     1.66   0.097    -.0089862    .1074488
+ provincedum5 |   .0335606   .0238666     1.41   0.160    -.0132328    .0803539
+ provincedum6 |   .0978714   .0244107     4.01   0.000     .0500114    .1457315
+ provincedum7 |   .0673582   .0243356     2.77   0.006     .0196454    .1150711
+ provincedum8 |   .0870425    .023211     3.75   0.000     .0415347    .1325504
+ provincedum9 |   .0333515   .0238246     1.40   0.162    -.0133595    .0800624
+provincedum10 |   .0098359   .0240789     0.41   0.683    -.0373736    .0570455
+provincedum11 |   .0246912   .0237419     1.04   0.298    -.0218577    .0712401
+provincedum12 |   .0159678   .0271421     0.59   0.556    -.0372476    .0691832
+provincedum13 |   .0340997   .0246894     1.38   0.167    -.0143069    .0825062
+provincedum14 |   .0588791   .0257555     2.29   0.022     .0083824    .1093758
+provincedum15 |    .080028   .0251215     3.19   0.001     .0307744    .1292816
+            t |  -.0042217   .0002769   -15.25   0.000    -.0047646   -.0036788
+            d |   .0115225   .0148498     0.78   0.438    -.0175924    .0406374
+           td |  -.0041331   .0003039   -13.60   0.000    -.0047289   -.0035373
+        _cons |   2.396762   .0440538    54.41   0.000     2.310389    2.483134
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      3,647
+                                                  Wald chi2(18)   =     115.74
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =          .
+                                                  Root MSE        =     .78036
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -3.597215   1.908124    -1.89   0.059     -7.33707    .1426395
+secgenhighedu |   4.475231   2.165821     2.07   0.039      .230301    8.720162
+          exp |   .0725074   .0221357     3.28   0.001     .0291222    .1158925
+       expsqr |  -.0015525    .000504    -3.08   0.002    -.0025403   -.0005648
+ provincedum2 |  -.2168221   .1065602    -2.03   0.042    -.4256763   -.0079679
+ provincedum3 |  -.0788698    .131934    -0.60   0.550    -.3374557    .1797161
+ provincedum4 |  -.2317609   .1119216    -2.07   0.038    -.4511231   -.0123987
+ provincedum5 |   .0359721   .0894626     0.40   0.688    -.1393714    .2113157
+ provincedum6 |   .0218203   .0910172     0.24   0.811    -.1565701    .2002108
+ provincedum7 |  -.0041309   .0919647    -0.04   0.964    -.1843785    .1761166
+ provincedum8 |  -.1680841   .0863901    -1.95   0.052    -.3374056    .0012374
+ provincedum9 |   .0707823   .0907776     0.78   0.436    -.1071385    .2487031
+provincedum10 |   .0370786   .0913086     0.41   0.685     -.141883    .2160402
+provincedum11 |  -.0783602   .0890045    -0.88   0.379    -.2528059    .0960855
+provincedum12 |  -.1740945   .1019736    -1.71   0.088     -.373959      .02577
+provincedum13 |  -.2006092   .0925402    -2.17   0.030    -.3819848   -.0192337
+provincedum14 |  -.3205174   .0967734    -3.31   0.001    -.5101898   -.1308449
+provincedum15 |  -.2457227    .093892    -2.62   0.009    -.4297476   -.0616978
+        _cons |   7.549886   .2331434    32.38   0.000     7.092934    8.006839
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  exp expsqr provincedum2 provincedum3 provincedum4 provincedum5
+            provincedum6 provincedum7 provincedum8 provincedum9 provincedum10
+            provincedum11 provincedum12 provincedum13 provincedum14
+            provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  17.7068  (p = 0.0001)
+  Wu-Hausman F(2,3626)            =  8.84535  (p = 0.0001)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  .388622  (p = 0.5330)
+  Basmann chi2(1)        =  .386532  (p = 0.5341)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  14.996  Chi-sq(19) P-value = 0.7229
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      3,647    8.247666    .6410867   5.298317   9.721166
+         exp |      3,647    19.08774    7.666347          2         36
+      expsqr |      3,647    423.0987    306.1865          4       1296
+        male |      3,647           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Male Province) pval
+> ue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "End
+> ogeneity df", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value"
+> , `basman_p', "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `paga
+> n_hall_p', "Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr (higheredu secgenhighedu = t d td ) if inran
+> ge(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & male == 0 & educat != .
+> , first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,207
+                                                        F(5, 2201)    = 810.08
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6479
+                                                        Adj R-squared = 0.6471
+                                                        Root MSE      = 0.2065
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1632388    .004423   -36.91   0.000    -.1719124   -.1545651
+      expsqr |   .0020226   .0001409    14.35   0.000     .0017462     .002299
+           t |   -.004811   .0003788   -12.70   0.000    -.0055538   -.0040682
+           d |   .0264941   .0189644     1.40   0.163    -.0106958    .0636841
+          td |  -.0040398   .0004067    -9.93   0.000    -.0048375   -.0032422
+       _cons |    2.57338    .047485    54.19   0.000      2.48026      2.6665
+------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,207
+                                                        F(5, 2201)    = 656.81
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.5987
+                                                        Adj R-squared = 0.5978
+                                                        Root MSE      = 0.2088
+
+------------------------------------------------------------------------------
+secgenhigh~u | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1579885   .0044741   -35.31   0.000    -.1667624   -.1492146
+      expsqr |   .0022331   .0001426    15.66   0.000     .0019535    .0025127
+           t |  -.0034681   .0003831    -9.05   0.000    -.0042194   -.0027167
+           d |   .0470827   .0191837     2.45   0.014     .0094627    .0847028
+          td |  -.0045548   .0004114   -11.07   0.000    -.0053617    -.003748
+       _cons |   2.364847   .0480341    49.23   0.000      2.27065    2.459044
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,207
+                                                  Wald chi2(4)    =      76.14
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0200
+                                                  Root MSE        =     .63016
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   .2883414   .9781354     0.29   0.768    -1.628769    2.205452
+secgenhighedu |   .2723718   1.109389     0.25   0.806    -1.901991    2.446735
+          exp |   .0208133   .0147172     1.41   0.157    -.0080319    .0496584
+       expsqr |  -.0004184   .0003408    -1.23   0.220    -.0010864    .0002496
+        _cons |   7.583498   .1479635    51.25   0.000     7.293494    7.873501
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  exp expsqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  14.9786  (p = 0.0006)
+  Wu-Hausman F(2,2200)            =  7.51655  (p = 0.0006)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =   2.9912  (p = 0.0837)
+  Basmann chi2(1)        =  2.98711  (p = 0.0839)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   8.845  Chi-sq(5) P-value = 0.1154
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,207    7.876517    .6366901   5.298317   9.721166
+         exp |      2,207    18.87041    7.720789          1         34
+      expsqr |      2,207     415.676    301.9249          1       1156
+        male |      2,207           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Female) pvalue adds
+> tat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneit
+> y df", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basm
+> an_p', "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_
+> p', "Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr provincedum2-provincedum15 (higheredu secgen
+> highedu = t d td ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667
+> ) & male == 0 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,207
+                                                        F(19, 2187)   = 220.57
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6571
+                                                        Adj R-squared = 0.6541
+                                                        Root MSE      = 0.2044
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1609149   .0044176   -36.43   0.000     -.169578   -.1522517
+       expsqr |   .0018835   .0001422    13.24   0.000     .0016046    .0021624
+ provincedum2 |   .0003636   .0365521     0.01   0.992    -.0713168    .0720441
+ provincedum3 |   .0072384   .0466436     0.16   0.877    -.0842321    .0987089
+ provincedum4 |   -.016808   .0381739    -0.44   0.660    -.0916688    .0580528
+ provincedum5 |   .0249409   .0270919     0.92   0.357    -.0281876    .0780694
+ provincedum6 |   .0490682   .0285634     1.72   0.086    -.0069461    .1050825
+ provincedum7 |   .0596442   .0286768     2.08   0.038     .0034076    .1158807
+ provincedum8 |     .05214   .0267678     1.95   0.052    -.0003529    .1046329
+ provincedum9 |   -.039266   .0277567    -1.41   0.157    -.0936983    .0151663
+provincedum10 |  -.0308225   .0279904    -1.10   0.271    -.0857131    .0240681
+provincedum11 |  -.0118452    .027293    -0.43   0.664    -.0653682    .0416777
+provincedum12 |  -.0084621   .0334379    -0.25   0.800    -.0740355    .0571113
+provincedum13 |    .008452   .0289037     0.29   0.770    -.0482297    .0651337
+provincedum14 |   .0070987   .0290718     0.24   0.807    -.0499124    .0641099
+provincedum15 |   .0650593   .0321346     2.02   0.043     .0020418    .1280768
+            t |  -.0052601   .0003872   -13.59   0.000    -.0060193   -.0045008
+            d |   .0303544   .0188753     1.61   0.108     -.006661    .0673697
+           td |  -.0037858   .0004071    -9.30   0.000    -.0045842   -.0029875
+        _cons |    2.56508   .0511376    50.16   0.000     2.464796    2.665363
+-------------------------------------------------------------------------------
+
+                                                        Number of obs =  2,207
+                                                        F(19, 2187)   = 178.17
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6075
+                                                        Adj R-squared = 0.6041
+                                                        Root MSE      = 0.2072
+
+-------------------------------------------------------------------------------
+secgenhighedu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1556688   .0044783   -34.76   0.000     -.164451   -.1468867
+       expsqr |   .0020888   .0001442    14.49   0.000      .001806    .0023715
+ provincedum2 |   .0447932   .0370539     1.21   0.227    -.0278713    .1174578
+ provincedum3 |   .0499286    .047284     1.06   0.291    -.0427976    .1426549
+ provincedum4 |   .0033236   .0386979     0.09   0.932     -.072565    .0792122
+ provincedum5 |   .0391921   .0274638     1.43   0.154    -.0146658    .0930499
+ provincedum6 |   .0728386   .0289556     2.52   0.012     .0160552    .1296219
+ provincedum7 |   .0848349   .0290705     2.92   0.004     .0278263    .1418435
+ provincedum8 |   .0694678   .0271353     2.56   0.011     .0162542    .1226813
+ provincedum9 |  -.0021615   .0281378    -0.08   0.939    -.0573412    .0530181
+provincedum10 |   .0041862   .0283747     0.15   0.883    -.0514579    .0598304
+provincedum11 |    .011251   .0276677     0.41   0.684    -.0430067    .0655088
+provincedum12 |   .0291655    .033897     0.86   0.390    -.0373082    .0956391
+provincedum13 |    .041823   .0293006     1.43   0.154    -.0156368    .0992829
+provincedum14 |    .023079   .0294709     0.78   0.434    -.0347148    .0808729
+provincedum15 |   .1023564   .0325757     3.14   0.002     .0384738    .1662391
+            t |  -.0039495   .0003925   -10.06   0.000    -.0047191   -.0031798
+            d |   .0536541   .0191344     2.80   0.005     .0161306    .0911776
+           td |  -.0043176   .0004127   -10.46   0.000    -.0051269   -.0035083
+        _cons |   2.333187   .0518396    45.01   0.000     2.231527    2.434847
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,207
+                                                  Wald chi2(18)   =     161.89
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0499
+                                                  Root MSE        =     .62046
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |  -.2694254   .9907837    -0.27   0.786    -2.211326    1.672475
+secgenhighedu |   .8661288    1.11514     0.78   0.437    -1.319506    3.051764
+          exp |     .01911   .0140556     1.36   0.174    -.0084385    .0466584
+       expsqr |   -.000362   .0003262    -1.11   0.267    -.0010012    .0002773
+ provincedum2 |  -.3699409   .1222319    -3.03   0.002     -.609511   -.1303708
+ provincedum3 |  -.1940631   .1507338    -1.29   0.198    -.4894958    .1013697
+ provincedum4 |  -.3893717   .1174869    -3.31   0.001    -.6196418   -.1591017
+ provincedum5 |  -.0794356   .0844841    -0.94   0.347    -.2450214    .0861503
+ provincedum6 |  -.0929735   .0928622    -1.00   0.317      -.27498     .089033
+ provincedum7 |  -.2362176    .094981    -2.49   0.013     -.422377   -.0500582
+ provincedum8 |  -.2936348   .0860873    -3.41   0.001    -.4623628   -.1249068
+ provincedum9 |   .1139576   .0934532     1.22   0.223    -.0692073    .2971224
+provincedum10 |  -.1458773   .0915017    -1.59   0.111    -.3252173    .0334627
+provincedum11 |  -.1500565   .0871074    -1.72   0.085    -.3207838    .0206708
+provincedum12 |  -.2065372   .1102987    -1.87   0.061    -.4227187    .0096444
+provincedum13 |   -.179303   .0964681    -1.86   0.063    -.3683769    .0097709
+provincedum14 |  -.2984162   .0907327    -3.29   0.001    -.4762491   -.1205833
+provincedum15 |  -.3189422   .1099702    -2.90   0.004    -.5344798   -.1034045
+        _cons |   7.763379   .1565904    49.58   0.000     7.456468    8.070291
+-------------------------------------------------------------------------------
+Endogenous: higheredu secgenhighedu
+Exogenous:  exp expsqr provincedum2 provincedum3 provincedum4 provincedum5
+            provincedum6 provincedum7 provincedum8 provincedum9 provincedum10
+            provincedum11 provincedum12 provincedum13 provincedum14
+            provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(2)          =  10.5482  (p = 0.0051)
+  Wu-Hausman F(2,2186)            =  5.24902  (p = 0.0053)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(1) =  .953641  (p = 0.3288)
+  Basmann chi2(1)        =  .945408  (p = 0.3309)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  37.757  Chi-sq(19) P-value = 0.0064
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,207    7.876517    .6366901   5.298317   9.721166
+         exp |      2,207    18.87041    7.720789          1         34
+      expsqr |      2,207     415.676    301.9249          1       1156
+        male |      2,207           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu & the product, Female Province) pv
+> alue addstat("Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "E
+> ndogeneity df", `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-valu
+> e", `basman_p', "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pa
+> gan_hall_p', "Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. *3)
+. ivregress 2sls log_monthlyearning exp expsqr male (higheredu = t d td ) if inrange(birthy
+> ear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                       Number of obs =   5,854
+                                                       F(6, 5847)    = 1638.62
+                                                       Prob > F      =  0.0000
+                                                       R-squared     =  0.6271
+                                                       Adj R-squared =  0.6267
+                                                       Root MSE      =  0.2064
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1643388   .0027665   -59.40   0.000    -.1697621   -.1589155
+      expsqr |    .002012    .000084    23.96   0.000     .0018474    .0021766
+        male |  -.0038586    .005573    -0.69   0.489    -.0147837    .0070664
+           t |  -.0048215   .0002196   -21.95   0.000    -.0052521    -.004391
+           d |   .0135882   .0116459     1.17   0.243     -.009242    .0364185
+          td |  -.0042148   .0002414   -17.46   0.000     -.004688   -.0037417
+       _cons |   2.613015   .0307097    85.09   0.000     2.552813    2.673217
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      5,854
+                                                  Wald chi2(4)    =     566.53
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0768
+                                                  Root MSE        =     .63814
+
+------------------------------------------------------------------------------
+log_monthl~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   higheredu |   .4496145   .0479813     9.37   0.000     .3555729    .5436562
+         exp |   .0296954   .0076573     3.88   0.000     .0146874    .0447033
+      expsqr |  -.0005926    .000179    -3.31   0.001    -.0009433   -.0002418
+        male |   .3756611   .0172161    21.82   0.000     .3419181    .4094041
+       _cons |   7.499318   .0786077    95.40   0.000      7.34525    7.653386
+------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  exp expsqr male t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  34.9977  (p = 0.0000)
+  Wu-Hausman F(1,5848)            =  35.1721  (p = 0.0000)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  3.93202  (p = 0.1400)
+  Basmann chi2(2)        =  3.92996  (p = 0.1402)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   8.789  Chi-sq(6) P-value = 0.1858
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      5,854     8.10774     .664202   5.298317   9.721166
+         exp |      5,854    19.00581     7.68698          1         36
+      expsqr |      5,854    420.3003    304.5823          1       1296
+        male |      5,854    .6229928    .4846781          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Pooled) pvalue addstat("Engod: Du
+> rbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", `endog_
+> df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "Overid
+> entification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroske
+> dasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr male provincedum2-provincedum15 (higheredu  
+> = t d td ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & educ
+> at != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  5,854
+                                                        F(20, 5833)   = 511.12
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6367
+                                                        Adj R-squared = 0.6355
+                                                        Root MSE      = 0.2040
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1622881   .0027474   -59.07   0.000    -.1676741   -.1569022
+       expsqr |   .0018746    .000084    22.31   0.000     .0017098    .0020393
+         male |    -.00558   .0055235    -1.01   0.312     -.016408    .0052481
+ provincedum2 |   .0713462   .0221062     3.23   0.001     .0280098    .1146825
+ provincedum3 |   .0909803   .0274962     3.31   0.001     .0370776     .144883
+ provincedum4 |   .0245486   .0230337     1.07   0.287    -.0206059    .0697031
+ provincedum5 |   .0353252   .0177268     1.99   0.046     .0005742    .0700763
+ provincedum6 |   .0849456   .0183331     4.63   0.000     .0490058    .1208853
+ provincedum7 |   .0756868   .0183241     4.13   0.000     .0397648    .1116088
+ provincedum8 |   .0785815   .0173392     4.53   0.000     .0445902    .1125727
+ provincedum9 |   .0031019   .0178679     0.17   0.862    -.0319258    .0381296
+provincedum10 |  -.0103576   .0180465    -0.57   0.566    -.0457354    .0250203
+provincedum11 |   .0116321   .0177204     0.66   0.512    -.0231065    .0463707
+provincedum12 |   .0063307   .0207576     0.30   0.760    -.0343619    .0470233
+provincedum13 |   .0258013   .0185508     1.39   0.164    -.0105652    .0621678
+provincedum14 |   .0395247   .0190806     2.07   0.038     .0021196    .0769298
+provincedum15 |    .075839   .0193561     3.92   0.000     .0378939    .1137841
+            t |  -.0052843   .0002222   -23.79   0.000    -.0057198   -.0048488
+            d |   .0179073    .011528     1.55   0.120    -.0046919    .0405064
+           td |   -.003971     .00024   -16.55   0.000    -.0044415   -.0035005
+        _cons |   2.584258   .0329993    78.31   0.000     2.519567    2.648949
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      5,854
+                                                  Wald chi2(18)   =     776.69
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.1113
+                                                  Root MSE        =     .62609
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   .4000598   .0470025     8.51   0.000     .3079366    .4921831
+          exp |   .0243054   .0075073     3.24   0.001     .0095914    .0390194
+       expsqr |  -.0004731   .0001756    -2.69   0.007    -.0008172    -.000129
+         male |   .3803234   .0169384    22.45   0.000     .3471248     .413522
+ provincedum2 |  -.2648104   .0673139    -3.93   0.000    -.3967432   -.1328775
+ provincedum3 |  -.1407821   .0840653    -1.67   0.094     -.305547    .0239828
+ provincedum4 |  -.2684664   .0704769    -3.81   0.000    -.4065987   -.1303342
+ provincedum5 |  -.0144619   .0540497    -0.27   0.789    -.1203973    .0914736
+ provincedum6 |  -.0058533   .0554245    -0.11   0.916    -.1144833    .1027767
+ provincedum7 |  -.1050344   .0554977    -1.89   0.058     -.213808    .0037391
+ provincedum8 |  -.2037091   .0523746    -3.89   0.000    -.3063615   -.1010568
+ provincedum9 |   .1113922   .0546549     2.04   0.042     .0042706    .2185138
+provincedum10 |  -.0126441   .0553913    -0.23   0.819    -.1212089    .0959208
+provincedum11 |  -.1043635   .0541942    -1.93   0.054    -.2105822    .0018552
+provincedum12 |  -.1805938   .0635908    -2.84   0.005    -.3052294   -.0559582
+provincedum13 |  -.1861589   .0566765    -3.28   0.001    -.2972429   -.0750749
+provincedum14 |  -.2933744   .0581827    -5.04   0.000    -.4074104   -.1793383
+provincedum15 |  -.2534027   .0587289    -4.31   0.000    -.3685092   -.1382962
+        _cons |   7.662607   .0935256    81.93   0.000       7.4793    7.845914
+-------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  exp expsqr male provincedum2 provincedum3 provincedum4
+            provincedum5 provincedum6 provincedum7 provincedum8 provincedum9
+            provincedum10 provincedum11 provincedum12 provincedum13
+            provincedum14 provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  21.7346  (p = 0.0000)
+  Wu-Hausman F(1,5834)            =   21.741  (p = 0.0000)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  6.55444  (p = 0.0377)
+  Basmann chi2(2)        =  6.53824  (p = 0.0380)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  69.365  Chi-sq(20) P-value = 0.0000
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      5,854     8.10774     .664202   5.298317   9.721166
+         exp |      5,854    19.00581     7.68698          1         36
+      expsqr |      5,854    420.3003    304.5823          1       1296
+        male |      5,854    .6229928    .4846781          0          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Pooled Province) pvalue addstat("
+> Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df"
+> , `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p'
+> , "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "
+> Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr (higheredu  = t d td ) if inrange(birthyear,
+>  1971, 1992) & inrange(monthlyearning, 200, 16667) & male == 1 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                       Number of obs =   3,647
+                                                       F(5, 3641)    = 1154.80
+                                                       Prob > F      =  0.0000
+                                                       R-squared     =  0.6133
+                                                       Adj R-squared =  0.6127
+                                                       Root MSE      =  0.2064
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1652997   .0035723   -46.27   0.000    -.1723035   -.1582958
+      expsqr |   .0020164   .0001053    19.15   0.000     .0018099    .0022228
+           t |  -.0048016   .0002702   -17.77   0.000    -.0053313   -.0042719
+           d |   .0052807   .0147764     0.36   0.721    -.0236901    .0342516
+          td |  -.0043413    .000301   -14.42   0.000    -.0049314   -.0037512
+       _cons |   2.635219   .0401994    65.55   0.000     2.556404    2.714035
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      3,647
+                                                  Wald chi2(3)    =      44.20
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0005
+                                                  Root MSE        =     .64084
+
+------------------------------------------------------------------------------
+log_monthl~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   higheredu |   .3945993   .0596147     6.62   0.000     .2777567     .511442
+         exp |   .0384506   .0095696     4.02   0.000     .0196944    .0572067
+      expsqr |  -.0007765   .0002241    -3.46   0.001    -.0012158   -.0003372
+       _cons |   7.792616   .0967004    80.59   0.000     7.603086    7.982145
+------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  exp expsqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  18.6987  (p = 0.0000)
+  Wu-Hausman F(1,3642)            =  18.7693  (p = 0.0000)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  6.59296  (p = 0.0370)
+  Basmann chi2(2)        =  6.59403  (p = 0.0370)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   6.481  Chi-sq(5) P-value = 0.2622
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      3,647    8.247666    .6410867   5.298317   9.721166
+         exp |      3,647    19.08774    7.666347          2         36
+      expsqr |      3,647    423.0987    306.1865          4       1296
+        male |      3,647           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Male) pvalue addstat("Engod: Durb
+> in p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", `endog_df
+> ', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "Overiden
+> tification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroskeda
+> sticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. ivregress 2sls log_monthlyearning exp expsqr provincedum2-provincedum15 (higheredu  = t d
+>  td ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & male == 1
+>  & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  3,647
+                                                        F(19, 3627)   = 318.14
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6250
+                                                        Adj R-squared = 0.6230
+                                                        Root MSE      = 0.2037
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |   -.163494   .0035419   -46.16   0.000    -.1704384   -.1565496
+       expsqr |   .0018829   .0001051    17.92   0.000     .0016768    .0020889
+ provincedum2 |   .1134254   .0280823     4.04   0.000     .0583666    .1684841
+ provincedum3 |   .1373948   .0343344     4.00   0.000     .0700782    .2047114
+ provincedum4 |   .0521886   .0291888     1.79   0.074    -.0050395    .1094167
+ provincedum5 |   .0437754    .023461     1.87   0.062    -.0022226    .0897735
+ provincedum6 |   .1098163   .0239958     4.58   0.000     .0627697    .1568629
+ provincedum7 |   .0895415    .023922     3.74   0.000     .0426396    .1364435
+ provincedum8 |   .0984588   .0228165     4.32   0.000     .0537244    .1431932
+ provincedum9 |   .0319484   .0234197     1.36   0.173    -.0139687    .0778654
+provincedum10 |    .006331   .0236697     0.27   0.789    -.0400761    .0527382
+provincedum11 |   .0299392   .0233384     1.28   0.200    -.0158185     .075697
+provincedum12 |   .0200107   .0266808     0.75   0.453    -.0323002    .0723217
+provincedum13 |   .0398377   .0242698     1.64   0.101    -.0077462    .0874215
+provincedum14 |    .064255   .0253178     2.54   0.011     .0146166    .1138935
+provincedum15 |   .0897098   .0246945     3.63   0.000     .0412933    .1381263
+            t |  -.0052567   .0002722   -19.31   0.000    -.0057904   -.0047231
+            d |   .0089549   .0145975     0.61   0.540    -.0196651     .037575
+           td |  -.0041177   .0002987   -13.78   0.000    -.0047034    -.003532
+        _cons |    2.58973   .0433051    59.80   0.000     2.504825    2.674634
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      3,647
+                                                  Wald chi2(17)   =     171.95
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0392
+                                                  Root MSE        =      .6283
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   .3427115   .0581679     5.89   0.000     .2287046    .4567184
+          exp |   .0335826    .009359     3.59   0.000     .0152392    .0519259
+       expsqr |  -.0006765   .0002194    -3.08   0.002    -.0011065   -.0002466
+ provincedum2 |  -.2189996    .085791    -2.55   0.011    -.3871469   -.0508522
+ provincedum3 |  -.1099624   .1055314    -1.04   0.297    -.3168001    .0968753
+ provincedum4 |  -.2059086    .089547    -2.30   0.021    -.3814175   -.0303997
+ provincedum5 |   .0241859   .0718828     0.34   0.737    -.1167018    .1650737
+ provincedum6 |   .0416802   .0728713     0.57   0.567    -.1011449    .1845053
+ provincedum7 |  -.0382725    .072839    -0.53   0.599    -.1810343    .1044894
+ provincedum8 |  -.1522203   .0692804    -2.20   0.028    -.2880074   -.0164333
+ provincedum9 |   .1055264   .0718233     1.47   0.142    -.0352447    .2462976
+provincedum10 |   .0611609   .0729143     0.84   0.402    -.0817486    .2040703
+provincedum11 |  -.0767429   .0716578    -1.07   0.284    -.2171896    .0637038
+provincedum12 |  -.1746829    .082102    -2.13   0.033    -.3355999   -.0137659
+provincedum13 |  -.1983329    .074502    -2.66   0.008    -.3443541   -.0523117
+provincedum14 |  -.3008242   .0775368    -3.88   0.000    -.4527935   -.1488549
+provincedum15 |  -.2278191    .075273    -3.03   0.002    -.3753515   -.0802867
+        _cons |   7.926536   .1170328    67.73   0.000     7.697156    8.155916
+-------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  exp expsqr provincedum2 provincedum3 provincedum4 provincedum5
+            provincedum6 provincedum7 provincedum8 provincedum9 provincedum10
+            provincedum11 provincedum12 provincedum13 provincedum14
+            provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  11.2424  (p = 0.0008)
+  Wu-Hausman F(1,3628)            =  11.2184  (p = 0.0008)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  7.18593  (p = 0.0275)
+  Basmann chi2(2)        =  7.16063  (p = 0.0279)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  54.924  Chi-sq(19) P-value = 0.0000
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      3,647    8.247666    .6410867   5.298317   9.721166
+         exp |      3,647    19.08774    7.666347          2         36
+      expsqr |      3,647    423.0987    306.1865          4       1296
+        male |      3,647           1           0          1          1
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Male Province) pvalue addstat("En
+> god: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", 
+> `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', 
+> "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "He
+> teroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr (higheredu  = t d td ) if inrange(birthyear,
+>  1971, 1992) & inrange(monthlyearning, 200, 16667) & male == 0 & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,207
+                                                        F(5, 2201)    = 810.08
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6479
+                                                        Adj R-squared = 0.6471
+                                                        Root MSE      = 0.2065
+
+------------------------------------------------------------------------------
+   higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         exp |  -.1632388    .004423   -36.91   0.000    -.1719124   -.1545651
+      expsqr |   .0020226   .0001409    14.35   0.000     .0017462     .002299
+           t |   -.004811   .0003788   -12.70   0.000    -.0055538   -.0040682
+           d |   .0264941   .0189644     1.40   0.163    -.0106958    .0636841
+          td |  -.0040398   .0004067    -9.93   0.000    -.0048375   -.0032422
+       _cons |    2.57338    .047485    54.19   0.000      2.48026      2.6665
+------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,207
+                                                  Wald chi2(3)    =      75.90
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0176
+                                                  Root MSE        =     .63091
+
+------------------------------------------------------------------------------
+log_monthl~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   higheredu |   .5276684   .0808594     6.53   0.000      .369187    .6861499
+         exp |   .0190191   .0127899     1.49   0.137    -.0060486    .0440869
+      expsqr |  -.0003775   .0002977    -1.27   0.205    -.0009611     .000206
+       _cons |   7.600437   .1310489    58.00   0.000     7.343585    7.857288
+------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  exp expsqr t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =  15.7501  (p = 0.0001)
+  Wu-Hausman F(1,2202)            =  15.8274  (p = 0.0001)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =  3.04423  (p = 0.2182)
+  Basmann chi2(2)        =  3.04015  (p = 0.2187)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :   9.412  Chi-sq(5) P-value = 0.0937
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,207    7.876517    .6366901   5.298317   9.721166
+         exp |      2,207    18.87041    7.720789          1         34
+      expsqr |      2,207     415.676    301.9249          1       1156
+        male |      2,207           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Female) pvalue addstat("Engod: Du
+> rbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df", `endog_
+> df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p', "Overid
+> entification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "Heteroske
+> dasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. ivregress 2sls log_monthlyearning exp expsqr provincedum2-provincedum15 (higheredu = t d 
+> td ) if inrange(birthyear, 1971, 1992) & inrange(monthlyearning, 200, 16667) & male == 0 
+> & educat != ., first
+
+First-stage regressions
+-----------------------
+
+                                                        Number of obs =  2,207
+                                                        F(19, 2187)   = 220.57
+                                                        Prob > F      = 0.0000
+                                                        R-squared     = 0.6571
+                                                        Adj R-squared = 0.6541
+                                                        Root MSE      = 0.2044
+
+-------------------------------------------------------------------------------
+    higheredu | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          exp |  -.1609149   .0044176   -36.43   0.000     -.169578   -.1522517
+       expsqr |   .0018835   .0001422    13.24   0.000     .0016046    .0021624
+ provincedum2 |   .0003636   .0365521     0.01   0.992    -.0713168    .0720441
+ provincedum3 |   .0072384   .0466436     0.16   0.877    -.0842321    .0987089
+ provincedum4 |   -.016808   .0381739    -0.44   0.660    -.0916688    .0580528
+ provincedum5 |   .0249409   .0270919     0.92   0.357    -.0281876    .0780694
+ provincedum6 |   .0490682   .0285634     1.72   0.086    -.0069461    .1050825
+ provincedum7 |   .0596442   .0286768     2.08   0.038     .0034076    .1158807
+ provincedum8 |     .05214   .0267678     1.95   0.052    -.0003529    .1046329
+ provincedum9 |   -.039266   .0277567    -1.41   0.157    -.0936983    .0151663
+provincedum10 |  -.0308225   .0279904    -1.10   0.271    -.0857131    .0240681
+provincedum11 |  -.0118452    .027293    -0.43   0.664    -.0653682    .0416777
+provincedum12 |  -.0084621   .0334379    -0.25   0.800    -.0740355    .0571113
+provincedum13 |    .008452   .0289037     0.29   0.770    -.0482297    .0651337
+provincedum14 |   .0070987   .0290718     0.24   0.807    -.0499124    .0641099
+provincedum15 |   .0650593   .0321346     2.02   0.043     .0020418    .1280768
+            t |  -.0052601   .0003872   -13.59   0.000    -.0060193   -.0045008
+            d |   .0303544   .0188753     1.61   0.108     -.006661    .0673697
+           td |  -.0037858   .0004071    -9.30   0.000    -.0045842   -.0029875
+        _cons |    2.56508   .0511376    50.16   0.000     2.464796    2.665363
+-------------------------------------------------------------------------------
+
+
+Instrumental variables 2SLS regression            Number of obs   =      2,207
+                                                  Wald chi2(17)   =     163.06
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.0602
+                                                  Root MSE        =     .61708
+
+-------------------------------------------------------------------------------
+log_monthly~g | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    higheredu |   .4975916   .0797459     6.24   0.000     .3412925    .6538907
+          exp |   .0143248   .0125646     1.14   0.254    -.0103014    .0389509
+       expsqr |  -.0002522   .0002924    -0.86   0.388    -.0008253    .0003208
+ provincedum2 |  -.3289147   .1096292    -3.00   0.003     -.543784   -.1140453
+ provincedum3 |  -.1530191   .1403984    -1.09   0.276     -.428195    .1221567
+ provincedum4 |  -.3741946   .1152196    -3.25   0.001    -.6000207   -.1483684
+ provincedum5 |   -.062635   .0812234    -0.77   0.441    -.2218298    .0965599
+ provincedum6 |  -.0648959   .0850711    -0.76   0.446    -.2316322    .1018404
+ provincedum7 |  -.2045416   .0853125    -2.40   0.017    -.3717511   -.0373321
+ provincedum8 |  -.2686754   .0794296    -3.38   0.001    -.4243546   -.1129962
+ provincedum9 |   .1449944    .084019     1.73   0.084    -.0196798    .3096685
+provincedum10 |  -.1197603   .0846358    -1.42   0.157    -.2856433    .0461227
+provincedum11 |  -.1287123   .0822089    -1.57   0.117    -.2898387    .0324141
+provincedum12 |  -.1725828   .1007141    -1.71   0.087    -.3699787    .0248131
+provincedum13 |  -.1474583   .0868462    -1.70   0.090    -.3176737    .0227571
+provincedum14 |  -.2804796   .0872668    -3.21   0.001    -.4515194   -.1094397
+provincedum15 |  -.2778138   .0958569    -2.90   0.004    -.4656899   -.0899377
+        _cons |   7.781835   .1539343    50.55   0.000     7.480129     8.08354
+-------------------------------------------------------------------------------
+Endogenous: higheredu
+Exogenous:  exp expsqr provincedum2 provincedum3 provincedum4 provincedum5
+            provincedum6 provincedum7 provincedum8 provincedum9 provincedum10
+            provincedum11 provincedum12 provincedum13 provincedum14
+            provincedum15 t d td
+
+. estat endog
+
+  Tests of endogeneity
+  H0: Variables are exogenous
+
+  Durbin (score) chi2(1)          =   11.019  (p = 0.0009)
+  Wu-Hausman F(1,2188)            =   10.979  (p = 0.0009)
+
+. local durbin_p = r(p_durbin)
+
+. local wu_p = r(p_wu)
+
+. local endog_df = r(df)
+
+. estat overid
+
+  Tests of overidentifying restrictions:
+
+  Sargan (score) chi2(2) =    1.574  (p = 0.4552)
+  Basmann chi2(2)        =  1.56085  (p = 0.4582)
+
+. local sargan_p = r(p_sargan) 
+
+. local basman_p = r(p_basmann) 
+
+. local overid_df = r(df)
+
+. ivhettest
+IV heteroskedasticity test(s) using levels of IVs only
+Ho: Disturbance is homoskedastic
+    Pagan-Hall general test statistic   :  38.763  Chi-sq(19) P-value = 0.0047
+
+. local pagan_hall_p = r(php)
+
+. local hetero_df = r(df)
+
+. sum log_monthlyearning exp expsqr male if e(sample)
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+log_monthl~g |      2,207    7.876517    .6366901   5.298317   9.721166
+         exp |      2,207    18.87041    7.720789          1         34
+      expsqr |      2,207     415.676    301.9249          1       1156
+        male |      2,207           0           0          0          0
+
+. outreg2 using "`xlspath'", append ctitle(IV: higheredu, Female Province) pvalue addstat("
+> Engod: Durbin p-value", `durbin_p', "Engod: Wu-Hausman p-value", `wu_p', "Endogeneity df"
+> , `endog_df', "Overid: Sargan p-value", `sargan_p', "Overid: Basmann p-value", `basman_p'
+> , "Overidentification df", `overid_df', "Heterosk: Pagan-Hall p-value", `pagan_hall_p', "
+> Heteroskedasticity df", `hetero_df')
+/Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Time Frame/Exp/
+> Rural/IV Rural ATF Exp 1982 1971-1992.xls
+dir : seeout
+
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/wyattwyatt/Downloads/Revision Code/Ivregress/Ivregress/1982/Adjusted Ti
+> me Frame/Exp/Rural/IV Rural ATF Exp 1982 1971-1992.log
+  log type:  text
+ closed on:  14 Aug 2024, 05:35:28
+-------------------------------------------------------------------------------------------
