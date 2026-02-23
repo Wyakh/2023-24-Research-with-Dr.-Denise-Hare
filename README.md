@@ -1,5 +1,5 @@
-# 2023-24-Research-with-Dr.-Denise-Hare
-Sponsored by Reed College Summer Research Fellowships, 2023 &amp; 2024.
+# 2023-24-Research-with-Dr.-Denise-Hare: Higher Education Returns in China’s General and Vocational Tracks
+Sponsored by Reed College Summer Research Fellowships, 2023 &amp; 2024. Working paper is available by request.
 
 Please first add two data files to this folder, then you can replicate the results by "Note.pdf".
 
